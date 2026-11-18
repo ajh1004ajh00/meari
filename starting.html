@@ -35,6 +35,15 @@
   <div class="sec" id="sec"></div>
 </div>
 <script>
+// Korean or English by the browser language (this page has its own origin, so it can't read the app's setting)
+const EN = !/^ko/i.test(navigator.language || "");
+const L = (ko, en) => (EN ? en : ko);
+if (EN) {
+  document.documentElement.lang = "en";
+  document.title = "Starting Meari…";
+  document.getElementById("h").textContent = "Starting Meari…";
+  document.getElementById("p").textContent = "Usually 10–20 seconds. It opens as soon as it is ready.";
+}
 // Opened instantly by the desktop shortcut (Ctrl+Alt+M) while the app boots in WSL.
 // A no-cors fetch resolves once the app answers (opaque response) and rejects while it is still down.
 const rec = new URLSearchParams(location.search).get("rec") === "1";
@@ -43,17 +52,17 @@ const t0 = Date.now();
 async function poll() {
   try {
     await fetch("http://127.0.0.1:8020/api/status", { mode: "no-cors", cache: "no-store" });
-    document.getElementById("h").textContent = "준비됐어요";
+    document.getElementById("h").textContent = L("준비됐어요", "Ready");
     location.replace(target);
     return;
   } catch {}
   const s = Math.round((Date.now() - t0) / 1000);
-  document.getElementById("sec").textContent = s + "초";
-  if (s > 30) document.getElementById("p").textContent = "조금 오래 걸리고 있어요. 컴퓨터를 막 켰다면 1분쯤 걸릴 수 있어요.";
+  document.getElementById("sec").textContent = s + L("초", " s");
+  if (s > 30) document.getElementById("p").textContent = L("조금 오래 걸리고 있어요. 컴퓨터를 막 켰다면 1분쯤 걸릴 수 있어요.", "Taking a little longer. Right after a restart it can take about a minute.");
   if (s > 180) {
     document.getElementById("box").classList.add("err");
-    document.getElementById("h").textContent = "메아리가 켜지지 않았어요";
-    document.getElementById("p").innerHTML = "바탕화면 메아리를 한 번 더 눌러 보세요. 계속 안 되면 로그를 확인해 주세요:<br><code>(메아리 폴더)\\data\\run.log</code>";
+    document.getElementById("h").textContent = L("메아리가 켜지지 않았어요", "Meari didn't start");
+    document.getElementById("p").innerHTML = L("바탕화면 메아리를 한 번 더 눌러 보세요. 계속 안 되면 로그를 확인해 주세요:", "Open Meari from the desktop once more. If it still fails, check the log:") + "<br><code>(메아리 폴더)\\data\\run.log</code>";
     return;
   }
   setTimeout(poll, 700);

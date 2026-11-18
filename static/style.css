@@ -730,6 +730,7 @@ dialog .r { display: flex; justify-content: flex-end; gap: 8px; margin-top: var(
 
 /* engine panel: state + two levels of "off" */
 .engine__row--sub { justify-content: space-between; margin-top: 6px; }
+.engine__row--sub #langBtn { margin-left: auto; margin-right: -4px; }
 .engine__idle { color: var(--tx-3); font-size: 11.5px; }
 body[data-engine="off"] [data-led] { background: var(--tx-4); box-shadow: none; animation: none; }
 .ln--wait .ln__ko { color: var(--tx-3); }

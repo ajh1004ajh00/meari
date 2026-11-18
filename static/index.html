@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body data-engine="boot" data-view="home">
 
@@ -88,6 +88,7 @@
     </div>
     <div class="engine__row engine__row--sub">
       <small id="engineIdle" class="engine__idle"></small>
+      <button id="langBtn" class="btn sm quiet" type="button" data-noi18n></button>
       <button id="shutdownBtn" class="btn sm quiet danger" title="앱과 엔진을 모두 끕니다"><svg class="ic s"><use href="#i-power"/></svg>모두 끄기</button>
     </div>
   </div>
@@ -361,6 +362,7 @@
   <form method="dialog" class="r"><button class="btn" value="no">취소</button><button class="btn danger-solid" value="yes" id="dlgOk"></button></form>
 </dialog>
 <div class="toasts" id="toasts" aria-live="polite"></div>
-<script src="app.js?v=15"></script>
+<script src="i18n.js?v=1"></script>
+<script src="app.js?v=16"></script>
 </body>
 </html>

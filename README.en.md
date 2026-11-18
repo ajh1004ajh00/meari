@@ -15,17 +15,17 @@ Everything runs on the laptop's own GPU with **NVIDIA Nemotron 3.5 Transcribe (N
 
 </div>
 
-![Meari home screen](docs/images/home.png)
+![Meari home screen](docs/images/en/home.png)
 
-> The notes in these screenshots are fictional demo data. The app UI is in Korean.
+> The notes in these screenshots are fictional demo data (recorded in Korean); the UI is switched to English.
 
 ## Screens
 
 | Note — summary + speaker transcript | Study — quiz + flashcards |
 |---|---|
-| ![Note view](docs/images/note.png) | ![Study view](docs/images/study.png) |
+| ![Note view](docs/images/en/note.png) | ![Study view](docs/images/en/study.png) |
 | **Recording** | **English translation** |
-| ![Recording view](docs/images/rec.png) | ![Translation](docs/images/translation.png) |
+| ![Recording view](docs/images/en/rec.png) | ![Translation](docs/images/en/translation.png) |
 
 <table>
 <tr>
@@ -38,8 +38,8 @@ so you can keep the live transcript next to your slides or meeting.
 The same UI also opens on your phone (optional, over Tailscale).
 
 </td>
-<td width="25%"><img src="docs/images/phone-home.png" alt="Mini window, home"></td>
-<td width="25%"><img src="docs/images/phone-note.png" alt="Mini window, note"></td>
+<td width="25%"><img src="docs/images/en/phone-home.png" alt="Mini window, home"></td>
+<td width="25%"><img src="docs/images/en/phone-note.png" alt="Mini window, note"></td>
 </tr>
 </table>
 
@@ -56,6 +56,7 @@ The same UI also opens on your phone (optional, over Tailscale).
 | **From a file** | Create a note from an audio or video file |
 | **Safety nets** | Warns right away if you record with a muted mic; the engine turns itself off after 30 idle minutes and frees GPU memory |
 | **Desktop app** | Tray app, global hotkey, mini always-on-top window, low-memory mode while hidden |
+| **Korean / English UI** | One click in the sidebar; defaults to your system language |
 
 ## Specs
 
@@ -184,7 +185,7 @@ copy target\release\meari.exe ..\Meari.exe
 
 ## Known limitations
 
-- The UI and the summary prompts are Korean-first.
+- Summaries, quizzes and answers are written in Korean (the UI can be English).
 - Speaker numbers restart every 30-minute part.
 - Translation is English only.
 - Material-to-transcript linking is based on text overlap (no match for scanned PDFs or English slides with a Korean lecture).

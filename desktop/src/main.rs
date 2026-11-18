@@ -23,12 +23,25 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 const REC_JS: &str = "if (window.meariQuickRecord) meariQuickRecord(); \
     else if (location.port === '8020') location.assign('/?rec=1'); else window.__rec = 1;";
 const ENGINE_OFF_JS: &str = "if (location.port === '8020') { \
-    if (rec) toast('녹음 중에는 엔진을 끌 수 없어요', true); \
-    else api('/engine/stop', { method: 'POST' }).then(() => { toast('엔진을 껐어요. GPU 메모리를 비웠어요'); checkEngine(); }).catch(fail); }";
+    if (rec) toast(t('녹음 중에는 엔진을 끌 수 없어요'), true); \
+    else api('/engine/stop', { method: 'POST' }).then(() => { toast(t('엔진을 껐어요. GPU 메모리를 비웠어요')); checkEngine(); }).catch(fail); }";
 const OFF_JS: &str = "if (location.port === '8020') document.getElementById('shutdownBtn').click(); \
     else location.href = 'http://localhost:8020/__meari_quit';";
 // The page asks the app to exit by navigating here; on_navigation catches it (no IPC needed for the remote page).
 const QUIT_PATH: &str = "/__meari_quit";
+
+// Tray and window labels follow the Windows display language (the page itself has its own Korean/English switch).
+fn korean_ui() -> bool {
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetUserDefaultUILanguage() -> u16;
+    }
+    (unsafe { GetUserDefaultUILanguage() } & 0x3ff) == 0x12 // LANG_KOREAN
+}
+
+fn tr(ko: &'static str, en: &'static str) -> &'static str {
+    if korean_ui() { ko } else { en }
+}
 
 fn args_want_rec(argv: &[String]) -> bool {
     argv.iter().any(|a| a.eq_ignore_ascii_case("--rec") || a.eq_ignore_ascii_case("/rec"))
@@ -117,17 +130,17 @@ fn set_mini(app: &AppHandle, on: bool) {
 }
 
 fn build_tray(app: &tauri::App) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "메아리 열기", true, None::<&str>)?;
-    let rec = MenuItem::with_id(app, "rec", "바로 녹음   Ctrl+Alt+M", true, None::<&str>)?;
-    let mini = CheckMenuItem::with_id(app, "mini", "작은 창 · 항상 위", true, false, None::<&str>)?;
-    let engine = MenuItem::with_id(app, "engine", "엔진 끄기 (GPU 비우기)", true, None::<&str>)?;
-    let off = MenuItem::with_id(app, "off", "모두 끄기", true, None::<&str>)?;
+    let open = MenuItem::with_id(app, "open", tr("메아리 열기", "Open Meari"), true, None::<&str>)?;
+    let rec = MenuItem::with_id(app, "rec", tr("바로 녹음   Ctrl+Alt+M", "Record now   Ctrl+Alt+M"), true, None::<&str>)?;
+    let mini = CheckMenuItem::with_id(app, "mini", tr("작은 창 · 항상 위", "Mini window · always on top"), true, false, None::<&str>)?;
+    let engine = MenuItem::with_id(app, "engine", tr("엔진 끄기 (GPU 비우기)", "Engine off (free GPU)"), true, None::<&str>)?;
+    let off = MenuItem::with_id(app, "off", tr("모두 끄기", "Turn all off"), true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(app, &[&open, &rec, &mini, &sep, &engine, &off])?;
     let mini_item = mini.clone();
     TrayIconBuilder::with_id("meari")
         .icon(app.default_window_icon().cloned().expect("icon"))
-        .tooltip("메아리")
+        .tooltip(tr("메아리", "Meari"))
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(move |app, e| match e.id.as_ref() {
@@ -195,7 +208,7 @@ fn main() {
                 WebviewUrl::App("index.html".into()) // boot page: polls the server, then jumps into the app
             };
             WebviewWindowBuilder::new(app, "main", url)
-                .title("메아리")
+                .title(tr("메아리", "Meari"))
                 .inner_size(1280.0, 860.0)
                 .min_inner_size(360.0, 560.0)
                 .center()

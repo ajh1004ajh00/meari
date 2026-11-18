@@ -2,8 +2,8 @@
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const SR = 16000;
-const BUSY = { recording: "녹음 중", transcribing: "받아쓰는 중", speakers: "화자별 원고 만드는 중", summarizing: "요약 노트 만드는 중",
-  translating: "영어로 번역하는 중", studying: "복습 자료 만드는 중", waiting: "엔진 켜는 중(약 3분) — 켜지면 이어서 정리해요" };
+const BUSY = { recording: t("녹음 중"), transcribing: t("받아쓰는 중"), speakers: t("화자별 원고 만드는 중"), summarizing: t("요약 노트 만드는 중"),
+  translating: t("영어로 번역하는 중"), studying: t("복습 자료 만드는 중"), waiting: t("엔진 켜는 중(약 3분) — 켜지면 이어서 정리해요") };
 const RM = matchMedia("(prefers-reduced-motion: reduce)");
 const TAU = Math.PI * 2;
 let engineOn = false, current = null, data = null, pollTimer = null, rec = null, editMode = false, viewing = null;
@@ -37,7 +37,7 @@ const ic = (id, cls = "s") => `<svg class="ic ${cls}" aria-hidden="true"><use hr
 const PING = '<span class="ping"><i></i></span>';
 const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const restart = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
-const when = (ts, o) => new Date(ts * 1000).toLocaleString("ko-KR", o);
+const when = (ts, o) => new Date(ts * 1000).toLocaleString(LOCALE, o);
 const typing = (el) => el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 
 // markdown → sections; "한 줄 요약" becomes the lead, tasks/exams get the amber box
@@ -69,7 +69,7 @@ function toast(msg, err) {
   $("#toasts").append(el);
   setTimeout(() => { el.classList.add("is-out"); setTimeout(() => el.remove(), 300); }, err ? 5200 : 2800);
 }
-const fail = (e) => toast(e?.message || String(e), true);
+const fail = (e) => toast(tMsg(e?.message || String(e)), true);
 function confirmDlg(title, body, ok) {
   const d = $("#dlg");
   $("#dlgT").textContent = title; $("#dlgP").textContent = body; $("#dlgOk").textContent = ok;
@@ -85,30 +85,30 @@ async function checkEngine() {
   engineOn = st.state === "ready";
   engineState = st.state === "ready" ? "on" : st.state === "off" ? "off" : "boot";
   document.body.dataset.engine = engineState;
-  const T = { on: ["엔진 준비됨", "Nemotron · 이 PC 안에서만", "준비됨"],
-    boot: ["엔진 켜는 중… (약 3분)", "녹음은 지금 바로 할 수 있어요", "켜는 중"],
-    off: ["엔진 꺼짐 · GPU 비워 둠", "녹음하면 자동으로 켜져요 (약 3분)", "꺼짐"] }[engineState];
+  const T = { on: [t("엔진 준비됨"), t("Nemotron · 이 PC 안에서만"), t("준비됨")],
+    boot: [t("엔진 켜는 중… (약 3분)"), t("녹음은 지금 바로 할 수 있어요"), t("켜는 중")],
+    off: [t("엔진 꺼짐 · GPU 비워 둠"), t("녹음하면 자동으로 켜져요 (약 3분)"), t("꺼짐")] }[engineState];
   $("#engineText").textContent = T[0];
-  $("#engineMeta").textContent = st.backlog ? `밀린 받아쓰기 ${st.backlog}개 · 켜지면 처리해요` : T[1];
+  $("#engineMeta").textContent = st.backlog ? t("밀린 받아쓰기 {n}개 · 켜지면 처리해요", { n: st.backlog }) : T[1];
   $$("[data-engine-short]").forEach((e) => (e.textContent = T[2]));
   const b = $("#engineBtn");
-  b.textContent = engineState === "off" ? "엔진 켜기" : "엔진 끄기"; b.disabled = engineState === "boot";
+  b.textContent = engineState === "off" ? t("엔진 켜기") : t("엔진 끄기"); b.disabled = engineState === "boot";
   $("#engineIdle").textContent = engineState === "on" && st.idle_left_s != null
-    ? (st.idle_left_s > 60 ? `안 쓰면 ${Math.ceil(st.idle_left_s / 60)}분 뒤 자동으로 꺼져요` : "곧 자동으로 꺼져요") : "";
+    ? (st.idle_left_s > 60 ? t("안 쓰면 {n}분 뒤 자동으로 꺼져요", { n: Math.ceil(st.idle_left_s / 60) }) : t("곧 자동으로 꺼져요")) : "";
 }
 $("#engineBtn").onclick = async () => {
   try {
-    if (engineState === "off") { await api("/engine/start", { method: "POST" }); toast("엔진을 켜는 중이에요 (약 3분)"); }
-    else { await api("/engine/stop", { method: "POST" }); toast("엔진을 껐어요. GPU 메모리를 비웠어요"); }
+    if (engineState === "off") { await api("/engine/start", { method: "POST" }); toast(t("엔진을 켜는 중이에요 (약 3분)")); }
+    else { await api("/engine/stop", { method: "POST" }); toast(t("엔진을 껐어요. GPU 메모리를 비웠어요")); }
   } catch (e) { fail(e); }
   checkEngine();
 };
 $("#shutdownBtn").onclick = async () => {
-  if (rec) return toast("녹음을 먼저 멈춰 주세요.", true);
-  if (!await confirmDlg("메아리를 모두 끌까요?", "엔진과 앱을 끄고 GPU 메모리(약 42GB)를 비워요. 노트는 그대로 남아요. 다시 쓰려면 바탕화면 메아리(Ctrl+Alt+M)를 누르세요. GPU만 비우려면 '엔진 끄기'를 쓰세요.", "모두 끄기")) return;
+  if (rec) return toast(t("녹음을 먼저 멈춰 주세요."), true);
+  if (!await confirmDlg(t("메아리를 모두 끌까요?"), t("엔진과 앱을 끄고 GPU 메모리(약 42GB)를 비워요. 노트는 그대로 남아요. 다시 쓰려면 바탕화면 메아리(Ctrl+Alt+M)를 누르세요. GPU만 비우려면 '엔진 끄기'를 쓰세요."), t("모두 끄기"))) return;
   try { await api("/shutdown", { method: "POST" }); } catch {}
   clearInterval(engineTimer); clearTimeout(pollTimer); lakeStop(); stageStop();
-  document.body.innerHTML = "<div class='off'><img class='mark' src='icon.svg' alt=''><h1>메아리를 껐어요</h1><p>GPU 메모리를 비웠어요. 이 창을 닫아도 됩니다.</p></div>";
+  document.body.innerHTML = `<div class='off'><img class='mark' src='icon.svg' alt=''><h1>${t("메아리를 껐어요")}</h1><p>${t("GPU 메모리를 비웠어요. 이 창을 닫아도 됩니다.")}</p></div>`;
   if (window.meariDesktop) setTimeout(() => location.assign("/__meari_quit"), 1500); // desktop app: the app catches this and exits
 };
 
@@ -127,7 +127,7 @@ function setMenu(open) {
 $("#menuBtn").onclick = () => setMenu(!document.body.classList.contains("menu-open"));
 
 function goHome() {
-  if (rec) return toast("녹음 중에는 홈으로 갈 수 없어요.", true);
+  if (rec) return toast(t("녹음 중에는 홈으로 갈 수 없어요."), true);
   current = null; data = null; finWatch = false; clearTimeout(pollTimer); resetAudio(); P.dataset.key = "";
   setView("home");
   loadList().catch(fail);
@@ -144,16 +144,16 @@ async function loadList() {
 function groupName(ts) {
   const d = new Date(ts * 1000), now = new Date();
   const days = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 864e5);
-  return days <= 0 ? "오늘" : days === 1 ? "어제" : days < 7 ? "이번 주" : d.toLocaleDateString("ko-KR", { year: "numeric", month: "long" });
+  return days <= 0 ? t("오늘") : days === 1 ? t("어제") : days < 7 ? t("이번 주") : d.toLocaleDateString(LOCALE, { year: "numeric", month: "long" });
 }
 function sideStatus(m) {
   if (isBusy(m)) return `<span class="nrow__m is-busy">${BUSY[m.status]}${m.progress != null ? " " + m.progress + "%" : ""}</span>`;
-  if (m.status === "error") return '<span class="nrow__m is-err">오류</span>';
+  if (m.status === "error") return `<span class="nrow__m is-err">${t("오류")}</span>`;
   return `<span class="nrow__m">${fmt(m.duration || 0)}</span>`;
 }
 function renderSide() {
-  $("#listLabel").textContent = "노트"; $("#noteCount").textContent = items.length || "";
-  if (!items.length) { $("#list").innerHTML = '<div class="notes__empty"><b>아직 노트가 없어요</b>첫 녹음을 마치면 여기에 날짜순으로 쌓여요.</div>'; return; }
+  $("#listLabel").textContent = t("노트"); $("#noteCount").textContent = items.length || "";
+  if (!items.length) { $("#list").innerHTML = `<div class="notes__empty"><b>${t("아직 노트가 없어요")}</b>${t("첫 녹음을 마치면 여기에 날짜순으로 쌓여요.")}</div>`; return; }
   let g = "", h = "";
   for (const m of items) {
     const gn = groupName(m.created);
@@ -184,8 +184,8 @@ function renderHome() {
   $("#recent").innerHTML = items.slice(0, 12).map((m) => {
     const busy = isBusy(m), err = m.status === "error";
     const sub = busy ? `<span class="row__s is-busy">${PING}<span>${BUSY[m.status]}${m.progress != null ? ` <span class="num">${m.progress}%</span>` : ""}</span>${m.progress != null ? `<span class="prog"><i style="width:${m.progress}%"></i></span>` : ""}</span>`
-      : err ? `<span class="row__s is-err">${ic("alert")}<span>${esc(m.error || "오류")}</span></span>`
-      : `<span class="row__s">${esc(m.source ? "파일 · " + m.source : m.terms ? "용어 · " + m.terms : m.duration ? "녹음" : "아직 녹음하지 않았어요")}</span>`;
+      : err ? `<span class="row__s is-err">${ic("alert")}<span>${esc(tMsg(m.error) || t("오류"))}</span></span>`
+      : `<span class="row__s">${esc(m.source ? t("파일 · {s}", { s: m.source }) : m.terms ? t("용어 · {s}", { s: m.terms }) : m.duration ? t("녹음") : t("아직 녹음하지 않았어요"))}</span>`;
     return `<button class="row${busy ? " is-busy" : ""}${err ? " is-err" : ""}" data-id="${m.id}">${fp(m.id)}<span class="row__main"><span class="row__t">${esc(m.title)}</span>${sub}</span>` +
       `<span class="row__d">${fmt(m.duration || 0)}</span><span class="row__w">${when(m.created, { month: "numeric", day: "numeric", weekday: "short" })}<br>${when(m.created, { hour: "2-digit", minute: "2-digit" })}</span></button>`;
   }).join("");
@@ -198,9 +198,9 @@ function renderHome() {
     if (k >= 0 && k < 7) { days[k].s += m.duration || 0; total += m.duration || 0; n++; }
   }
   const max = Math.max(1, ...days.map((x) => x.s));
-  $("#weekCard").innerHTML = `<div class="card__l"><span>최근 7일</span><span class="num">${when(days[0].d / 1000, { month: "numeric", day: "numeric" })} – ${when(today / 1000, { month: "numeric", day: "numeric" })}</span></div>` +
-    `<p class="stat">${fmt(total)}<small>${n ? `노트 ${n}개를 녹음했어요` : "이번 주에는 아직 녹음이 없어요"}</small></p>` +
-    `<div class="bars" aria-hidden="true">${days.map((x, i) => `<div${i === 6 ? ' class="is-today"' : ""}><i style="height:${(x.s / max * 100).toFixed(0)}%"></i><span>${x.d.toLocaleDateString("ko-KR", { weekday: "short" })}</span></div>`).join("")}</div>`;
+  $("#weekCard").innerHTML = `<div class="card__l"><span>${t("최근 7일")}</span><span class="num">${when(days[0].d / 1000, { month: "numeric", day: "numeric" })} – ${when(today / 1000, { month: "numeric", day: "numeric" })}</span></div>` +
+    `<p class="stat">${fmt(total)}<small>${n ? t("노트 {n}개를 녹음했어요", { n }) : t("이번 주에는 아직 녹음이 없어요")}</small></p>` +
+    `<div class="bars" aria-hidden="true">${days.map((x, i) => `<div${i === 6 ? ' class="is-today"' : ""}><i style="height:${(x.s / max * 100).toFixed(0)}%"></i><span>${x.d.toLocaleDateString(LOCALE, { weekday: LANG === "en" ? "narrow" : "short" })}</span></div>`).join("")}</div>`;
 }
 
 let searchTimer, hits = [];
@@ -213,10 +213,10 @@ async function runSearch() {
   hits = res;
   const re = new RegExp(escRe(esc(q)), "gi");
   const hl = (t) => esc(t).replace(re, (m) => `<mark>${m}</mark>`);
-  $("#listLabel").textContent = "검색 결과"; $("#noteCount").textContent = hits.length;
+  $("#listLabel").textContent = t("검색 결과"); $("#noteCount").textContent = hits.length;
   $("#list").innerHTML = hits.map((h, i) => `<button class="nrow" data-hit="${i}"><span class="nrow__t">${esc(h.title)}</span>` +
-    `<span class="nrow__m">${esc(h.where)}${h.start != null ? " · " + fmt(h.start) : ""}</span><span></span><span class="nrow__snip">${hl(h.text)}</span></button>`).join("") ||
-    '<div class="notes__empty"><b>검색 결과가 없어요</b>제목·원고·요약·번역·자료에서 찾아요.</div>';
+    `<span class="nrow__m">${esc(tWhere(h.where))}${h.start != null ? " · " + fmt(h.start) : ""}</span><span></span><span class="nrow__snip">${hl(h.text)}</span></button>`).join("") ||
+    `<div class="notes__empty"><b>${t("검색 결과가 없어요")}</b>${t("제목·원고·요약·번역·자료에서 찾아요.")}</div>`;
 }
 async function openHit(h) {
   await openNote(h.id);
@@ -240,7 +240,7 @@ $("#recent").onclick = (e) => { const b = e.target.closest(".row"); if (b) openN
 
 // ---------------------------------------------------------------- note
 async function openNote(id) {
-  if (rec && id !== current) return toast("녹음 중에는 다른 노트로 옮길 수 없어요.", true);
+  if (rec && id !== current) return toast(t("녹음 중에는 다른 노트로 옮길 수 없어요."), true);
   if (id !== current) {
     viewing = null; editMode = false; lens = null; docTab = "summary"; noteMode = "note"; finWatch = false;
     segKey = finKey = studyKey = ""; dens = null; resetAudio(); P.dataset.key = "";
@@ -271,10 +271,10 @@ async function refresh() {
   }
   const err = $("#noteErr");
   err.hidden = m.status !== "error";
-  if (!err.hidden) err.innerHTML = ic("alert") + `<span>오류: ${esc(m.error)}</span>`;
+  if (!err.hidden) err.innerHTML = ic("alert") + `<span>${esc(t("오류: {e}", { e: tMsg(m.error) }))}</span>`;
   const spk = d.final ? new Set(d.final.paragraphs.map((x) => x.speaker)).size : 0;
   $("#nmeta").textContent = when(m.created, { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short", hour: "2-digit", minute: "2-digit" }) +
-    ` · ${fmt(m.duration)}${spk ? ` · 화자 ${spk}` : ""}${d.materials.length ? ` · 자료 ${d.materials.length}` : ""}${isBusy(m) ? " · " + BUSY[m.status] : ""}`;
+    ` · ${fmt(m.duration)}${spk ? t(" · 화자 {n}", { n: spk }) : ""}${d.materials.length ? t(" · 자료 {n}", { n: d.materials.length }) : ""}${isBusy(m) ? " · " + BUSY[m.status] : ""}`;
   if (!lens) lens = d.final ? "final" : "live";
   if (!editMode || !document.activeElement?.isContentEditable) { renderSegments(); renderFinal(); }
   applyLens();
@@ -290,7 +290,7 @@ async function refresh() {
   if (busy) pollTimer = setTimeout(async () => { try { await refresh(); } catch {} loadList().catch(() => {}); }, 2000);
 }
 
-const busyBlock = (m, lines = 6) => `<div class="busy"><p class="busy__l">${PING}${BUSY[m.status] || "처리하는 중"}${m.progress != null ? `<span class="num">${m.progress}%</span>` : ""}</p>${'<i class="skel"></i>'.repeat(lines)}</div>`;
+const busyBlock = (m, lines = 6) => `<div class="busy"><p class="busy__l">${PING}${BUSY[m.status] || t("처리하는 중")}${m.progress != null ? `<span class="num">${m.progress}%</span>` : ""}</p>${'<i class="skel"></i>'.repeat(lines)}</div>`;
 const ce = () => (editMode ? ' contenteditable="plaintext-only" spellcheck="false"' : "");
 
 // transcript, lens 1: what was written down live (timestamps, page badges, English)
@@ -301,10 +301,10 @@ function renderSegments(force) {
   segKey = key;
   const box = $("#segments");
   box.innerHTML = data.segments.length ? data.segments.map((s, i) => `<div class="ln" data-t="${s.start}" data-i="${i}"><span class="ln__t num">${fmt(s.start)}</span><div class="ln__b">` +
-      `<p class="ln__ko"><span class="tx__t"${ce()}>${esc(s.text)}</span>${s.edited ? '<span class="tag">수정됨</span>' : ""}` +
-      `${s.page ? `<button class="pg" type="button" data-mat="${esc(s.mat)}" data-page="${s.page}" title="강의 자료 ${s.page}쪽 보기">p.${s.page}</button>` : ""}</p>` +
+      `<p class="ln__ko"><span class="tx__t"${ce()}>${esc(s.text)}</span>${s.edited ? `<span class="tag">${t("수정됨")}</span>` : ""}` +
+      `${s.page ? `<button class="pg" type="button" data-mat="${esc(s.mat)}" data-page="${s.page}" title="${t("강의 자료 {n}쪽 보기", { n: s.page })}">p.${s.page}</button>` : ""}</p>` +
       `${s.en ? `<p class="ln__en" lang="en">${esc(s.en)}</p>` : ""}</div></div>`).join("")
-    : `<div class="tx__empty">${m.status === "transcribing" ? busyBlock(m) : "<p class='empty-tx'>녹음을 시작하면 여기에 실시간으로 받아써져요.</p>"}</div>`;
+    : `<div class="tx__empty">${m.status === "transcribing" ? busyBlock(m) : `<p class='empty-tx'>${t("녹음을 시작하면 여기에 실시간으로 받아써져요.")}</p>`}</div>`;
   hasEn = data.segments.some((s) => s.en);
   curIdx = -1; markCur(false);
 }
@@ -314,14 +314,14 @@ function renderFinal(force) {
   if (!force && key === finKey) return;
   finKey = key;
   if (!f) {
-    $("#final").innerHTML = `<div class="tx__empty">${["speakers", "transcribing"].includes(m.status) ? busyBlock(m) : "<p class='empty-tx'>녹음을 멈추면 화자별로 정리된 원고가 만들어져요.</p>"}</div>`;
+    $("#final").innerHTML = `<div class="tx__empty">${["speakers", "transcribing"].includes(m.status) ? busyBlock(m) : `<p class='empty-tx'>${t("녹음을 멈추면 화자별로 정리된 원고가 만들어져요.")}</p>`}</div>`;
     return;
   }
   let part = null;
   $("#final").innerHTML = f.paragraphs.map((p, i) => {
     let h = "";
-    if (p.part && p.part !== part) { part = p.part; h = `<div class="part">${(part - 1) * 30}분 ~ (화자 번호는 30분 구간마다 새로 매겨져요)</div>`; }
-    return h + `<div class="para" data-i="${i}" data-s="${(p.speaker % 4) + 1}"><button class="who" type="button" tabindex="${editMode ? 0 : -1}">화자 ${p.speaker + 1}</button>` +
+    if (p.part && p.part !== part) { part = p.part; h = `<div class="part">${t("{n}분 ~ (화자 번호는 30분 구간마다 새로 매겨져요)", { n: (part - 1) * 30 })}</div>`; }
+    return h + `<div class="para" data-i="${i}" data-s="${(p.speaker % 4) + 1}"><button class="who" type="button" tabindex="${editMode ? 0 : -1}">${t("화자 {n}", { n: p.speaker + 1 })}</button>` +
       `<p class="tx__ko"><span class="tx__t"${ce()}>${esc(p.text)}</span></p></div>`;
   }).join("");
 }
@@ -332,8 +332,8 @@ function applyLens() {
   $("#enBtn").hidden = !(lens === "live" && hasEn);
   if (!data) return;
   const f = data.final;
-  $("#txStat").textContent = lens === "final" ? (f ? `${f.paragraphs.length}문단 · 화자 ${new Set(f.paragraphs.map((x) => x.speaker)).size}명` : "")
-    : data.segments.length ? `${data.segments.length}줄 · 받아쓴 그대로` : "";
+  $("#txStat").textContent = lens === "final" ? (f ? t("{a}문단 · 화자 {b}명", { a: f.paragraphs.length, b: new Set(f.paragraphs.map((x) => x.speaker)).size }) : "")
+    : data.segments.length ? t("{n}줄 · 받아쓴 그대로", { n: data.segments.length }) : "";
 }
 $("#lensSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) setLens(b.dataset.lens); };
 $("#enBtn").onclick = () => {
@@ -349,7 +349,7 @@ function bindEdit(el, url) {
     const t = el.textContent.trim();
     if (!t || t === last) return;
     try { await api(url(), json("PATCH", { text: t })); last = t; el.classList.add("saved"); setTimeout(() => el.classList.remove("saved"), 900); }
-    catch (e) { toast("저장 실패: " + e.message, true); }
+    catch (e) { toast(t("저장 실패: {e}", { e: tMsg(e.message) }), true); }
   };
   el.oninput = () => { clearTimeout(timer); timer = setTimeout(save, 800); }; // autosave after typing pauses
   el.onblur = save;
@@ -382,7 +382,7 @@ $("#txBody").onclick = async (e) => {
 
 function applyEdit() {
   const b = $("#editBtn");
-  b.setAttribute("aria-pressed", editMode); $("span", b).textContent = editMode ? "편집 끝" : "편집";
+  b.setAttribute("aria-pressed", editMode); $("span", b).textContent = editMode ? t("편집 끝") : t("편집");
   $("#editHint").hidden = !editMode; $("#txBody").classList.toggle("is-edit", editMode);
 }
 function setEdit(on) {
@@ -414,24 +414,24 @@ $("#modeSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) se
 function renderSummary() {
   const m = data.meta;
   if (["speakers", "summarizing", "transcribing"].includes(m.status)) $("#summary").innerHTML = busyBlock(m, 9);
-  else $("#summary").innerHTML = (data.summary ? md(data.summary) : "<p class='empty-tx'>녹음을 멈추면 요약 노트가 자동으로 만들어져요.</p>");
+  else $("#summary").innerHTML = (data.summary ? md(data.summary) : `<p class='empty-tx'>${t("녹음을 멈추면 요약 노트가 자동으로 만들어져요.")}</p>`);
   $("#editSummaryBtn").disabled = !data.summary || isBusy(m);
 }
 $("#editSummaryBtn").onclick = () => { $("#summaryText").value = data.summary || ""; $("#summary").hidden = true; $("#summaryEditor").hidden = false; $("#summaryText").focus(); };
 $("#cancelSummaryBtn").onclick = () => { $("#summary").hidden = false; $("#summaryEditor").hidden = true; };
 $("#saveSummaryBtn").onclick = async () => {
   try { await api(`/sessions/${current}/summary`, json("PUT", { text: $("#summaryText").value })); } catch (e) { return fail(e); }
-  $("#summary").hidden = false; $("#summaryEditor").hidden = true; toast("요약 노트를 저장했어요"); refresh().catch(fail);
+  $("#summary").hidden = false; $("#summaryEditor").hidden = true; toast(t("요약 노트를 저장했어요")); refresh().catch(fail);
 };
 
 function renderTranslation() {
   const m = data.meta;
   $("#translation").innerHTML = m.status === "translating" ? busyBlock(m) : data.translation ? md(data.translation)
-    : "<p class='empty-tx' lang='ko'>화자별 원고를 영어로 번역해요. (이 모델은 영어 번역만 안정적으로 지원해요)</p>";
+    : `<p class='empty-tx'>${t("화자별 원고를 영어로 번역해요. (이 모델은 영어 번역만 안정적으로 지원해요)")}</p>`;
 }
 function renderQA() {
   $("#qa").innerHTML = data.qa.map((x) => `<div class="qa__item"><div class="qa__q">${esc(x.q)}</div><div class="qa__a doc">${md(x.a)}</div></div>`).join("") ||
-    "<p class='empty-tx'>아직 질문이 없어요. 아래 칸에 물어보세요.</p>";
+    `<p class='empty-tx'>${t("아직 질문이 없어요. 아래 칸에 물어보세요.")}</p>`;
 }
 $("#askForm").onsubmit = async (e) => {
   e.preventDefault();
@@ -439,7 +439,7 @@ $("#askForm").onsubmit = async (e) => {
   setDoc("qa");
   $("#question").value = ""; $("#question").disabled = true;
   if (!data.qa.length) $("#qa").innerHTML = "";
-  $("#qa").insertAdjacentHTML("beforeend", `<div class="qa__item"><div class="qa__q">${esc(q)}</div><div class="qa__a"><p class="busy__l">${PING}원고와 자료에서 찾는 중…</p></div></div>`);
+  $("#qa").insertAdjacentHTML("beforeend", `<div class="qa__item"><div class="qa__q">${esc(q)}</div><div class="qa__a"><p class="busy__l">${PING}${t("원고와 자료에서 찾는 중…")}</p></div></div>`);
   $("#docBody").scrollTop = $("#docBody").scrollHeight;
   try { await api(`/sessions/${current}/ask`, json("POST", { question: q })); } catch (err) { fail(err); }
   $("#question").disabled = false; $("#question").focus();
@@ -450,7 +450,7 @@ $("#askForm").onsubmit = async (e) => {
 // ---------------------------------------------------------------- materials
 function renderMaterials() {
   $("#materials").innerHTML = data.materials.map((m) => `<div class="mat__file" role="button" tabindex="0" data-id="${m.id}"${viewing?.id === m.id ? ' aria-current="true"' : ""}>` +
-    `${ic("file")}<b>${esc(m.name)}</b><span class="num">${m.pages.length}쪽</span><button class="btn sm quiet danger" data-del="${m.id}">${ic("trash")}삭제</button></div>`).join("");
+    `${ic("file")}<b>${esc(m.name)}</b><span class="num">${t("{n}쪽", { n: m.pages.length })}</span><button class="btn sm quiet danger" data-del="${m.id}">${ic("trash")}${t("삭제")}</button></div>`).join("");
   if (viewing && !data.materials.some((x) => x.id === viewing.id)) { viewing = null; $("#viewer").innerHTML = ""; $("#viewer").dataset.key = ""; }
   if (!data.materials.length) { $("#viewer").innerHTML = ""; $("#viewer").dataset.key = ""; }
   else if (docTab === "materials" && !viewing) openMaterial(data.materials[0].id, 1);
@@ -459,7 +459,7 @@ function renderMaterials() {
 $("#materials").onclick = async (e) => {
   const del = e.target.closest("[data-del]");
   if (del) {
-    if (!await confirmDlg("이 자료를 지울까요?", "원고에 붙은 쪽 번호도 함께 사라져요.", "삭제")) return;
+    if (!await confirmDlg(t("이 자료를 지울까요?"), t("원고에 붙은 쪽 번호도 함께 사라져요."), t("삭제"))) return;
     try { await api(`/sessions/${current}/materials/${del.dataset.del}`, { method: "DELETE" }); } catch (err) { return fail(err); }
     if (viewing?.id === del.dataset.del) { viewing = null; $("#viewer").innerHTML = ""; $("#viewer").dataset.key = ""; }
     segKey = ""; refresh().catch(fail);
@@ -477,11 +477,11 @@ function openMaterial(id, page, flash) {
   const v = $("#viewer"), key = id + ":" + page, url = `/api/sessions/${current}/materials/${id}/file`;
   if (v.dataset.key !== key) {
     v.dataset.key = key;
-    const nav = `<button class="btn sm icon" data-p="${page - 1}"${page <= 1 ? " disabled" : ""} aria-label="이전 쪽">${ic("chev-l")}</button>` +
-      `<span class="num">p.${page} / ${m.pages.length}</span><button class="btn sm icon" data-p="${page + 1}"${page >= m.pages.length ? " disabled" : ""} aria-label="다음 쪽">${ic("chev-r")}</button>`;
-    v.innerHTML = `<div class="viewer-bar"><b>${esc(m.name)}</b>${nav}<span class="sp"></span><a class="btn sm quiet" href="${url}" target="_blank" rel="noopener">${ic("ext")}새 창에서 열기</a></div>` +
+    const nav = `<button class="btn sm icon" data-p="${page - 1}"${page <= 1 ? " disabled" : ""} aria-label="${t("이전 쪽")}">${ic("chev-l")}</button>` +
+      `<span class="num">p.${page} / ${m.pages.length}</span><button class="btn sm icon" data-p="${page + 1}"${page >= m.pages.length ? " disabled" : ""} aria-label="${t("다음 쪽")}">${ic("chev-r")}</button>`;
+    v.innerHTML = `<div class="viewer-bar"><b>${esc(m.name)}</b>${nav}<span class="sp"></span><a class="btn sm quiet" href="${url}" target="_blank" rel="noopener">${ic("ext")}${t("새 창에서 열기")}</a></div>` +
       (m.kind === "pdf" ? `<iframe src="${url}#page=${page}" title="${esc(m.name)}"></iframe>`
-        : `<div class="page-text">${esc(m.pages[page - 1] || "(이 쪽에는 글자가 없어요)")}</div>`) + '<div class="refs" id="refs"></div>';
+        : `<div class="page-text">${esc(m.pages[page - 1] || t("(이 쪽에는 글자가 없어요)"))}</div>`) + '<div class="refs" id="refs"></div>';
   }
   renderRefs();
   if (flash) { const t = $(".page-text, iframe", v); if (t) restart(t, "is-flash"); }
@@ -490,8 +490,8 @@ function openMaterial(id, page, flash) {
 function renderRefs() {
   const box = $("#refs"); if (!box || !viewing || !data) return;
   const refs = data.segments.filter((s) => s.mat === viewing.id && s.page === viewing.page);
-  box.innerHTML = "<h3>이 쪽을 설명한 곳</h3>" + (refs.length ? refs.slice(0, 30).map((s) => `<button class="ref" data-t="${s.start}"><span class="num">${fmt(s.start)}</span><span>${esc(s.text)}</span></button>`).join("")
-    : "<p class='hint'>이 쪽과 이어진 문장이 없어요.</p>");
+  box.innerHTML = `<h3>${t("이 쪽을 설명한 곳")}</h3>` + (refs.length ? refs.slice(0, 30).map((s) => `<button class="ref" data-t="${s.start}"><span class="num">${fmt(s.start)}</span><span>${esc(s.text)}</span></button>`).join("")
+    : `<p class='hint'>${t("이 쪽과 이어진 문장이 없어요.")}</p>`);
 }
 $("#viewer").onclick = (e) => {
   const p = e.target.closest("[data-p]"); if (p && viewing) return openMaterial(viewing.id, +p.dataset.p);
@@ -500,10 +500,10 @@ $("#viewer").onclick = (e) => {
 $("#materialInput").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return; e.target.value = "";
   const fd = new FormData(); fd.append("file", f);
-  $("#materials").insertAdjacentHTML("beforeend", `<p class="busy__l">${PING}자료 읽는 중…</p>`);
+  $("#materials").insertAdjacentHTML("beforeend", `<p class="busy__l">${PING}${t("자료 읽는 중…")}</p>`);
   try {
     const r = await api(`/sessions/${current}/materials`, { method: "POST", body: fd });
-    if (r.textless === r.pages) toast("자료에서 글자를 찾지 못했어요(스캔본일 수 있어요). 보기는 되지만 원고와 연결되지는 않아요.", true);
+    if (r.textless === r.pages) toast(t("자료에서 글자를 찾지 못했어요(스캔본일 수 있어요). 보기는 되지만 원고와 연결되지는 않아요."), true);
     viewing = { id: r.id, page: 1 }; $("#viewer").dataset.key = "";
   } catch (err) { fail(err); }
   segKey = "";
@@ -519,7 +519,7 @@ function renderStudy() {
   if (k === studyKey) return;
   if (!studyKey.startsWith(current + (s?.created || ""))) { picks = {}; ci = 0; }
   studyKey = k;
-  $("#studyBtn span").textContent = s ? "새로 만들기" : "복습 자료 만들기";
+  $("#studyBtn span").textContent = s ? t("새로 만들기") : t("복습 자료 만들기");
   $("#modeScore").textContent = "";
   if (m.status === "studying") {
     $("#study").innerHTML = busyBlock(m, 6); $("#deck").innerHTML = ""; $("#scoreRings").innerHTML = ""; $("#scoreTx").innerHTML = "";
@@ -527,8 +527,8 @@ function renderStudy() {
   }
   if (!s || (!s.quiz.length && !s.cards.length)) {
     $("#scoreRings").innerHTML = ""; $("#scoreTx").innerHTML = "";
-    $("#study").innerHTML = '<div class="study__empty"><h3>퀴즈와 암기카드</h3><p>원고를 바탕으로 객관식 퀴즈와 암기카드를 만들어요. 위의 <b>복습 자료 만들기</b>를 눌러 주세요.</p></div>';
-    $("#deck").innerHTML = "<p class='empty-tx'>복습 자료를 만들면 여기에 암기카드가 나와요.</p>";
+    $("#study").innerHTML = `<div class="study__empty"><h3>${t("퀴즈와 암기카드")}</h3><p>${t("원고를 바탕으로 객관식 퀴즈와 암기카드를 만들어요. 위의 <b>복습 자료 만들기</b>를 눌러 주세요.")}</p></div>`;
+    $("#deck").innerHTML = `<p class='empty-tx'>${t("복습 자료를 만들면 여기에 암기카드가 나와요.")}</p>`;
     return;
   }
   renderQuiz(); renderDeck();
@@ -537,16 +537,16 @@ function renderQuiz() {
   const Q = data.study.quiz, L = "ABCDEFG";
   $("#study").innerHTML = Q.length ? Q.map((q, i) => {
     const pick = picks[i], done = pick != null, st = !done ? "open" : pick === q.answer ? "right" : "wrong";
-    return `<article class="quiz" data-state="${st}" data-q="${i}"><header><span class="qn">${pad(i + 1)}</span><h3>${esc(q.q)}</h3><span class="qs">${st === "right" ? "정답" : st === "wrong" ? "오답" : ""}</span></header>` +
+    return `<article class="quiz" data-state="${st}" data-q="${i}"><header><span class="qn">${pad(i + 1)}</span><h3>${esc(q.q)}</h3><span class="qs">${st === "right" ? t("정답") : st === "wrong" ? t("오답") : ""}</span></header>` +
       `<div class="choices">${q.choices.map((c, j) => {
         const cls = done && j === q.answer ? " right" : done && j === pick ? " wrong" : "";
-        return `<button class="choice${cls}" data-k="${j}"${done ? ' tabindex="-1"' : ""}><span class="key">${L[j]}</span><span>${esc(c)}</span><span class="mk">${cls === " right" ? "정답" : cls === " wrong" ? "내 답" : ""}</span></button>`;
+        return `<button class="choice${cls}" data-k="${j}"${done ? ' tabindex="-1"' : ""}><span class="key">${L[j]}</span><span>${esc(c)}</span><span class="mk">${cls === " right" ? t("정답") : cls === " wrong" ? t("내 답") : ""}</span></button>`;
       }).join("")}</div>` +
-      (done ? `<p class="explain"><b>${st === "right" ? "정답!" : `오답 — 정답은 ${L[q.answer]}.`}</b> ${esc(q.explain || "")}</p>` : "") + "</article>";
-  }).join("") : "<p class='empty-tx'>이번에는 퀴즈가 만들어지지 않았어요.</p>";
+      (done ? `<p class="explain"><b>${st === "right" ? t("정답!") : t("오답 — 정답은 {k}.", { k: L[q.answer] })}</b> ${esc(q.explain || "")}</p>` : "") + "</article>";
+  }).join("") : `<p class='empty-tx'>${t("이번에는 퀴즈가 만들어지지 않았어요.")}</p>`;
   const done = Object.keys(picks).length, right = Q.filter((q, i) => picks[i] === q.answer).length;
   $("#scoreRings").innerHTML = Q.map((q, i) => `<i class="${picks[i] == null ? "" : picks[i] === q.answer ? "r" : "w"}"></i>`).join("");
-  $("#scoreTx").innerHTML = !Q.length ? "" : done ? `<b>${Q.length}문제 중 ${done}문제</b> 풀었어요 · ${right}개 맞음` : `<b>퀴즈 ${Q.length}문제</b> · 보기를 눌러 풀어 보세요`;
+  $("#scoreTx").innerHTML = !Q.length ? "" : done ? t("<b>{a}문제 중 {b}문제</b> 풀었어요 · {c}개 맞음", { a: Q.length, b: done, c: right }) : t("<b>퀴즈 {n}문제</b> · 보기를 눌러 풀어 보세요", { n: Q.length });
   $("#modeScore").textContent = Q.length ? `${done}/${Q.length}` : "";
 }
 $("#study").onclick = (e) => {
@@ -558,14 +558,14 @@ $("#study").onclick = (e) => {
 };
 function renderDeck() {
   const C = data.study.cards;
-  if (!C.length) { $("#deck").innerHTML = "<p class='empty-tx'>이번에는 암기카드가 만들어지지 않았어요.</p>"; return; }
+  if (!C.length) { $("#deck").innerHTML = `<p class='empty-tx'>${t("이번에는 암기카드가 만들어지지 않았어요.")}</p>`; return; }
   ci = (ci + C.length) % C.length;
   const c = C[ci];
-  $("#deck").innerHTML = `<button class="fcard" id="fcard" aria-label="암기카드 뒤집기"><span class="f front"><b>${esc(c.front)}</b><span class="hint">눌러서 뜻 보기</span></span>` +
+  $("#deck").innerHTML = `<button class="fcard" id="fcard" aria-label="${t("암기카드 뒤집기")}"><span class="f front"><b>${esc(c.front)}</b><span class="hint">${t("눌러서 뜻 보기")}</span></span>` +
     `<span class="f back"><small>${esc(c.front)}</small><p>${esc(c.back)}</p></span></button>` +
     `<div class="deck-dots" aria-hidden="true">${C.length <= 40 ? C.map((_, j) => `<i${j === ci ? ' class="on"' : ""}></i>`).join("") : ""}</div>` +
-    `<div class="deck-ctl"><button class="btn icon" data-card="${ci - 1}" aria-label="이전 카드">${ic("chev-l")}</button><span class="cnt num">${ci + 1} / ${C.length}</span>` +
-    `<button class="btn icon" data-card="${ci + 1}" aria-label="다음 카드">${ic("chev-r")}</button></div>` +
+    `<div class="deck-ctl"><button class="btn icon" data-card="${ci - 1}" aria-label="${t("이전 카드")}">${ic("chev-l")}</button><span class="cnt num">${ci + 1} / ${C.length}</span>` +
+    `<button class="btn icon" data-card="${ci + 1}" aria-label="${t("다음 카드")}">${ic("chev-r")}</button></div>` +
     `<div class="deck-all">${C.map((x, j) => `<button data-card="${j}" aria-current="${j === ci}"><b>${esc(x.front)}</b><span class="num">${pad(j + 1)}</span></button>`).join("")}</div>`;
 }
 $("#deck").onclick = (e) => {
@@ -585,11 +585,11 @@ $("#recTitle").onchange = () => { $("#title").value = $("#recTitle").value; save
 $("#terms").onchange = () => api(`/sessions/${current}`, json("PATCH", { terms: $("#terms").value })).catch(fail);
 $$("#title, #recTitle, #terms").forEach((i) => (i.onkeydown = (e) => { if (e.key === "Enter") i.blur(); }));
 $("#deleteBtn").onclick = async () => {
-  if (rec) return toast("녹음 중에는 지울 수 없어요.", true);
-  if (!await confirmDlg("이 노트를 지울까요?", `'${data.meta.title}' 노트와 녹음 파일을 지울까요? 되돌릴 수 없어요.`, "삭제")) return;
+  if (rec) return toast(t("녹음 중에는 지울 수 없어요."), true);
+  if (!await confirmDlg(t("이 노트를 지울까요?"), t("'{t}' 노트와 녹음 파일을 지울까요? 되돌릴 수 없어요.", { t: data.meta.title }), t("삭제"))) return;
   try { await api(`/sessions/${current}`, { method: "DELETE" }); } catch (e) { return fail(e); }
   current = null; data = null; clearTimeout(pollTimer); resetAudio(); P.dataset.key = "";
-  setView("home"); loadList().catch(fail); toast("노트를 지웠어요");
+  setView("home"); loadList().catch(fail); toast(t("노트를 지웠어요"));
 };
 $("#resummarizeBtn").onclick = async () => {
   try { await api(`/sessions/${current}/finalize`, { method: "POST" }); } catch (e) { return fail(e); }
@@ -609,11 +609,11 @@ async function newNote() {
 $("#newBtn").onclick = () => newNote().catch(fail);
 async function uploadFile(f) {
   if (!f) return;
-  if (rec) return toast("녹음 중에는 파일을 올릴 수 없어요.", true);
-  if (!engineOn) toast("엔진을 켜는 중이에요. 켜지면(약 3분) 받아쓰기를 시작해요");
+  if (rec) return toast(t("녹음 중에는 파일을 올릴 수 없어요."), true);
+  if (!engineOn) toast(t("엔진을 켜는 중이에요. 켜지면(약 3분) 받아쓰기를 시작해요"));
   const m = await api("/sessions", json("POST", { title: f.name.replace(/\.[^.]+$/, "") }));
   await openNote(m.id); setLens("live");
-  $("#segments").innerHTML = `<div class="tx__empty"><p class="busy__l">${PING}파일 올리는 중…</p></div>`; segKey = "";
+  $("#segments").innerHTML = `<div class="tx__empty"><p class="busy__l">${PING}${t("파일 올리는 중…")}</p></div>`; segKey = "";
   const fd = new FormData(); fd.append("file", f);
   try { await api(`/sessions/${m.id}/upload`, { method: "POST", body: fd }); } catch (err) { fail(err); }
   refresh().catch(fail); loadList().catch(() => {});
@@ -639,7 +639,7 @@ function ensureAudio() {
   audioFor = key;
   $("#playBtn").classList.add("is-loading");
   audioLoading = fetch(`/api/sessions/${id}/audio?d=${dur}`, { headers: { "X-SoriNote": "1" } })
-    .then((r) => { if (!r.ok) throw new Error("녹음 파일을 불러오지 못했어요 (" + r.status + ")"); return r.blob(); })
+    .then((r) => { if (!r.ok) throw new Error(t("녹음 파일을 불러오지 못했어요 ({n})", { n: r.status })); return r.blob(); })
     .then((b) => {
       if (audioFor !== key) return;
       if (P.src.startsWith("blob:")) URL.revokeObjectURL(P.src);
@@ -650,7 +650,7 @@ function ensureAudio() {
     .finally(() => { audioLoading = null; $("#playBtn").classList.remove("is-loading"); });
   return audioLoading;
 }
-function updPlayBtn() { const b = $("#playBtn"); b.innerHTML = ic(P.paused ? "play" : "pause", ""); b.setAttribute("aria-label", P.paused ? "재생" : "일시정지"); }
+function updPlayBtn() { const b = $("#playBtn"); b.innerHTML = ic(P.paused ? "play" : "pause", ""); b.setAttribute("aria-label", P.paused ? t("재생") : t("일시정지")); }
 $("#playBtn").onclick = async () => {
   if (!P.paused) return P.pause();
   try { await ensureAudio(); if (Math.abs(P.currentTime - headT) > .5) P.currentTime = headT; await P.play(); } catch (e) { fail(e); }
@@ -786,24 +786,24 @@ function drawNoteTl() {
 })();
 
 // ---------------------------------------------------------------- recording controls (shared by every deck)
-const SRCNAME = { mic: "마이크", tab: "탭 소리", both: "마이크 + 탭 소리" };
+const SRCNAME = { mic: t("마이크"), tab: t("탭 소리"), both: t("마이크 + 탭 소리") };
 function syncControls() {
   $$("[data-src] button").forEach((b) => {
     b.setAttribute("aria-checked", b.dataset.v === S.source);
-    if (b.dataset.v !== "mic" && !canTab) { b.disabled = true; b.title = "이 브라우저는 탭 소리 녹음을 지원하지 않아요"; }
+    if (b.dataset.v !== "mic" && !canTab) { b.disabled = true; b.title = t("이 브라우저는 탭 소리 녹음을 지원하지 않아요"); }
   });
   $$("[data-tr]").forEach((b) => b.setAttribute("aria-checked", S.translate));
 }
 document.addEventListener("click", (e) => {
   const sb = e.target.closest("[data-src] button");
   if (sb) {
-    if (rec) return toast("녹음 중에는 녹음할 소리를 바꿀 수 없어요.");
+    if (rec) return toast(t("녹음 중에는 녹음할 소리를 바꿀 수 없어요."));
     S.source = sb.dataset.v; store.set("source", S.source); syncControls(); return;
   }
   const tr = e.target.closest("[data-tr]");
   if (tr) {
     S.translate = !S.translate; store.set("translate", S.translate ? "1" : "0"); syncControls();
-    if (rec) { rec.translate = S.translate; toast(S.translate ? "다음 줄부터 영어 번역을 함께 받아써요" : "다음 줄부터 영어 번역 없이 받아써요"); }
+    if (rec) { rec.translate = S.translate; toast(S.translate ? t("다음 줄부터 영어 번역을 함께 받아써요") : t("다음 줄부터 영어 번역 없이 받아써요")); }
     return;
   }
   const sr = e.target.closest("[data-start-rec]");
@@ -813,7 +813,7 @@ document.addEventListener("click", (e) => {
 });
 async function onStartRec(btn) {
   if (rec) return;
-  if (!engineOn) { api("/engine/start", { method: "POST" }).catch(() => {}); toast("녹음은 바로 시작해요. 엔진이 켜지면(약 3분) 따라잡아 받아써요"); }
+  if (!engineOn) { api("/engine/start", { method: "POST" }).catch(() => {}); toast(t("녹음은 바로 시작해요. 엔진이 켜지면(약 3분) 따라잡아 받아써요")); }
   if (btn.id === "recBtn") return startRec();
   if (await newNote()) await startRec();
 }
@@ -825,20 +825,20 @@ const D = { bars: new Float32Array(120), ghost: null, ghostN: 0, rings: [], shot
 
 async function startRec() {
   if (rec || !data || !current) return;
-  if (!navigator.mediaDevices?.getUserMedia) return toast("이 주소에서는 마이크를 쓸 수 없어요. 휴대폰이라면 https 주소로 접속해 주세요.", true);
+  if (!navigator.mediaDevices?.getUserMedia) return toast(t("이 주소에서는 마이크를 쓸 수 없어요. 휴대폰이라면 https 주소로 접속해 주세요."), true);
   if (editMode) setEdit(false);
   pauseAudio();
   const src = S.source, streams = [];
   try {
     if (src !== "tab") streams.push(await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: src === "both", noiseSuppression: true, autoGainControl: true } }));
     if (src !== "mic") {
-      if (!navigator.mediaDevices.getDisplayMedia) throw new Error("이 브라우저는 탭 소리 녹음을 지원하지 않아요");
+      if (!navigator.mediaDevices.getDisplayMedia) throw new Error(t("이 브라우저는 탭 소리 녹음을 지원하지 않아요"));
       const d = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
       d.getVideoTracks().forEach((t) => t.stop());
-      if (!d.getAudioTracks().length) { streams.forEach((s) => s.getTracks().forEach((t) => t.stop())); return toast("공유 창에서 '탭 오디오 공유'(또는 시스템 오디오)를 켜 주세요.", true); }
+      if (!d.getAudioTracks().length) { streams.forEach((s) => s.getTracks().forEach((t) => t.stop())); return toast(t("공유 창에서 '탭 오디오 공유'(또는 시스템 오디오)를 켜 주세요."), true); }
       streams.push(d);
     }
-  } catch (e) { streams.forEach((s) => s.getTracks().forEach((t) => t.stop())); return toast("오디오를 가져올 수 없어요: " + e.message, true); }
+  } catch (e) { streams.forEach((s) => s.getTracks().forEach((t) => t.stop())); return toast(t("오디오를 가져올 수 없어요: {e}", { e: e.message }), true); }
 
   let ctx, node;
   try {
@@ -849,7 +849,7 @@ async function startRec() {
     const sink = ctx.createGain(); sink.gain.value = 0; node.connect(sink).connect(ctx.destination);
   } catch (e) {
     streams.forEach((s) => s.getTracks().forEach((t) => t.stop())); ctx?.close();
-    return toast("오디오를 처리할 수 없어요: " + e.message, true);
+    return toast(t("오디오를 처리할 수 없어요: {e}", { e: e.message }), true);
   }
 
   rec = { ctx, streams, node, buf: new Float32Array(SR * 60), len: 0, sent: 0, queue: Promise.resolve(), inflight: 0, level: 0, translate: S.translate };
@@ -862,12 +862,12 @@ async function startRec() {
 
   const v = $("#recView");
   v.dataset.mode = "rec";
-  $("#recStateT").textContent = "녹음 중"; $("#recLed").className = "led led--rec";
+  $("#recStateT").textContent = t("녹음 중"); $("#recLed").className = "led led--rec";
   $("#stageLbl").textContent = SRCNAME[src];
   $("#recTitle").value = data.meta.title;
-  $("#recInT").textContent = rec.micLabel ? "입력 · " + rec.micLabel : "입력 장치 이름을 알 수 없어요";
+  $("#recInT").textContent = rec.micLabel ? t("입력 · {m}", { m: rec.micLabel }) : t("입력 장치 이름을 알 수 없어요");
   $("#recIn").title = rec.micLabel || ""; $("#recIn").classList.remove("is-bad");
-  $("#stateText").textContent = "말하는 내용이 10초 안팎 간격으로 받아써져요" + (rec.micLabel ? ` · 입력: ${rec.micLabel}` : "");
+  $("#stateText").textContent = t("말하는 내용이 10초 안팎 간격으로 받아써져요") + (rec.micLabel ? t(" · 입력: {m}", { m: rec.micLabel }) : "");
   $("#stopBtn").disabled = false;
   $$("#finSteps li").forEach((li) => (li.className = ""));
   $$("#recView [data-src]").forEach((g) => g.classList.add("is-locked"));
@@ -883,16 +883,16 @@ async function startRec() {
 // A muted microphone delivers digital silence: warn within seconds instead of recording nothing for an hour.
 function micWarn(kind) {
   const el = $("#micWarn"), hard = kind === "hard";
-  if (!kind) { el.hidden = true; el.dataset.kind = ""; $("#recIn").classList.remove("is-bad"); document.title = "메아리"; D.muted = false; return; }
+  if (!kind) { el.hidden = true; el.dataset.kind = ""; $("#recIn").classList.remove("is-bad"); document.title = t("메아리"); D.muted = false; return; }
   if (el.dataset.kind !== kind) {
     el.dataset.kind = kind; el.className = "alert" + (hard ? " hard" : "");
-    $("b", el).textContent = hard ? "소리가 전혀 들어오지 않아요 — 지금은 아무것도 녹음되지 않고 있어요" : "30초 동안 말소리가 감지되지 않았어요";
-    $("p", el).textContent = (hard ? "마이크가 음소거된 것 같아요 — 키보드의 마이크 키나 Windows 설정 > 시스템 > 소리 > 입력에서 음소거를 풀어 주세요."
-      : "마이크 위치나 입력 장치를 확인해 보세요.") + (rec?.micLabel ? ` (지금 입력: ${rec.micLabel})` : "");
+    $("b", el).textContent = hard ? t("소리가 전혀 들어오지 않아요 — 지금은 아무것도 녹음되지 않고 있어요") : t("30초 동안 말소리가 감지되지 않았어요");
+    $("p", el).textContent = (hard ? t("마이크가 음소거된 것 같아요 — 키보드의 마이크 키나 Windows 설정 > 시스템 > 소리 > 입력에서 음소거를 풀어 주세요.")
+      : t("마이크 위치나 입력 장치를 확인해 보세요.")) + (rec?.micLabel ? t(" (지금 입력: {m})", { m: rec.micLabel }) : "");
   }
   el.hidden = false; D.muted = hard;
   $("#recIn").classList.toggle("is-bad", hard);
-  document.title = hard ? "⚠ 소리 없음 — 메아리" : "메아리";
+  document.title = hard ? t("⚠ 소리 없음 — 메아리") : t("메아리");
 }
 function checkSilence() {
   const now = performance.now(), muted = rec.streams.some((s) => s.getAudioTracks()[0]?.muted);
@@ -944,7 +944,7 @@ function sendChunk(n) {
     try {
       seg = await api(`/sessions/${id}/chunk?start=${start}&translate=${r.translate ? 1 : 0}`, { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: pcm.buffer });
       if (seg.text && current === id) data.segments.push(seg);
-    } catch (e) { $("#stateText").textContent = "받아쓰기 실패: " + e.message; }
+    } catch (e) { $("#stateText").textContent = t("받아쓰기 실패: {e}", { e: tMsg(e.message) }); }
     r.inflight--;
     if (current === id && seg?.pending) { markWaiting(); r.waiting = (r.waiting || 0) + 1; return; }
     if (current === id) resolvePending(seg?.text ? seg : null);
@@ -964,29 +964,29 @@ function liveEl(s, fresh) {
 function fillLive() {
   const L = $("#liveList"), segs = data?.segments || [], keep = liveAll ? segs : segs.slice(-MAXROWS);
   L.innerHTML = "";
-  if (segs.length > keep.length) { const b = document.createElement("button"); b.className = "fold"; b.textContent = `앞의 ${segs.length - keep.length}줄은 접어 두었어요 · 눌러서 펼치기`; L.append(b); }
-  if (!segs.length) L.innerHTML = '<p class="live__empty">말이 멈출 때마다 여기에 한 줄씩 받아써져요.</p>';
+  if (segs.length > keep.length) { const b = document.createElement("button"); b.className = "fold"; b.textContent = t("앞의 {n}줄은 접어 두었어요 · 눌러서 펼치기", { n: segs.length - keep.length }); L.append(b); }
+  if (!segs.length) L.innerHTML = `<p class="live__empty">${t("말이 멈출 때마다 여기에 한 줄씩 받아써져요.")}</p>`;
   keep.forEach((s) => L.append(liveEl(s)));
   markLast(); L.scrollTop = L.scrollHeight; $("#liveJump").hidden = true;
 }
 function markLast() {
   const rows = $$("#liveList .ln:not(.ln--pend)");
   rows.forEach((el, i) => el.classList.toggle("is-last", i === rows.length - 1));
-  $("#liveCount").textContent = (data?.segments.length || 0) + "줄";
+  $("#liveCount").textContent = t("{n}줄", { n: data?.segments.length || 0 });
 }
 function addPending(start) {
   const L = $("#liveList"), stick = nearEnd(L);
   $(".live__empty", L)?.remove();
   const d = document.createElement("div");
   d.className = "ln ln--pend";
-  d.innerHTML = `<span class="ln__t num">${fmt(start)}</span><div class="ln__b"><p class="ln__ko">${PING}받아쓰는 중…</p></div>`;
+  d.innerHTML = `<span class="ln__t num">${fmt(start)}</span><div class="ln__b"><p class="ln__ko">${PING}${t("받아쓰는 중…")}</p></div>`;
   L.append(d);
   if (stick) L.scrollTop = L.scrollHeight;
 }
 // a chunk recorded while the engine was warming: keep a quiet row; pullBacklog() fills it in later
 function markWaiting() {
   const p = $(".ln--pend", $("#liveList"));
-  if (p) { p.classList.replace("ln--pend", "ln--wait"); $(".ln__ko", p).textContent = "엔진이 켜지면 받아써요 · 소리는 저장됐어요"; }
+  if (p) { p.classList.replace("ln--pend", "ln--wait"); $(".ln__ko", p).textContent = t("엔진이 켜지면 받아써요 · 소리는 저장됐어요"); }
 }
 let pulling = false;
 async function pullBacklog() {
@@ -1007,7 +1007,7 @@ async function pullBacklog() {
 }
 function resolvePending(seg) {
   const L = $("#liveList"), stick = nearEnd(L), pend = $(".ln--pend", L);
-  if (!seg) { pend?.remove(); if (!$(".ln", L)) L.innerHTML = '<p class="live__empty">말이 멈출 때마다 여기에 한 줄씩 받아써져요.</p>'; return; }
+  if (!seg) { pend?.remove(); if (!$(".ln", L)) L.innerHTML = `<p class="live__empty">${t("말이 멈출 때마다 여기에 한 줄씩 받아써져요.")}</p>`; return; }
   const el = liveEl(seg, true);
   pend ? pend.replaceWith(el) : L.append(el);
   if (!liveAll) {
@@ -1016,7 +1016,7 @@ function resolvePending(seg) {
       rows[0].remove();
       let f = $(".fold", L);
       if (!f) { f = document.createElement("button"); f.className = "fold"; L.prepend(f); }
-      f.textContent = `앞의 ${data.segments.length - MAXROWS}줄은 접어 두었어요 · 눌러서 펼치기`;
+      f.textContent = t("앞의 {n}줄은 접어 두었어요 · 눌러서 펼치기", { n: data.segments.length - MAXROWS });
     }
   }
   markLast();
@@ -1048,10 +1048,10 @@ async function stopRec() {
   r.node.port.onmessage = null;
   r.streams.forEach((s) => s.getTracks().forEach((t) => t.stop()));
   if (r.len > SR / 2) sendChunk(r.len);
-  $("#stopBtn").disabled = true; $("#stateText").textContent = "남은 부분 받아쓰는 중…";
+  $("#stopBtn").disabled = true; $("#stateText").textContent = t("남은 부분 받아쓰는 중…");
   // finishing: the echoes come home while the note is made
-  $("#recView").dataset.mode = "fin"; $("#recStateT").textContent = "정리하는 중"; $("#recLed").className = "led led--echo";
-  $("#stageLbl").textContent = "녹음 끝"; D.finT = 0; finWatch = true;
+  $("#recView").dataset.mode = "fin"; $("#recStateT").textContent = t("정리하는 중"); $("#recLed").className = "led led--echo";
+  $("#stageLbl").textContent = t("녹음 끝"); D.finT = 0; finWatch = true;
   setFinStep("rest");
   await r.queue; await r.ctx.close();
   try { await r.wake?.release(); } catch {}
@@ -1076,7 +1076,7 @@ function setFinStep(step, pct) {
 function updateFin(m) {
   if (m.status === "speakers") setFinStep("speakers", m.progress);
   else if (m.status === "summarizing") setFinStep("summarizing", m.progress);
-  else if (m.status === "done") { setFinStep("done"); setTimeout(() => { if (finWatch) { leaveFin(); toast("노트가 준비됐어요 — 요약 노트부터 보여드려요"); } }, 450); }
+  else if (m.status === "done") { setFinStep("done"); setTimeout(() => { if (finWatch) { leaveFin(); toast(t("노트가 준비됐어요 — 요약 노트부터 보여드려요")); } }, 450); }
   else if (m.status === "error") leaveFin();
 }
 function leaveFin() {
@@ -1100,7 +1100,7 @@ function holdStart() {
 function holdEnd(nudge) {
   if (!holdT) return;
   clearTimeout(holdT); holdT = 0; stopBtn.classList.remove("is-hold");
-  if (nudge) { restart(stopBtn, "is-nudge"); if (performance.now() - lastNudge > 2500) { lastNudge = performance.now(); toast("멈추려면 0.7초 동안 길게 눌러 주세요"); } }
+  if (nudge) { restart(stopBtn, "is-nudge"); if (performance.now() - lastNudge > 2500) { lastNudge = performance.now(); toast(t("멈추려면 0.7초 동안 길게 눌러 주세요")); } }
 }
 stopBtn.addEventListener("pointerdown", (e) => { if (!e.button) holdStart(); });
 stopBtn.addEventListener("pointerup", () => holdEnd(true));
@@ -1351,7 +1351,7 @@ syncControls(); applyMode(); setDoc("summary");
 function gestureStart(ctx) {
   const o = document.createElement("div");
   o.className = "gesture";
-  o.innerHTML = "<div><b>아무 키나 누르거나 클릭하면 녹음이 시작돼요</b><small>바로가기로 열린 창은 브라우저가 소리를 잠시 막아 둬요</small></div>";
+  o.innerHTML = `<div><b>${t("아무 키나 누르거나 클릭하면 녹음이 시작돼요")}</b><small>${t("바로가기로 열린 창은 브라우저가 소리를 잠시 막아 둬요")}</small></div>`;
   const go = () => { ctx.resume(); o.remove(); removeEventListener("keydown", go, true); };
   o.onclick = go; addEventListener("keydown", go, true);
   document.body.append(o);
@@ -1361,11 +1361,15 @@ async function quickRecord() {
   history.replaceState(null, "", location.pathname);
   await loadList().catch(() => {});
   const live = items.find((m) => m.status === "recording" && Date.now() / 1000 - m.updated < 40);
-  if (live) { await openNote(live.id); return toast("다른 창에서 이미 녹음 중이에요", true); }
+  if (live) { await openNote(live.id); return toast(t("다른 창에서 이미 녹음 중이에요"), true); }
   if (!engineOn) api("/engine/start", { method: "POST" }).catch(() => {});
   if (await newNote()) await startRec();
 }
+// UI language: the button names the other language; switching reloads (blocked while recording)
+$("#langBtn").textContent = LANG === "en" ? "한국어" : "English";
+$("#langBtn").title = LANG === "en" ? "한국어로 보기" : "View in English";
+$("#langBtn").onclick = () => rec ? toast(t("녹음 중에는 언어를 바꿀 수 없어요."), true) : setLang(LANG === "en" ? "ko" : "en");
 // desktop app (Tauri) tray/hotkey while this window is already open: never interrupt a running recording
-window.meariQuickRecord = () => rec ? toast("이미 녹음 중이에요") : quickRecord().catch(fail);
+window.meariQuickRecord = () => rec ? toast(t("이미 녹음 중이에요")) : quickRecord().catch(fail);
 checkEngine(); engineTimer = setInterval(checkEngine, 5000);
 if (new URLSearchParams(location.search).get("rec") === "1") quickRecord().catch(fail); else loadList().catch(fail);
