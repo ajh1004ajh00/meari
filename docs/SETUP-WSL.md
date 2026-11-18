@@ -21,18 +21,13 @@
 
 ## 순서
 
-1. **WSL 배포판**: `wsl --install -d Ubuntu-24.04`. 메아리는 기본으로 이 이름을 써요.
-   다른 이름이면 `MEARI_WSL_DISTRO`(데스크톱 앱)와 `launch.vbs`의 `DISTRO`를 바꾸세요.
-2. **NeMo Speech + vLLM**: WSL 안에서 `NVIDIA-NeMo/Speech`를 받아서(기본 위치 `/root/nemo-speech`)
-   README의 vLLM 안내대로 `.venv`에 설치해요. 위치를 바꾸면 `MEARI_NEMO_DIR`를 설정하세요.
-3. **모델**: Hugging Face에서 Nemotron 3.5 Transcribe NVFP4 모델을 받아요(기본 위치
-   `/root/models/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4`, 다르면 `MEARI_MODEL`).
-   모델은 NVIDIA 라이선스를 따르고, 이 저장소에는 들어 있지 않아요.
-4. 아래 **WSL 대응 패치**를 적용해요.
-5. 앱 서버에 필요한 패키지: `fastapi uvicorn python-multipart requests numpy soundfile pypdf python-pptx`
-   (같은 `.venv`에 설치).
-6. 확인: `bash scripts/engine.sh`를 실행하고 `curl http://127.0.0.1:8010/v1/models`가 응답하면 성공이에요.
-   처음 켤 때는 커널 컴파일 때문에 오래 걸려요. 그다음부터는 약 2분 30초 걸려요.
+설치 순서(WSL, NeMo Speech + vLLM, 모델 받기, 앱 패키지)는 [README의 설치](../README.md#설치)를 따라 주세요.
+여기서는 그 사이에 넣어야 하는 **WSL 대응 패치**와 메모리 설정을 설명해요.
+
+- 배포판 이름이 `Ubuntu-24.04`가 아니면 `MEARI_WSL_DISTRO`(데스크톱 앱)와 `launch.vbs`의 `DISTRO`를 바꾸세요.
+- NeMo Speech나 모델 위치를 바꾸면 `MEARI_NEMO_DIR`, `MEARI_MODEL`을 설정하세요.
+- 확인: 패치 후 `bash scripts/engine.sh`를 실행하고 `curl http://127.0.0.1:8010/v1/models`가 응답하면 성공이에요.
+  시작 로그에 `quantization=modelopt_mixed`가 보여야 해요. 처음에는 커널 컴파일로 몇 분 더 걸려요.
 
 ## WSL 대응 패치
 
