@@ -11,6 +11,8 @@
 
 `Windows on ARM` · `RTX Spark (N1X)` · `통합 메모리 128GB` · `WSL2` · `vLLM` · `Rust/Tauri`
 
+**한국어** | [English](README.en.md)
+
 </div>
 
 ![메아리 홈 화면](docs/images/home.png)
@@ -191,16 +193,3 @@ copy target\release\meari.exe ..\Meari.exe
 
 - 코드: [MIT](LICENSE)
 - 모델: Nemotron 3.5 Transcribe는 [OpenMDW 1.1](https://openmdw.ai/license/1-1/)을 따르며 이 저장소에 포함되어 있지 않아요.
-
----
-
-<details>
-<summary><b>English</b></summary>
-
-**Meari** is a local lecture/meeting recorder for **Windows on ARM laptops with an NVIDIA RTX Spark (unified-memory, Blackwell) GPU**.
-Press `Ctrl+Alt+M` to record with live transcription; afterwards it builds a speaker-separated transcript, summary,
-English translation, Q&A and study quizzes — all on-device with NVIDIA Nemotron 3.5 Transcribe (NVFP4) served by vLLM in WSL2.
-The desktop shell is a 6.7 MB Rust/Tauri tray app. Install steps are above; the WSL-specific vLLM patches are in
-[docs/SETUP-WSL.md](docs/SETUP-WSL.md).
-
-</details>
