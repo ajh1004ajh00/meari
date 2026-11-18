@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- 메아리: a warm voice above the water, its echo spreading below -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#182C58"/><stop offset=".56" stop-color="#0C1830"/><stop offset="1" stop-color="#050912"/></linearGradient>
+    <radialGradient id="dot" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#FFE6D2"/><stop offset=".55" stop-color="#FFB489"/><stop offset="1" stop-color="#F28A52"/></radialGradient>
+    <radialGradient id="glow" cx=".5" cy=".3" r=".5"><stop offset="0" stop-color="#FFA36C" stop-opacity=".32"/><stop offset="1" stop-color="#FFA36C" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+  <rect width="64" height="64" rx="15" fill="url(#glow)"/>
+  <ellipse cx="32" cy="42" rx="28.5" ry="12.4" fill="none" stroke="#8AD8E8" stroke-opacity=".28" stroke-width="2.4"/>
+  <ellipse cx="32" cy="42" rx="19.5" ry="8.4" fill="none" stroke="#8AD8E8" stroke-opacity=".66" stroke-width="2.6"/>
+  <ellipse cx="32" cy="42" rx="10.5" ry="4.5" fill="none" stroke="#C4F0F7" stroke-width="2.8"/>
+  <ellipse cx="32" cy="42" rx="3.2" ry="1.2" fill="#FFC09A" fill-opacity=".9"/>
+  <circle cx="32" cy="18.5" r="6.6" fill="url(#dot)"/>
+</svg>

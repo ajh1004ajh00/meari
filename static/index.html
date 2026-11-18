@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b15">
+<meta name="color-scheme" content="dark">
+<title>메아리</title>
+<!-- the .ico carries a heavier optical variant for 16–32 px tabs; icon.svg is the full mark -->
+<link rel="icon" href="sorinote.ico" sizes="16x16 24x24 32x32 48x48 64x64 128x128 256x256">
+<link rel="icon" href="icon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
+<link rel="stylesheet" href="style.css?v=13">
+</head>
+<body data-engine="boot" data-view="home">
+
+<!-- one icon set (24 px grid, 1.6 stroke) + the app mark -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <linearGradient id="mk-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#182C58"/><stop offset=".56" stop-color="#0C1830"/><stop offset="1" stop-color="#050912"/></linearGradient>
+    <radialGradient id="mk-dot" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#FFE6D2"/><stop offset=".55" stop-color="#FFB489"/><stop offset="1" stop-color="#F28A52"/></radialGradient>
+    <radialGradient id="mk-glow" cx=".5" cy=".3" r=".5"><stop offset="0" stop-color="#FFA36C" stop-opacity=".32"/><stop offset="1" stop-color="#FFA36C" stop-opacity="0"/></radialGradient>
+    <symbol id="mark" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="15" fill="url(#mk-bg)"/>
+      <rect width="64" height="64" rx="15" fill="url(#mk-glow)"/>
+      <ellipse cx="32" cy="42" rx="28.5" ry="12.4" fill="none" stroke="#8AD8E8" stroke-opacity=".28" stroke-width="2.4"/>
+      <ellipse cx="32" cy="42" rx="19.5" ry="8.4" fill="none" stroke="#8AD8E8" stroke-opacity=".66" stroke-width="2.6"/>
+      <ellipse cx="32" cy="42" rx="10.5" ry="4.5" fill="none" stroke="#C4F0F7" stroke-width="2.8"/>
+      <ellipse cx="32" cy="42" rx="3.2" ry="1.2" fill="#FFC09A" fill-opacity=".9"/>
+      <circle cx="32" cy="18.5" r="6.6" fill="url(#mk-dot)"/>
+    </symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/></symbol>
+    <symbol id="i-tab" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3 9.5h18M10 14.5l4-2.2v4.4z"/></symbol>
+    <symbol id="i-both" viewBox="0 0 24 24"><circle cx="9" cy="12" r="5.2"/><circle cx="15" cy="12" r="5.2"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4.5 20h15"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8.5 5.6v12.8a.6.6 0 0 0 .9.5l10.3-6.4a.6.6 0 0 0 0-1L9.4 5.1a.6.6 0 0 0-.9.5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13 7l4 4"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 20h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V4.5h4V7M7 7l1 13h8l1-13M10.5 11v5.5M13.5 11v5.5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="M9.5 5.5L16 12l-6.5 6.5"/></symbol>
+    <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="M14.5 5.5L8 12l6.5 6.5"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4.2l8.6 15.3H3.4zM12 10v4.4M12 17v.3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3.5v8M7 6.6a7.5 7.5 0 1 0 10 0"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3.5h7l4 4v13H7zM14 3.5v4h4"/></symbol>
+    <symbol id="i-ask" viewBox="0 0 24 24"><path d="M4.5 6h15v10.5h-8L7 20v-3.5H4.5z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24"><path d="M19 12a7 7 0 1 1-2.2-5.1M19 4.5v4h-4"/></symbol>
+    <symbol id="i-cards" viewBox="0 0 24 24"><rect x="4" y="8" width="13" height="11.5" rx="2"/><path d="M8 4.5h10a2 2 0 0 1 2 2V15"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 6.5h14M5 11h14M5 15.5h10M5 20h6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M13.5 4.5H19.5V10.5M19.5 4.5l-8 8M17 14v5.5H4.5V7H10"/></symbol>
+  </defs>
+</svg>
+
+<!-- phone top bar (≤760 px) -->
+<header class="phbar">
+  <button class="phbar__home" data-home aria-label="메아리 홈으로"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><b>메아리</b></button>
+  <span class="chip"><i class="led" data-led></i><span data-engine-short>확인 중</span></span>
+  <button id="menuBtn" class="btn icon quiet" aria-label="노트 목록과 검색" aria-expanded="false"><svg class="ic"><use href="#i-menu"/></svg></button>
+</header>
+
+<aside id="sidebar" class="side" aria-label="노트 목록과 엔진">
+  <button id="homeLink" class="brand" data-home aria-label="메아리 홈으로">
+    <svg class="mark" aria-hidden="true"><use href="#mark"/></svg>
+    <span><b>메아리</b><small>로컬 강의·회의 노트</small></span>
+  </button>
+  <div class="side__actions">
+    <button id="newBtn" class="sbtn sbtn--rec"><i class="voice-dot"></i>새 노트 녹음</button>
+    <label class="sbtn"><svg class="ic s"><use href="#i-upload"/></svg>파일로 만들기<input id="fileInput" type="file" accept="audio/*,video/*" hidden></label>
+    <label class="search"><svg class="ic s"><use href="#i-search"/></svg><input id="search" type="search" placeholder="모든 노트에서 검색" autocomplete="off" aria-label="모든 노트에서 검색"><kbd>/</kbd></label>
+  </div>
+  <div class="navlabel"><span id="listLabel">노트</span><span class="num" id="noteCount"></span></div>
+  <div id="list" class="notes"></div>
+  <div class="engine">
+    <div class="engine__row">
+      <i id="engineDot" class="led" data-led></i>
+      <span class="engine__tx"><b id="engineText">엔진 확인 중…</b><small id="engineMeta">Nemotron · 이 PC 안에서만</small></span>
+      <button id="engineBtn" class="btn sm quiet" title="GPU 메모리만 비우고 앱은 그대로 둡니다">엔진 끄기</button>
+    </div>
+    <div class="engine__row engine__row--sub">
+      <small id="engineIdle" class="engine__idle"></small>
+      <button id="shutdownBtn" class="btn sm quiet danger" title="앱과 엔진을 모두 끕니다"><svg class="ic s"><use href="#i-power"/></svg>모두 끄기</button>
+    </div>
+  </div>
+</aside>
+<div class="scrim" data-close-menu></div>
+
+<main id="main">
+  <!-- ============ home ============ -->
+  <section id="empty" class="view home">
+    <!-- first run: no notes yet -->
+    <div id="first" class="first lake" hidden>
+      <canvas aria-hidden="true"></canvas>
+      <div class="hero">
+        <p class="eyebrow">메아리 · 로컬 강의·회의 노트</p>
+        <h1>말은 흘러가도,<br><em>메아리</em>는 남습니다.</h1>
+        <p>강의와 회의를 녹음하면 실시간으로 받아쓰고, 끝나면 화자별 원고·요약 노트·복습 퀴즈로 되돌려 드려요.</p>
+      </div>
+      <div class="orb-wrap">
+        <button id="firstRec" class="orb" data-start-rec aria-label="지금 녹음 시작"><svg class="ic"><use href="#i-mic"/></svg></button>
+        <div class="orb-lab">
+          <b class="when-on">지금 녹음 시작</b><small class="when-on">처음 한 번, 브라우저가 마이크 권한을 물어봐요</small>
+          <b class="when-boot">지금 녹음 시작</b><small class="when-boot">엔진은 켜지는 중(약 3분) — 녹음은 바로 되고, 준비되면 따라잡아 받아써요</small>
+        </div>
+        <div class="recopts">
+          <div class="segc" role="radiogroup" aria-label="녹음할 소리" data-src>
+            <button type="button" role="radio" data-v="mic"><svg class="ic s"><use href="#i-mic"/></svg>마이크</button>
+            <button type="button" role="radio" data-v="tab"><svg class="ic s"><use href="#i-tab"/></svg>탭 소리</button>
+            <button type="button" role="radio" data-v="both"><svg class="ic s"><use href="#i-both"/></svg>둘 다</button>
+          </div>
+          <button type="button" class="tgl" role="switch" data-tr><i></i>실시간 영어 번역</button>
+        </div>
+        <label class="file-drop"><svg class="ic s"><use href="#i-upload"/></svg><span><b>파일로 만들기</b> — 녹음·영상 파일을 올려요</span><input id="homeFile" type="file" accept="audio/*,video/*" hidden></label>
+      </div>
+      <ol class="steps">
+        <li><span class="n">01</span><b>듣기</b><p>마이크, 온라인 강의 탭 소리, 또는 둘 다. 버튼 하나로 시작해요.</p></li>
+        <li><span class="n">02</span><b>받아쓰기</b><p>말이 멈출 때마다(8~16초) 문장이 떠올라요. 원하면 영어 번역도 함께.</p></li>
+        <li><span class="n">03</span><b>메아리</b><p>멈추면 화자별 원고, 요약 노트, 퀴즈와 암기카드가 되돌아와요.</p></li>
+      </ol>
+      <p class="local"><svg class="ic s"><use href="#i-lock"/></svg>모든 처리는 이 노트북 안에서만 이루어져요. 녹음도 원고도 밖으로 나가지 않아요.</p>
+    </div>
+
+    <!-- home with notes -->
+    <div id="homeNotes" class="home__in" hidden>
+      <div class="deck">
+        <svg class="deck__arcs" viewBox="0 0 560 520" aria-hidden="true"><g fill="none" stroke="currentColor"><ellipse cx="114" cy="260" rx="90" ry="90" opacity=".42"/><ellipse cx="184" cy="260" rx="160" ry="160" opacity=".26"/><ellipse cx="264" cy="260" rx="240" ry="240" opacity=".15"/></g></svg>
+        <button id="homeRec" class="reckey" data-start-rec aria-label="지금 녹음 시작"><i></i></button>
+        <div class="deck__txt">
+          <b>지금 녹음 시작</b>
+          <span class="when-on">말하는 동안 받아쓰고, 멈추면 정리해요</span>
+          <span class="when-boot">바로 녹음돼요 · 엔진이 켜지면(약 3분) 따라잡아 받아써요</span>
+        </div>
+        <div class="deck__opts">
+          <div class="segc" role="radiogroup" aria-label="녹음할 소리" data-src>
+            <button type="button" role="radio" data-v="mic"><svg class="ic s"><use href="#i-mic"/></svg>마이크</button>
+            <button type="button" role="radio" data-v="tab"><svg class="ic s"><use href="#i-tab"/></svg>탭 소리</button>
+            <button type="button" role="radio" data-v="both"><svg class="ic s"><use href="#i-both"/></svg>둘 다</button>
+          </div>
+          <button type="button" class="tgl" role="switch" data-tr><i></i>실시간 영어 번역</button>
+          <label class="btn"><svg class="ic s"><use href="#i-upload"/></svg>파일로 만들기<input id="homeFile2" type="file" accept="audio/*,video/*" hidden></label>
+        </div>
+      </div>
+      <div class="home__grid">
+        <section aria-labelledby="recentH">
+          <div class="sech"><h2 id="recentH">최근 노트</h2><span class="num" id="recentCount"></span><span class="sech__r">최근 녹음순</span></div>
+          <div id="recent"></div>
+        </section>
+        <aside class="rail" aria-label="최근 7일">
+          <div class="card" id="weekCard"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ note (two modes: 노트 / 복습) ============ -->
+  <section id="note" class="view note" data-mode="note" hidden>
+    <header class="nhead">
+      <div class="nhead__a">
+        <input id="title" class="ntitle" maxlength="120" aria-label="노트 제목">
+        <div class="nhead__acts">
+          <button id="editBtn" class="btn" aria-pressed="false" title="원고를 직접 고칩니다"><svg class="ic s"><use href="#i-edit"/></svg><span>편집</span></button>
+          <a id="exportBtn" class="btn" download title="요약·원고·번역·암기카드·퀴즈·질문을 마크다운으로 저장"><svg class="ic s"><use href="#i-export"/></svg><span class="lbl">내보내기</span><span class="num">.md</span></a>
+          <button id="deleteBtn" class="btn icon danger" aria-label="노트 삭제" title="노트 삭제"><svg class="ic s"><use href="#i-trash"/></svg></button>
+        </div>
+      </div>
+      <div class="nhead__b">
+        <div class="segc" role="tablist" aria-label="노트 보기 방식" id="modeSeg">
+          <button type="button" role="tab" data-mode="note" aria-selected="true"><svg class="ic s"><use href="#i-note"/></svg>노트</button>
+          <button type="button" role="tab" data-mode="study" aria-selected="false"><svg class="ic s"><use href="#i-cards"/></svg>복습 <span class="num" id="modeScore"></span></button>
+        </div>
+        <span id="nmeta" class="nmeta num"></span>
+        <label class="terms" title="자주 나올 용어·이름 (쉼표로 구분) — 요약 노트에서 표기를 바로잡는 데 쓰여요"><span class="terms__l">용어</span><input id="terms" placeholder="자주 나올 용어·이름 (쉼표로 구분)" autocomplete="off"></label>
+      </div>
+    </header>
+    <div id="noteErr" class="banner err" role="alert" hidden></div>
+
+    <!-- a note with no audio yet: the same record deck as the home screen -->
+    <div id="recorder" class="deck deck--note" hidden>
+      <svg class="deck__arcs" viewBox="0 0 560 520" aria-hidden="true"><g fill="none" stroke="currentColor"><ellipse cx="114" cy="260" rx="90" ry="90" opacity=".42"/><ellipse cx="184" cy="260" rx="160" ry="160" opacity=".26"/><ellipse cx="264" cy="260" rx="240" ry="240" opacity=".15"/></g></svg>
+      <button id="recBtn" class="reckey" data-start-rec aria-label="녹음 시작"><i></i></button>
+      <div class="deck__txt">
+        <b>녹음 시작</b>
+        <span class="when-on">강의 자료를 먼저 올려 두면 원고에 쪽 번호가 붙어요</span>
+        <span class="when-boot">바로 녹음돼요 · 엔진이 켜지면(약 3분) 따라잡아 받아써요</span>
+      </div>
+      <div class="deck__opts">
+        <div class="segc" role="radiogroup" aria-label="녹음할 소리" data-src>
+          <button type="button" role="radio" data-v="mic"><svg class="ic s"><use href="#i-mic"/></svg>마이크</button>
+          <button type="button" role="radio" data-v="tab"><svg class="ic s"><use href="#i-tab"/></svg>탭 소리</button>
+          <button type="button" role="radio" data-v="both"><svg class="ic s"><use href="#i-both"/></svg>둘 다</button>
+        </div>
+        <button type="button" class="tgl" role="switch" data-tr><i></i>실시간 영어 번역</button>
+      </div>
+    </div>
+
+    <div id="playerBar" class="player" hidden>
+      <button id="playBtn" class="pbtn" aria-label="재생"><svg class="ic"><use href="#i-play"/></svg></button>
+      <div class="ptime num"><b id="pCur">00:00</b>/ <span id="pDur">00:00</span></div>
+      <div id="noteTl" class="tl" role="slider" tabindex="0" aria-label="재생 위치" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"><canvas aria-hidden="true"></canvas><i class="tl__hair" hidden></i><div class="tl__tip" hidden></div></div>
+      <button id="rateBtn" class="btn sm quiet num" aria-label="재생 속도">1.0×</button>
+      <audio id="player" preload="metadata" hidden></audio>
+    </div>
+
+    <div class="nbody">
+      <section class="pane pane--doc" aria-label="정리된 것">
+        <div class="pane__head">
+          <div class="tabs" role="tablist" id="docTabs">
+            <button type="button" role="tab" data-doc="summary" aria-selected="true">요약 노트</button>
+            <button type="button" role="tab" data-doc="materials" aria-selected="false">강의 자료 <span class="count" id="matCount">0</span></button>
+            <button type="button" role="tab" data-doc="translation" aria-selected="false">영어 번역</button>
+            <button type="button" role="tab" data-doc="qa" aria-selected="false">질문 <span class="count" id="qaCount">0</span></button>
+          </div>
+        </div>
+        <div class="pane__body" id="docBody">
+          <div data-docpanel="summary">
+            <div class="doctools">
+              <button id="resummarizeBtn" class="btn sm quiet"><svg class="ic s"><use href="#i-retry"/></svg>다시 정리하기</button>
+              <button id="editSummaryBtn" class="btn sm quiet"><svg class="ic s"><use href="#i-edit"/></svg>요약 고치기</button>
+            </div>
+            <article id="summary" class="doc"></article>
+            <div id="summaryEditor" class="sum-edit" hidden>
+              <textarea id="summaryText" spellcheck="false" aria-label="요약 노트 마크다운"></textarea>
+              <div class="r"><button id="saveSummaryBtn" class="btn primary">저장</button><button id="cancelSummaryBtn" class="btn">취소</button></div>
+            </div>
+          </div>
+          <div data-docpanel="materials" hidden>
+            <div class="mat">
+              <div class="doctools">
+                <label class="btn sm"><svg class="ic s"><use href="#i-upload"/></svg>자료 올리기 (PDF·PPTX·TXT)<input id="materialInput" type="file" accept=".pdf,.pptx,.txt,.md" hidden></label>
+              </div>
+              <p class="hint">자료를 올리면 원고 문장 옆에 관련 페이지(p.3 등)가 붙고, 요약과 질문 답변에도 참고돼요.</p>
+              <div id="materials"></div>
+              <div id="viewer"></div>
+            </div>
+          </div>
+          <div data-docpanel="translation" hidden>
+            <div class="doctools"><button id="translateBtn" class="btn sm quiet"><svg class="ic s"><use href="#i-retry"/></svg>영어로 번역하기</button></div>
+            <article id="translation" class="doc" lang="en"></article>
+          </div>
+          <div data-docpanel="qa" hidden>
+            <div class="qa"><p class="hint">녹취록과 강의 자료를 바탕으로 답해요.</p><div id="qa" class="qa__list"></div></div>
+          </div>
+        </div>
+        <form id="askForm" class="ask" autocomplete="off">
+          <svg class="ic s"><use href="#i-ask"/></svg>
+          <input id="question" placeholder="이 노트에 대해 물어보세요 — 예: 시험에 나온다고 한 부분은?" aria-label="이 노트에 질문하기">
+          <button class="btn primary" type="submit">질문</button>
+        </form>
+      </section>
+
+      <section class="pane pane--tx" aria-label="원고">
+        <div class="pane__head">
+          <h2 class="pane__title">원고</h2>
+          <div class="segc sm" role="radiogroup" aria-label="원고 보기" id="lensSeg">
+            <button type="button" role="radio" data-lens="final">화자별</button>
+            <button type="button" role="radio" data-lens="live">실시간 기록</button>
+          </div>
+          <button type="button" id="enBtn" class="chipbtn" aria-pressed="false" title="실시간 영어 번역을 문장 아래에 겹쳐 보기" hidden>EN</button>
+          <span id="txStat" class="pane__stat num"></span>
+        </div>
+        <div id="editHint" class="edithint" hidden><svg class="ic s"><use href="#i-edit"/></svg>편집 모드 — 문장을 눌러 고치면 자동 저장돼요. 화자 이름을 누르면 화자를 바꿀 수 있어요.</div>
+        <div id="txBody" class="pane__body tx">
+          <div id="final"></div>
+          <div id="segments" hidden></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="study">
+      <section class="study__quiz" aria-labelledby="quizH">
+        <div class="score">
+          <h2 id="quizH" class="vh">퀴즈</h2>
+          <span class="rings" id="scoreRings" aria-hidden="true"></span>
+          <p id="scoreTx"></p>
+          <button id="studyBtn" class="btn sm"><svg class="ic s"><use href="#i-retry"/></svg><span>복습 자료 만들기</span></button>
+        </div>
+        <div id="study"></div>
+      </section>
+      <section class="study__cards" aria-labelledby="cardH">
+        <div class="sthead"><h2 id="cardH">암기카드</h2><span class="sthead__m">눌러서 뒤집기 · <kbd>←</kbd> <kbd>→</kbd> 넘기기</span></div>
+        <div id="deck" class="deck-wrap"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ============ recording: focus mode ============ -->
+  <section id="recView" class="view rec" data-mode="rec" hidden aria-label="녹음">
+    <header class="rec__bar">
+      <div class="rec__state"><i class="led led--rec" id="recLed"></i><span id="recStateT">녹음 중</span></div>
+      <input id="recTitle" class="rec__title" maxlength="120" aria-label="노트 제목">
+      <span class="rec__in" id="recIn" title="지금 녹음하고 있는 입력 장치"><svg class="ic s"><use href="#i-mic"/></svg><span id="recInT">입력 확인 중</span></span>
+    </header>
+    <div class="rec__mid">
+      <div class="stage" id="stage">
+        <canvas id="stageCv" aria-hidden="true"></canvas>
+        <div id="micWarn" class="alert" role="alert" hidden><svg class="ic"><use href="#i-alert"/></svg><b></b><p></p></div>
+        <div class="stage__core">
+          <div class="stage__lbl"><svg class="ic s"><use href="#i-mic"/></svg><span id="stageLbl">마이크</span></div>
+          <div id="timer" class="timer num" role="timer" aria-label="녹음 시간">00:00</div>
+          <div id="chunkBox" class="stage__chunk">이번 구간 <b class="num" id="chunkNow">00.0</b>초</div>
+          <div id="stateText" class="stage__state" aria-live="polite"></div>
+        </div>
+        <div class="stage__ctl">
+          <div class="ctl ctl--l">
+            <span class="ctl__lbl">녹음할 소리</span>
+            <div class="segc is-locked" role="radiogroup" aria-label="녹음할 소리" data-src>
+              <button type="button" role="radio" data-v="mic"><svg class="ic s"><use href="#i-mic"/></svg>마이크</button>
+              <button type="button" role="radio" data-v="tab"><svg class="ic s"><use href="#i-tab"/></svg>탭 소리</button>
+              <button type="button" role="radio" data-v="both"><svg class="ic s"><use href="#i-both"/></svg>둘 다</button>
+            </div>
+            <span class="ctl__note"><svg class="ic s"><use href="#i-lock"/></svg>녹음 중에는 바꿀 수 없어요</span>
+          </div>
+          <div class="ctl ctl--c">
+            <button id="stopBtn" class="stop" aria-label="멈추고 정리하기 — 길게 누르기">
+              <svg viewBox="0 0 90 90" aria-hidden="true"><circle class="trk" cx="45" cy="45" r="42"/><circle class="arc" cx="45" cy="45" r="42"/></svg>
+              <i></i>
+            </button>
+            <span class="ctl__cap">길게 눌러 멈추고 정리</span>
+          </div>
+          <div class="ctl ctl--r">
+            <button type="button" class="tgl" role="switch" data-tr><i></i>실시간 영어 번역</button>
+            <div class="meterrow"><span class="ml">입력</span><div class="meter" id="meter"><i></i><b></b></div><span class="num" id="dbT">−∞ dB</span></div>
+          </div>
+        </div>
+        <div class="fin" aria-live="polite">
+          <h2>메아리가 돌아오고 있어요</h2>
+          <ol class="fin__steps" id="finSteps">
+            <li data-step="rest"><span class="ping"><i></i></span><svg class="ic s"><use href="#i-check"/></svg>남은 부분 받아쓰기</li>
+            <li data-step="speakers"><span class="ping"><i></i></span><svg class="ic s"><use href="#i-check"/></svg>화자별 원고 <span class="num"></span></li>
+            <li data-step="summarizing"><span class="ping"><i></i></span><svg class="ic s"><use href="#i-check"/></svg>요약 노트 <span class="num"></span></li>
+          </ol>
+          <p class="fin__cap">창을 닫아도 정리는 계속돼요. 끝나면 노트가 열려요.</p>
+          <button id="finGo" class="btn">노트로 가기</button>
+        </div>
+      </div>
+      <aside class="live" aria-label="실시간 원고">
+        <header class="live__head"><h2>실시간 원고</h2><span class="num" id="liveCount">0줄</span><span class="live__hint">8–16초 사이, 말이 멈춘 곳에서 한 줄이 돼요</span></header>
+        <div class="live__list" id="liveList"></div>
+        <button class="live__jump" id="liveJump" hidden>최신으로</button>
+      </aside>
+    </div>
+    <footer class="rec__tl">
+      <div class="tlcap"><span>처음</span><b class="num">00:00</b></div>
+      <div class="tl" id="recTl" aria-hidden="true"><canvas></canvas></div>
+      <div class="tlcap tlcap--now"><span>지금</span><b class="num" id="recNow">00:00</b></div>
+    </footer>
+  </section>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgT">
+  <h2 id="dlgT"></h2><p id="dlgP"></p>
+  <form method="dialog" class="r"><button class="btn" value="no">취소</button><button class="btn danger-solid" value="yes" id="dlgOk"></button></form>
+</dialog>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="app.js?v=15"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+* text=auto
+*.sh text eol=lf
+*.patch text eol=lf
+# Windows Script Host needs UTF-16 LE (with BOM) for the Korean messages; keep the bytes as they are
+*.vbs -text diff
+*.png binary
+*.ico binary

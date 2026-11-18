@@ -1,0 +1,6 @@
+{
+  "identifier": "meari-local",
+  "description": "IPC for the bundled boot page",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

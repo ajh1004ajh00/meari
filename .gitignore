@@ -1,0 +1,22 @@
+# recordings, transcripts, notes and logs: personal data, never commit
+data/
+
+# builds
+desktop/target/
+desktop/gen/
+Meari.exe
+*.exe
+
+# python / editor / OS
+__pycache__/
+*.pyc
+.venv/
+*.bak
+*.bak-*
+*.orig
+*.pid
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

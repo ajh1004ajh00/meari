@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>메아리 켜는 중…</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  :root { --ink: #070c18; --tx-1: #e9eef8; --tx-2: #a9b4c8; --tx-3: #6f7b93; --voice: #ffa36c; --echo: #8ad8e8; --err: #ff8a8a; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 0%, #142449 0%, #0a1226 55%, var(--ink) 100%);
+    color: var(--tx-1); font: 15px/1.6 "Pretendard Variable", Pretendard, "Malgun Gothic", system-ui, sans-serif; letter-spacing: -0.01em; }
+  .box { text-align: center; padding: 24px; }
+  .stage { position: relative; width: 180px; height: 120px; margin: 0 auto 28px; }
+  .dot { position: absolute; left: 50%; top: 18px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, #ffe6d2, #ffb489 55%, #f28a52); box-shadow: 0 0 24px rgba(255, 163, 108, .55); }
+  .ring { position: absolute; left: 50%; top: 82px; width: 30px; height: 10px; margin: -5px 0 0 -15px; border: 2px solid var(--echo);
+    border-radius: 50%; opacity: 0; animation: ripple 2.4s cubic-bezier(.2, .6, .3, 1) infinite; }
+  .ring:nth-child(3) { animation-delay: .8s; } .ring:nth-child(4) { animation-delay: 1.6s; }
+  @keyframes ripple { 0% { transform: scale(.6); opacity: .9; } 100% { transform: scale(5.6); opacity: 0; } }
+  h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.02em; }
+  p { margin: 0; color: var(--tx-2); }
+  .sec { font-variant-numeric: tabular-nums; color: var(--tx-3); font-size: 13px; margin-top: 14px; }
+  .err h1 { color: var(--err); } .err .ring { animation-play-state: paused; opacity: .25; }
+  code { color: var(--tx-2); font-size: 12.5px; }
+  @media (prefers-reduced-motion: reduce) { .ring { animation: none; opacity: .4; } }
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <div class="stage" aria-hidden="true"><div class="dot"></div><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+  <h1 id="h">메아리를 켜는 중…</h1>
+  <p id="p">보통 10~20초 걸려요. 준비되면 바로 녹음 화면으로 넘어가요.</p>
+  <div class="sec" id="sec"></div>
+</div>
+<script>
+// Opened instantly by the desktop shortcut (Ctrl+Alt+M) while the app boots in WSL.
+// A no-cors fetch resolves once the app answers (opaque response) and rejects while it is still down.
+// window.__rec is set by the desktop app (meari.exe --rec, or the tray while this page is up)
+const wantRec = () => window.__rec === 1 || new URLSearchParams(location.search).get("rec") === "1";
+const t0 = Date.now();
+async function poll() {
+  try {
+    await fetch("http://127.0.0.1:8020/api/status", { mode: "no-cors", cache: "no-store" });
+    document.getElementById("h").textContent = "준비됐어요";
+    location.replace("http://localhost:8020/" + (wantRec() ? "?rec=1" : ""));
+    return;
+  } catch {}
+  const s = Math.round((Date.now() - t0) / 1000);
+  document.getElementById("sec").textContent = s + "초";
+  if (s > 30) document.getElementById("p").textContent = "조금 오래 걸리고 있어요. 컴퓨터를 막 켰다면 1분쯤 걸릴 수 있어요.";
+  if (s > 180) {
+    document.getElementById("box").classList.add("err");
+    document.getElementById("h").textContent = "메아리가 켜지지 않았어요";
+    document.getElementById("p").innerHTML = "작업표시줄 트레이의 메아리 아이콘에서 '모두 끄기'를 누른 뒤 다시 켜 보세요. 계속 안 되면 로그를 확인해 주세요:<br><code>(메아리 폴더)\\data\\run.log</code>";
+    return;
+  }
+  setTimeout(poll, 700);
+}
+poll();
+</script>
+</body>
+</html>

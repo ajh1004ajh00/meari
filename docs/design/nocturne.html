@@ -1,0 +1,2406 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0F1C">
+<title>메아리 — Nocturne 시안</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3.75' fill='%230B1222'/%3E%3Cg fill='none' stroke='%23ECE8DE'%3E%3Ccircle cx='5.5' cy='10.5' r='4.5' stroke-width='1.3'/%3E%3Cpath d='M5.5 2A8.5 8.5 0 0 1 14 10.5' stroke-width='1.2' opacity='.6'/%3E%3C/g%3E%3Ccircle cx='5.5' cy='10.5' r='1.9' fill='%23EBC98A'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600&display=swap">
+<style>
+/* =====================================================================
+   메아리 · NOCTURNE — 밤의 공책
+   1. Tokens   2. Base   3. Primitives   4. Mock bar   5. App shell
+   6. Home     7. Note   8. Study        9. Recording  10. Phone
+   11. System sheet      12. Motion / responsive
+   ===================================================================== */
+
+/* ---------- 1. TOKENS ---------- */
+:root,
+:root[data-theme="light"] .night {
+  color-scheme: dark;
+  /* ink — surfaces, deepest to raised */
+  --ink-0: #05080F;
+  --ink-1: #0A0F1C;
+  --ink-2: #0E1526;
+  --ink-3: #141D32;
+  --ink-4: #1C2742;
+  /* paper — text, brightest to faintest (paper-4 is decorative only) */
+  --paper-1: #ECE8DE;
+  --paper-2: #B7BFCE;
+  --paper-3: #8792AA;
+  --paper-4: #55617A;
+  /* hairlines */
+  --line-1: rgba(168, 188, 230, .10);
+  --line-2: rgba(168, 188, 230, .18);
+  --line-3: rgba(168, 188, 230, .34);
+  /* moon — the one accent */
+  --moon: #EBC98A;
+  --moon-ink: #1B1405;
+  --moon-soft: rgba(235, 201, 138, .11);
+  --moon-line: rgba(235, 201, 138, .42);
+  /* ember — recording, errors */
+  --ember: #FF7B66;
+  --ember-ink: #2A0B05;
+  --ember-soft: rgba(255, 123, 102, .11);
+  --ember-line: rgba(255, 123, 102, .46);
+  /* sage — ready, correct */
+  --sage: #8FD0AE;
+  --sage-soft: rgba(143, 208, 174, .11);
+  --sage-line: rgba(143, 208, 174, .42);
+  --tide: #8DBBE8;
+  /* speakers */
+  --spk-1: #EBC98A;
+  --spk-2: #8DBBE8;
+  --spk-3: #8FD0AE;
+  --spk-4: #E3A3BC;
+  --mark-bg: rgba(235, 201, 138, .26);
+  --mark-fg: #FFF4DA;
+  --slide-bg: #EFEADF;
+  --slide-ink: #161D30;
+  --shadow-pop: 0 0 0 1px rgba(168, 188, 230, .14), 0 20px 48px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .4);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ink-0: #E9E4D8;
+  --ink-1: #F5F1E8;
+  --ink-2: #EEE9DE;
+  --ink-3: #E6E0D2;
+  --ink-4: #DCD5C4;
+  --paper-1: #141B2D;
+  --paper-2: #394259;
+  --paper-3: #4F586F;
+  --paper-4: #9099AC;
+  --line-1: rgba(20, 27, 45, .09);
+  --line-2: rgba(20, 27, 45, .17);
+  --line-3: rgba(20, 27, 45, .34);
+  --moon: #84560A;
+  --moon-ink: #FFF8E8;
+  --moon-soft: rgba(132, 86, 10, .09);
+  --moon-line: rgba(132, 86, 10, .45);
+  --ember: #B5341D;
+  --ember-ink: #FFF4F0;
+  --ember-soft: rgba(181, 52, 29, .08);
+  --ember-line: rgba(181, 52, 29, .45);
+  --sage: #1F7350;
+  --sage-soft: rgba(31, 115, 80, .09);
+  --sage-line: rgba(31, 115, 80, .45);
+  --tide: #245E9C;
+  --spk-1: #84560A;
+  --spk-2: #245E9C;
+  --spk-3: #1F7350;
+  --spk-4: #9C3566;
+  --mark-bg: rgba(214, 158, 46, .32);
+  --mark-fg: #141B2D;
+  --slide-bg: #FFFFFF;
+  --slide-ink: #161D30;
+  --shadow-pop: 0 0 0 1px rgba(20, 27, 45, .1), 0 20px 48px rgba(20, 27, 45, .16), 0 2px 8px rgba(20, 27, 45, .08);
+}
+:root {
+  /* type */
+  --font-ui: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-serif: "Noto Serif KR", "Nanum Myeongjo", AppleMyungjo, Batang, serif;
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-ui: 15px;
+  --fs-read: 16.5px;
+  --fs-lede: 19px;
+  --fs-h2: 20px;
+  --fs-title: 31px;
+  --fs-display: 44px;
+  /* space — 4px scale */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+  /* shape */
+  --r-1: 4px;
+  --r-2: 8px;
+  --r-3: 12px;
+  --r-pill: 999px;
+  /* layout */
+  --bar-h: 36px;
+  --side-w: 264px;
+  --rail-w: 372px;
+  --gutter: 76px;
+  --measure: 640px;
+  --margin: 64px;
+  /* motion */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --ease-out: cubic-bezier(.16, .84, .44, 1);
+  --dur-1: 120ms;
+  --dur-2: 240ms;
+  --dur-3: 520ms;
+}
+
+/* ---------- 2. BASE ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  background: var(--ink-1);
+  color: var(--paper-1);
+  font: 400 var(--fs-ui)/1.6 var(--font-ui);
+  letter-spacing: -.011em;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-break: strict;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+[hidden] { display: none !important; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
+button { cursor: pointer; background: none; border: 0; padding: 0; text-align: inherit; }
+h1, h2, h3, h4, p, ul, ol, figure { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+a { color: inherit; text-decoration: none; }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--moon); outline-offset: 2px; border-radius: var(--r-1); }
+::selection { background: var(--mark-bg); color: var(--mark-fg); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+mark { background: var(--mark-bg); color: var(--mark-fg); border-radius: 2px; padding: 0 1px; }
+kbd {
+  font: 500 var(--fs-2xs)/1 var(--font-ui); letter-spacing: 0; color: var(--paper-3);
+  padding: 3px 5px; border: 1px solid var(--line-2); border-radius: var(--r-1); white-space: nowrap;
+}
+.num { font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- 3. PRIMITIVES ---------- */
+.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+
+.kicker { display: inline-flex; align-items: center; gap: var(--s-2); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em; color: var(--paper-3); }
+
+/* ring section mark — the smallest form of the echo motif */
+.ringmark { position: relative; flex: none; display: inline-block; width: 11px; height: 11px; border: 1px solid currentColor; border-radius: 50%; }
+.ringmark::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: currentColor; }
+
+/* buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px;
+  border: 1px solid var(--line-2); border-radius: var(--r-2); color: var(--paper-2);
+  font-size: var(--fs-sm); font-weight: 550; white-space: nowrap;
+  transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1), transform var(--dur-1);
+}
+.btn:hover { background: var(--ink-3); border-color: var(--line-3); color: var(--paper-1); }
+.btn:active { background: var(--ink-4); transform: translateY(.5px); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+.btn.quiet { border-color: transparent; }
+.btn.quiet:hover { border-color: transparent; }
+.btn.solid { background: var(--moon); border-color: var(--moon); color: var(--moon-ink); font-weight: 650; }
+.btn.solid:hover { background: color-mix(in srgb, var(--moon) 90%, #fff); color: var(--moon-ink); }
+.btn.danger { color: var(--ember); }
+.btn.danger:hover { background: var(--ember-soft); border-color: var(--ember-line); color: var(--ember); }
+.btn[aria-pressed="true"] { background: var(--moon-soft); border-color: var(--moon-line); color: var(--moon); }
+.btn.icon { width: 32px; padding: 0; }
+.btn.sm { height: 26px; padding: 0 9px; font-size: var(--fs-xs); border-radius: 6px; }
+
+/* timestamp + page reference */
+.ts {
+  font-size: var(--fs-xs); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--paper-3);
+  padding: 1px 0; border-bottom: 1px solid transparent; transition: color var(--dur-1), border-color var(--dur-1);
+}
+.ts:hover { color: var(--moon); border-bottom-color: var(--moon-line); }
+.pg {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border: 1px solid var(--line-2); border-radius: var(--r-1);
+  font-size: var(--fs-2xs); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--moon); white-space: nowrap;
+  transition: background var(--dur-1), border-color var(--dur-1);
+}
+.pg:hover { background: var(--moon-soft); border-color: var(--moon-line); }
+.pg:active { background: color-mix(in srgb, var(--moon) 22%, transparent); }
+.tag { font-size: var(--fs-2xs); color: var(--paper-3); border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 0 7px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+.tag.ok { color: var(--sage); border-color: var(--sage-line); }
+
+/* segmented control */
+.seg-ctl { display: inline-flex; padding: 2px; border: 1px solid var(--line-2); border-radius: var(--r-2); gap: 2px; }
+.seg-ctl button {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: 6px;
+  font-size: var(--fs-sm); font-weight: 550; color: var(--paper-3); white-space: nowrap;
+  transition: background var(--dur-1), color var(--dur-1);
+}
+.seg-ctl button:hover { color: var(--paper-1); }
+.seg-ctl button[aria-checked="true"] { background: var(--ink-4); color: var(--paper-1); }
+.seg-ctl[aria-disabled="true"] button:not([aria-checked="true"]) { opacity: .4; pointer-events: none; }
+.seg-ctl[aria-disabled="true"] button { cursor: default; }
+
+/* switch */
+.switch { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-sm); font-weight: 550; color: var(--paper-2); }
+.switch i { position: relative; width: 30px; height: 18px; border-radius: 9px; border: 1px solid var(--line-3); transition: background var(--dur-2), border-color var(--dur-2); }
+.switch i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper-3); transition: transform var(--dur-2) var(--ease), background var(--dur-2); }
+.switch[aria-checked="true"] i { background: var(--moon-soft); border-color: var(--moon-line); }
+.switch[aria-checked="true"] i::after { transform: translateX(12px); background: var(--moon); }
+.switch:hover { color: var(--paper-1); }
+
+/* pulse — "working" is always a ripple, never a spinner */
+.pulse { position: relative; flex: none; display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--moon); }
+.pulse::before, .pulse::after { content: ""; position: absolute; inset: -1px; border: 1px solid var(--moon); border-radius: 50%; opacity: 0; animation: ripple 1.9s var(--ease-out) infinite; }
+.pulse::after { animation-delay: .95s; }
+.pulse.ember { background: var(--ember); }
+.pulse.ember::before, .pulse.ember::after { border-color: var(--ember); }
+@keyframes ripple { 0% { transform: scale(1); opacity: .75; } 100% { transform: scale(3.2); opacity: 0; } }
+
+.busy-line { display: flex; align-items: center; gap: 12px; color: var(--paper-2); font-size: var(--fs-sm); }
+.busy-line .bar { flex: 1; height: 1px; background: var(--line-2); position: relative; overflow: hidden; }
+.busy-line .bar i { position: absolute; inset: 0 auto 0 0; background: var(--moon); transition: width .4s linear; }
+.err-line { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--ember-line); border-radius: var(--r-2); background: var(--ember-soft); color: var(--paper-1); font-size: var(--fs-sm); line-height: 1.55; }
+.err-line .i { color: var(--ember); margin-top: 2px; }
+.err-line b { color: var(--ember); font-weight: 650; }
+
+/* the core — record / stop. It is the pebble; rings always start here. */
+.core {
+  --d: 64px; position: relative; flex: none; display: grid; place-items: center; width: var(--d); height: var(--d);
+  border-radius: 50%; border: 1px solid var(--ember-line);
+  background: radial-gradient(circle at 50% 38%, rgba(255, 123, 102, .2), rgba(255, 123, 102, .04) 72%);
+  transition: border-color var(--dur-2), background var(--dur-2), box-shadow var(--dur-2);
+}
+.core::before, .core::after { content: ""; position: absolute; inset: -1px; border-radius: 50%; border: 1px solid var(--ember); opacity: 0; pointer-events: none; animation: ripple-out 3.6s var(--ease-out) infinite; }
+.core::after { animation-delay: 1.8s; }
+@keyframes ripple-out { 0% { transform: scale(1); opacity: .5; } 100% { transform: scale(2.5); opacity: 0; } }
+.core-glyph { width: 34%; height: 34%; border-radius: 50%; background: var(--ember); transition: border-radius var(--dur-2) var(--ease), transform var(--dur-2) var(--ease), background var(--dur-2); }
+.core.is-stop .core-glyph { border-radius: 22%; width: 30%; height: 30%; }
+.core-xs { --d: 18px; background: none; }
+.core-xs::before, .core-xs::after { display: none; }
+.core-xs .core-glyph { width: 44%; height: 44%; }
+.core-lg { --d: 76px; }
+.core-xl { --d: 96px; }
+.core-prog { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); transform: rotate(-90deg); opacity: 0; transition: opacity var(--dur-2); pointer-events: none; }
+.core-prog circle { fill: none; stroke: var(--moon); stroke-width: 1.2; stroke-linecap: round; stroke-dasharray: 0 100; transition: stroke-dasharray .5s linear; }
+.core.is-wait { border-color: var(--line-3); background: none; }
+.core.is-wait::before, .core.is-wait::after { animation: none; }
+.core.is-wait .core-glyph { background: var(--paper-4); transform: scale(.8); }
+.core.is-wait .core-prog { opacity: 1; }
+
+/* hairline ring field behind a core */
+.field {
+  position: absolute; left: 50%; top: 50%; width: 2200px; height: 2200px; margin: -1100px 0 0 -1100px; z-index: -1; pointer-events: none; border-radius: 50%;
+  background: repeating-radial-gradient(circle, transparent 0, transparent 79px, var(--line-2) 79px, var(--line-2) 80px);
+  -webkit-mask-image: radial-gradient(circle, #000 3%, rgba(0, 0, 0, .55) 22%, transparent 50%);
+  mask-image: radial-gradient(circle, #000 3%, rgba(0, 0, 0, .55) 22%, transparent 50%);
+}
+
+/* speaker-ring emblem */
+.emblem { flex: none; display: block; }
+.em-track { fill: none; stroke: var(--line-2); stroke-width: 1; }
+.em-arc { fill: none; stroke-width: 1.6; stroke-linecap: round; }
+.em-dot { fill: var(--paper-3); }
+
+/* popover */
+.pop { position: absolute; z-index: 30; padding: var(--s-4); border-radius: var(--r-3); background: var(--ink-3); box-shadow: var(--shadow-pop); font-size: var(--fs-sm); line-height: 1.6; color: var(--paper-2); animation: pop-in var(--dur-2) var(--ease); }
+.pop b { display: block; color: var(--paper-1); font-size: 14px; margin-bottom: 4px; }
+.pop .row-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: var(--s-3); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- 4. MOCK BAR (not part of the product) ---------- */
+.mock {
+  position: fixed; inset: 0 0 auto 0; height: var(--bar-h); z-index: 100; display: flex; align-items: center; gap: var(--s-4);
+  padding: 0 var(--s-3); background: #03050A; border-bottom: 1px solid rgba(168, 188, 230, .16); color: #8792AA; font-size: var(--fs-xs);
+  overflow-x: auto; scrollbar-width: none; white-space: nowrap;
+}
+.mock-name { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; color: #B7BFCE; }
+.mock-name svg { width: 16px; height: 16px; }
+.mock-tabs { display: flex; gap: 2px; }
+.mock-tabs button, .mock-states button, .mock-theme { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-radius: 6px; color: #8792AA; font-weight: 550; transition: background var(--dur-1), color var(--dur-1); }
+.mock-tabs button:hover, .mock-states button:hover, .mock-theme:hover { color: #ECE8DE; background: rgba(168, 188, 230, .08); }
+.mock-tabs button[aria-current="true"] { color: #1B1405; background: #EBC98A; }
+.mock-tabs button[aria-current="true"] kbd { color: #1B1405; border-color: rgba(27, 20, 5, .35); }
+.mock kbd { padding: 2px 4px; font-size: 10px; }
+.mock-states { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.mock-states .lbl { margin-right: 4px; color: #8792AA; }
+.mock-states button[aria-pressed="true"] { color: #ECE8DE; background: rgba(168, 188, 230, .14); }
+.mock-theme { border: 1px solid rgba(168, 188, 230, .18); }
+
+/* ---------- 5. APP SHELL ---------- */
+.shell { position: fixed; inset: var(--bar-h) 0 0 0; display: none; }
+body[data-shell="app"] .app { display: grid; grid-template-columns: var(--side-w) minmax(0, 1fr); }
+body[data-shell="rec"] .rec { display: grid; }
+body[data-shell="phone"] .phones { display: flex; }
+body[data-shell="system"] .system { display: block; }
+
+.side { position: relative; display: flex; flex-direction: column; min-height: 0; background: var(--ink-2); border-right: 1px solid var(--line-1); }
+.brand { display: flex; align-items: center; gap: 11px; padding: 20px 20px 18px; }
+.brand-ic { width: 30px; height: 30px; flex: none; }
+.brand b { display: block; font: 600 18px/1.1 var(--font-serif); letter-spacing: -.02em; }
+.brand small { display: block; margin-top: 3px; font-size: 11.5px; color: var(--paper-3); }
+.side-actions { display: grid; gap: 2px; padding: 0 12px; }
+.new-rec, .new-file { display: flex; align-items: center; gap: 10px; height: 38px; padding: 0 10px; border-radius: var(--r-2); font-size: 14px; font-weight: 600; cursor: pointer; transition: background var(--dur-1), border-color var(--dur-1), color var(--dur-1); }
+.new-rec { border: 1px solid var(--line-2); }
+.new-rec:hover { background: var(--ink-3); border-color: var(--ember-line); }
+.new-rec:active { background: var(--ink-4); }
+.new-rec kbd { margin-left: auto; }
+.new-file { color: var(--paper-2); font-weight: 500; }
+.new-file .i { margin: 0 1px; }
+.new-file:hover { background: var(--ink-3); color: var(--paper-1); }
+.search { display: flex; align-items: center; gap: 8px; height: 36px; margin: 14px 12px 0; padding: 0 10px; border-bottom: 1px solid var(--line-2); color: var(--paper-3); transition: border-color var(--dur-1); }
+.search:focus-within { border-bottom-color: var(--moon); color: var(--paper-1); }
+.search input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; font-size: 14px; }
+.search input::placeholder { color: var(--paper-3); }
+.search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.search:focus-within kbd { visibility: hidden; }
+
+.nl { flex: 1; min-height: 0; overflow-y: auto; padding: 6px 8px 12px; }
+.nl-group { padding: 16px 12px 6px; font-size: var(--fs-2xs); font-weight: 600; letter-spacing: .08em; color: var(--paper-3); }
+.nl-item { position: relative; display: block; width: 100%; padding: 8px 12px; border-radius: var(--r-2); transition: background var(--dur-1); }
+.nl-item:hover { background: var(--ink-3); }
+.nl-item:active { background: var(--ink-4); }
+.nl-item.is-active { background: var(--ink-3); }
+.nl-item.is-active::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 2px; border-radius: 1px; background: var(--moon); }
+.nl-t { display: block; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nl-s { display: flex; align-items: center; gap: 7px; margin-top: 1px; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.nl-s.err { color: var(--ember); }
+.nl-snip { display: block; margin-top: 3px; font-size: var(--fs-xs); line-height: 1.5; color: var(--paper-2); }
+.nl-empty { padding: 20px 12px; font-size: var(--fs-sm); color: var(--paper-3); line-height: 1.7; }
+
+.engine { position: relative; display: flex; align-items: center; gap: 10px; padding: 12px 16px 14px 20px; border-top: 1px solid var(--line-1); }
+.engine::before { content: ""; position: absolute; left: 0; top: -1px; height: 1px; width: var(--pct, 0%); background: var(--moon); transition: width .5s linear; opacity: 0; }
+.engine[data-state="booting"]::before { opacity: 1; }
+.eng-dot { position: relative; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--sage); }
+.eng-dot::before { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--sage-line); }
+.engine[data-state="booting"] .eng-dot { background: var(--moon); }
+.engine[data-state="booting"] .eng-dot::before { border-color: var(--moon); animation: ripple 1.9s var(--ease-out) infinite; inset: -1px; }
+.eng-text { flex: 1; min-width: 0; line-height: 1.35; }
+.eng-text b { display: block; font-size: var(--fs-sm); font-weight: 600; }
+.eng-text small { display: block; font-size: 11.5px; color: var(--paper-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#offPop { left: 12px; right: 12px; bottom: 62px; }
+
+.main { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.view { display: none; height: 100%; overflow-y: auto; }
+body[data-view="first"] .v-first, body[data-view="home"] .v-home { display: block; }
+body[data-view="note"] .v-note { display: flex; }
+
+/* ---------- 6. HOME ---------- */
+.clipper { position: relative; min-height: 100%; overflow: clip; isolation: isolate; }
+.first-wrap { max-width: 1040px; margin: 0 auto; padding: clamp(40px, 9vh, 96px) 48px 72px; }
+.first-top { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--s-8); align-items: start; }
+.display { margin-top: var(--s-4); font: 600 var(--fs-display)/1.3 var(--font-serif); letter-spacing: -.035em; text-wrap: balance; }
+.lead { margin-top: var(--s-5); max-width: 33em; font-size: 16px; line-height: 1.85; color: var(--paper-2); text-wrap: pretty; }
+.cta-row { display: flex; align-items: center; gap: var(--s-6); margin-top: var(--s-7); flex-wrap: wrap; }
+.rec-cta { display: flex; align-items: center; gap: var(--s-5); padding: 6px 20px 6px 6px; border-radius: var(--r-pill); }
+.rec-cta .cta-text b { display: block; font-size: 18px; font-weight: 650; letter-spacing: -.02em; }
+.rec-cta .cta-text small { display: block; margin-top: 1px; font-size: var(--fs-sm); color: var(--paper-3); }
+.rec-cta:hover .core:not(.is-wait) { border-color: var(--ember); box-shadow: 0 0 0 7px var(--ember-soft); }
+.rec-cta:hover .core::before, .rec-cta:hover .core::after { animation-duration: 2s; }
+.rec-cta:active .core-glyph { transform: scale(.86); }
+.rec-cta[aria-disabled="true"] { cursor: progress; }
+.file-cta { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 2px; border-bottom: 1px solid var(--line-2); color: var(--paper-2); font-weight: 550; cursor: pointer; transition: color var(--dur-1), border-color var(--dur-1); }
+.file-cta small { color: var(--paper-3); font-weight: 400; font-size: var(--fs-sm); }
+.file-cta:hover { color: var(--paper-1); border-bottom-color: var(--moon); }
+.first-note { display: flex; align-items: center; gap: 10px; margin-top: var(--s-5); min-height: 24px; font-size: var(--fs-sm); color: var(--paper-3); }
+.first-note .eng-dot { margin: 0 4px; }
+
+.toc { padding-top: 6px; }
+.toc h2 { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--line-3); font: 600 15px/1.4 var(--font-serif); }
+.toc h2 small { font: 400 var(--fs-xs)/1 var(--font-ui); color: var(--paper-3); }
+.toc li { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--line-1); font-size: 14px; }
+.toc li span:first-child { font-weight: 550; }
+.toc li i { flex: 1; min-width: 12px; border-bottom: 1px dotted var(--line-3); transform: translateY(-4px); }
+.toc li span:last-child { font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+
+.how { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); margin-top: clamp(48px, 9vh, 88px); counter-reset: how; }
+.how li { padding-top: var(--s-4); border-top: 1px solid var(--line-2); }
+.how svg { display: block; width: 132px; height: 56px; margin: 6px 0 14px; color: var(--paper-2); }
+.how h3 { display: flex; align-items: baseline; gap: 10px; font: 600 17px/1.4 var(--font-serif); }
+.how h3::before { counter-increment: how; content: "0" counter(how); font: 500 var(--fs-xs)/1 var(--font-ui); letter-spacing: .04em; color: var(--moon); font-variant-numeric: tabular-nums; }
+.how p { margin-top: 6px; font-size: 14px; line-height: 1.75; color: var(--paper-2); text-wrap: pretty; }
+.how .shimmer { animation: shimmer 1.8s ease-in-out infinite; }
+@keyframes shimmer { 50% { opacity: .25; } }
+
+.home-wrap { max-width: 1080px; margin: 0 auto; padding: clamp(32px, 6vh, 64px) 48px 72px; }
+.home-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--s-6); flex-wrap: wrap; }
+.home-head h1 { margin-top: 10px; font: 600 34px/1.3 var(--font-serif); letter-spacing: -.035em; }
+.home-head .sum { margin-top: 8px; font-size: 14px; color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.home-rec { display: flex; align-items: center; gap: var(--s-5); }
+.home-rec .rec-cta { gap: var(--s-4); }
+.home-rec .rec-cta .cta-text b { font-size: 16px; }
+.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: var(--s-8); margin-top: var(--s-7); align-items: start; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid var(--line-3); }
+.sec-head h2 { font: 600 15px/1.4 var(--font-serif); }
+.sec-head small { font-size: var(--fs-xs); color: var(--paper-3); }
+
+.row { position: relative; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; column-gap: var(--s-4); align-items: start; padding: 18px 12px 18px 8px; margin: 0 -12px 0 -8px; border-bottom: 1px solid var(--line-1); border-radius: var(--r-2); cursor: pointer; transition: background var(--dur-1); }
+.row:hover { background: var(--ink-2); }
+.row:active { background: var(--ink-3); }
+.row-emblem { display: grid; place-items: center; width: 40px; height: 40px; margin-top: 2px; }
+.row-title { display: block; font: 600 18px/1.45 var(--font-serif); letter-spacing: -.02em; transition: color var(--dur-1); }
+.row:hover .row-title { color: var(--moon); }
+.row-ex { display: block; margin-top: 3px; font-size: 14px; line-height: 1.65; color: var(--paper-2); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.row-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 8px; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.row-when { padding-top: 5px; text-align: right; font-size: var(--fs-xs); line-height: 1.7; color: var(--paper-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row-when b { display: block; font-weight: 600; color: var(--paper-2); }
+.row .busy-line { margin-top: 10px; }
+.row .err-line { margin-top: 10px; align-items: center; }
+.row .err-line .btn { margin-left: auto; }
+.row.is-first .row-title { font-size: 22px; }
+
+.aside-block + .aside-block { margin-top: var(--s-7); }
+.cont { display: block; width: 100%; padding: 14px 0; border-bottom: 1px solid var(--line-1); transition: color var(--dur-1); }
+.cont:hover b { color: var(--moon); }
+.cont small { display: block; font-size: var(--fs-xs); color: var(--paper-3); }
+.cont b { display: block; margin-top: 2px; font-size: 14px; font-weight: 600; line-height: 1.55; transition: color var(--dur-1); }
+.cont .ticks { margin-top: 8px; }
+.ticks { display: flex; gap: 5px; flex-wrap: wrap; }
+.ticks i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid var(--line-3); transition: background var(--dur-2), border-color var(--dur-2), transform var(--dur-2); }
+.ticks i.on { background: var(--sage); border-color: var(--sage); }
+.ticks i.miss { background: var(--ember); border-color: var(--ember); }
+.ticks i.cur { border-color: var(--moon); transform: scale(1.25); }
+.quote { padding: 14px 0; border-bottom: 1px solid var(--line-1); }
+.quote p { font: 400 14.5px/1.75 var(--font-serif); color: var(--paper-2); }
+.quote small { display: block; margin-top: 6px; font-size: var(--fs-xs); color: var(--paper-3); }
+
+/* ---------- 7. NOTE ---------- */
+.v-note { flex-direction: column; overflow: hidden; }
+.note-body { flex: 1; min-height: 0; display: flex; }
+.reader { flex: 1; min-width: 0; overflow-y: auto; scroll-padding-top: 72px; }
+.col { width: 100%; max-width: calc(var(--gutter) + var(--measure) + var(--margin) + 40px + 64px); margin: 0 auto; padding: 0 32px; }
+
+.note-head { display: grid; grid-template-columns: var(--gutter) minmax(0, 1fr); column-gap: 20px; padding-top: 36px; padding-bottom: 22px; }
+.note-head .emblem-box { padding-top: 26px; display: flex; justify-content: flex-end; }
+.head-top { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); min-height: 32px; }
+.head-actions { display: flex; gap: 4px; }
+.title { margin-top: 2px; font: 600 var(--fs-title)/1.32 var(--font-serif); letter-spacing: -.035em; border-radius: var(--r-1); text-wrap: balance; cursor: text; }
+.title:hover { box-shadow: 0 1px 0 var(--line-2); }
+.title:focus-visible { outline: none; box-shadow: 0 1px 0 var(--moon); }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 10px; font-size: var(--fs-sm); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.meta .who-key { display: inline-flex; align-items: center; gap: 6px; }
+.meta .who-key i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); }
+.terms { display: flex; align-items: baseline; gap: 12px; margin-top: 12px; font-size: var(--fs-sm); color: var(--paper-2); }
+.terms dt { flex: none; color: var(--paper-3); font-weight: 600; font-size: var(--fs-xs); letter-spacing: .06em; }
+.terms dd { margin: 0; }
+.terms input { width: 100%; min-width: 320px; border: 0; border-bottom: 1px solid transparent; background: none; padding: 1px 0; color: var(--paper-2); transition: border-color var(--dur-1); }
+.terms input:hover { border-bottom-color: var(--line-2); }
+.terms input:focus { border-bottom-color: var(--moon); color: var(--paper-1); }
+.terms dd { flex: 1; }
+
+details.menu { position: relative; }
+details.menu summary { list-style: none; }
+details.menu summary::-webkit-details-marker { display: none; }
+details.menu[open] summary { background: var(--ink-4); color: var(--paper-1); }
+.menu-list { position: absolute; right: 0; top: 38px; z-index: 30; width: 208px; padding: 6px; border-radius: var(--r-3); background: var(--ink-3); box-shadow: var(--shadow-pop); animation: pop-in var(--dur-2) var(--ease); }
+.menu-list button { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border-radius: 6px; font-size: var(--fs-sm); color: var(--paper-2); }
+.menu-list button:hover { background: var(--ink-4); color: var(--paper-1); }
+.menu-list button.danger { color: var(--ember); }
+.menu-list button.danger:hover { background: var(--ember-soft); }
+.menu-list hr { border: 0; border-top: 1px solid var(--line-1); margin: 6px 4px; }
+
+.note-tabs { position: sticky; top: 0; z-index: 6; background: color-mix(in srgb, var(--ink-1) 86%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line-1); }
+.note-tabs .col { display: grid; grid-template-columns: var(--gutter) minmax(0, 1fr); column-gap: 20px; }
+.tabs-in { grid-column: 2; display: flex; align-items: center; gap: var(--s-5); height: 48px; }
+.tab { position: relative; height: 48px; font-size: 14.5px; font-weight: 600; color: var(--paper-3); transition: color var(--dur-1); }
+.tab small { margin-left: 5px; font-size: var(--fs-2xs); font-weight: 500; font-variant-numeric: tabular-nums; color: var(--paper-3); }
+.tab:hover { color: var(--paper-1); }
+.tab[aria-selected="true"] { color: var(--paper-1); }
+.tab::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--moon); transform: scaleX(0); transform-origin: left; transition: transform var(--dur-2) var(--ease); }
+.tab[aria-selected="true"]::after { transform: scaleX(1); }
+.tabs-in .sp { flex: 1; }
+
+.pane { display: none; padding-top: var(--s-6); padding-bottom: 120px; }
+.v-note[data-tab="note"] .pane-note, .v-note[data-tab="script"] .pane-script, .v-note[data-tab="study"] .pane-study { display: block; }
+
+/* the document grid: gutter (time, speaker) · text · margin (page notes) */
+.doc-row, .para, .seg { display: grid; grid-template-columns: var(--gutter) minmax(0, var(--measure)) var(--margin); column-gap: 20px; }
+.gut { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-align: right; }
+.mar { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; padding-top: 5px; }
+
+.lede-row { padding-bottom: var(--s-5); }
+.lede-row .gut { padding-top: 9px; }
+.lede { font: 400 var(--fs-lede)/1.85 var(--font-serif); letter-spacing: -.02em; text-wrap: pretty; }
+.sec { padding: var(--s-5) 0 var(--s-4); border-top: 1px solid var(--line-1); }
+.sec .gut { padding-top: 6px; }
+.sec .mar { padding-top: 7px; }
+.sec h2 { display: flex; align-items: baseline; gap: 10px; font: 600 var(--fs-h2)/1.45 var(--font-serif); letter-spacing: -.025em; }
+.sec h2 .ringmark { color: var(--moon); transform: translateY(-1px); }
+.sec ul { margin-top: 12px; }
+.sec li { position: relative; padding-left: 18px; margin-top: 9px; font-size: var(--fs-read); line-height: 1.85; color: var(--paper-1); text-wrap: pretty; }
+.sec li::before { content: ""; position: absolute; left: 3px; top: .92em; width: 6px; height: 1px; background: var(--paper-3); }
+.sec li b, .lede b { font-weight: 650; color: var(--paper-1); }
+.sec li b { box-shadow: inset 0 -1px 0 var(--moon-line); }
+.eq { font-family: Cambria, "STIX Two Text", "Times New Roman", serif; font-size: 1.06em; font-weight: 400; letter-spacing: .01em; white-space: nowrap; }
+.eq sub, .slide sub, .face sub, .quiz sub { font-size: .72em; line-height: 0; }
+.callout { margin-top: 14px; padding: 14px 18px; border-left: 1px solid var(--moon); background: linear-gradient(90deg, var(--moon-soft), transparent 82%); }
+.callout .kicker { color: var(--moon); }
+.callout ul { margin-top: 2px; }
+.doc-end { display: grid; grid-template-columns: var(--gutter) minmax(0, var(--measure)) var(--margin); column-gap: 20px; margin-top: var(--s-5); padding-top: var(--s-4); border-top: 1px solid var(--line-1); }
+.doc-end > div { grid-column: 2; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: var(--fs-xs); color: var(--paper-3); }
+.doc-end .sp { flex: 1; }
+
+.script-bar { display: grid; grid-template-columns: var(--gutter) minmax(0, var(--measure)) var(--margin); column-gap: 20px; margin-bottom: var(--s-4); }
+.script-bar > div { grid-column: 2; display: flex; align-items: center; gap: var(--s-3); flex-wrap: wrap; }
+.script-bar .count { margin-left: auto; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.script-bar > .edit-hint { grid-column: 2; display: none; align-items: center; gap: 10px; margin-top: 12px; padding: 9px 12px; border: 1px solid var(--moon-line); border-radius: var(--r-2); background: var(--moon-soft); color: var(--moon); font-size: var(--fs-sm); }
+body.editing .script-bar > .edit-hint { display: flex; }
+.tr-busy { grid-column: 2; margin-top: 12px; }
+
+.para { padding: 11px 0; }
+.para .gut { padding-top: 4px; }
+.who { font-size: var(--fs-xs); font-weight: 650; color: var(--c, var(--paper-2)); border-radius: var(--r-1); padding: 0 2px; cursor: default; }
+body.editing .who { cursor: pointer; box-shadow: inset 0 -1px 0 var(--c); }
+body.editing .who:hover { background: var(--ink-3); }
+.body { min-width: 0; padding-left: 16px; margin-left: -17px; border-left: 1px solid transparent; transition: border-color var(--dur-2); }
+.tx { font-size: var(--fs-read); line-height: 1.9; text-wrap: pretty; border-radius: var(--r-1); transition: background var(--dur-3), color var(--dur-2); }
+.en { margin-top: 4px; font-size: 14.5px; line-height: 1.7; color: var(--paper-3); letter-spacing: 0; word-break: normal; text-wrap: pretty; }
+.script[data-lang="ko"] .en { display: none; }
+.script[data-lang="en"] .tx { display: none; }
+.script[data-lang="en"] .en { margin-top: 0; font-size: 16px; line-height: 1.8; color: var(--paper-1); }
+.para.now .body, .seg.now .body { border-left-color: var(--moon); }
+.para:hover .ts, .seg:hover .ts { color: var(--paper-1); }
+.flash .tx, .flash .en { animation: flash 1.8s var(--ease); }
+@keyframes flash { 0%, 35% { background: var(--mark-bg); } 100% { background: transparent; } }
+body.editing .script .tx { cursor: text; box-shadow: inset 0 -1px 0 var(--line-2); }
+body.editing .script .tx:hover { box-shadow: inset 0 -1px 0 var(--line-3); }
+body.editing .script .tx:focus { outline: none; box-shadow: inset 0 -1px 0 var(--moon); background: var(--ink-2); }
+.tx.saved { background: var(--sage-soft); }
+.part { display: grid; grid-template-columns: var(--gutter) minmax(0, var(--measure)) var(--margin); column-gap: 20px; margin: 18px 0 10px; }
+.part span { grid-column: 2; display: flex; align-items: center; gap: 12px; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.part span::before, .part span::after { content: ""; flex: 1; height: 1px; background: var(--line-2); }
+.part span::before { flex: 0 0 24px; }
+
+/* raw live transcript — hundreds of lines; skip offscreen layout */
+.seg { padding: 5px 0; content-visibility: auto; contain-intrinsic-size: auto 44px; }
+.seg .gut { padding-top: 4px; }
+.seg .tx { font-size: 15.5px; line-height: 1.8; color: var(--paper-2); }
+.seg .mar { padding-top: 4px; }
+.script-view { display: none; }
+.script[data-view="final"] .view-final, .script[data-view="raw"] .view-raw { display: block; }
+.raw-note { display: grid; grid-template-columns: var(--gutter) minmax(0, var(--measure)) var(--margin); column-gap: 20px; margin-top: var(--s-5); }
+.raw-note p { grid-column: 2; font-size: var(--fs-xs); color: var(--paper-3); }
+
+/* rail: materials + questions */
+.rail { flex: none; width: var(--rail-w); display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--line-1); background: var(--ink-2); }
+.v-note:not(.rail-open) .rail, .v-note[data-tab="study"] .rail { display: none; }
+.rail-tabs { display: flex; align-items: center; gap: var(--s-5); height: 48px; padding: 0 12px 0 20px; border-bottom: 1px solid var(--line-1); }
+.rail-tabs .btn { margin-left: auto; }
+.rail-pane { flex: 1; min-height: 0; overflow-y: auto; padding: var(--s-4) 20px var(--s-5); display: none; }
+.rail[data-rail="mat"] .rail-mat, .rail[data-rail="qa"] .rail-qa { display: block; }
+.mat { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; margin: 0 -10px; width: calc(100% + 20px); border-radius: var(--r-2); transition: background var(--dur-1); }
+.mat:hover { background: var(--ink-3); }
+.mat.is-active { background: var(--ink-3); }
+.mat .i { color: var(--paper-3); }
+.mat.is-active .i { color: var(--moon); }
+.mat-name { flex: 1; min-width: 0; }
+.mat-name b { display: block; font-size: var(--fs-sm); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mat-name small { display: block; font-size: 11.5px; color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.mat-name small.warn { color: var(--ember); }
+.slide-nav { display: flex; align-items: center; gap: 6px; margin: var(--s-4) 0 10px; font-size: var(--fs-sm); color: var(--paper-2); font-variant-numeric: tabular-nums; }
+.slide-nav b { min-width: 76px; text-align: center; font-weight: 600; }
+.slide-nav a { margin-left: auto; font-size: var(--fs-xs); color: var(--paper-3); border-bottom: 1px solid var(--line-2); }
+.slide-nav a:hover { color: var(--moon); border-color: var(--moon-line); }
+.slide { aspect-ratio: 16 / 10; padding: 7% 8%; border-radius: var(--r-1); background: var(--slide-bg); color: var(--slide-ink); display: flex; flex-direction: column; box-shadow: 0 0 0 1px var(--line-2), 0 10px 30px rgba(0, 0, 0, .28); overflow: hidden; }
+.slide small { font-size: 9.5px; letter-spacing: .04em; opacity: .6; }
+.slide h4 { margin-top: 5px; font: 700 17px/1.3 var(--font-ui); letter-spacing: -.03em; }
+.slide .f { margin: auto 0; padding: 8px 0; text-align: center; font: 400 22px/1.2 Cambria, "STIX Two Text", "Times New Roman", serif; letter-spacing: .01em; }
+.slide ul { margin-top: auto; }
+.slide li { position: relative; padding-left: 12px; font-size: 11.5px; line-height: 1.6; }
+.slide li::before { content: ""; position: absolute; left: 1px; top: .72em; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: .5; }
+.slide.is-blank { align-items: center; justify-content: center; text-align: center; }
+.slide.is-blank p { font-size: 12px; opacity: .6; }
+.backrefs { margin-top: var(--s-5); }
+.backrefs h4 { padding-bottom: 8px; border-bottom: 1px solid var(--line-2); font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em; color: var(--paper-3); }
+.backref { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 10px; width: 100%; padding: 10px 0; border-bottom: 1px solid var(--line-1); font-size: var(--fs-sm); line-height: 1.6; color: var(--paper-2); }
+.backref span:first-child { font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; padding-top: 1px; }
+.backref:hover { color: var(--paper-1); }
+.backref:hover span:first-child { color: var(--moon); }
+.backrefs .none { padding: 10px 0; font-size: var(--fs-sm); color: var(--paper-3); }
+
+.qa-item { padding: 14px 0 16px; border-bottom: 1px solid var(--line-1); }
+.qa-item:first-child { padding-top: 2px; }
+.qa-q { font: 600 15px/1.6 var(--font-serif); letter-spacing: -.02em; }
+.qa-a { margin-top: 8px; font-size: 14px; line-height: 1.8; color: var(--paper-2); }
+.qa-a li { position: relative; padding-left: 14px; margin-top: 6px; }
+.qa-a li::before { content: ""; position: absolute; left: 2px; top: .9em; width: 5px; height: 1px; background: var(--paper-3); }
+.qa-a .ts, .qa-a .pg, .explain .ts, .explain .pg { margin-left: 4px; }
+.qa-a .busy-line { margin-top: 4px; }
+.ask { flex: none; padding: 12px 20px 16px; border-top: 1px solid var(--line-1); }
+.ask-sug { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.ask-sug button { height: 24px; padding: 0 9px; border: 1px solid var(--line-2); border-radius: var(--r-pill); font-size: var(--fs-xs); color: var(--paper-3); transition: color var(--dur-1), border-color var(--dur-1); }
+.ask-sug button:hover { color: var(--moon); border-color: var(--moon-line); }
+.ask-in { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 6px 0 12px; border: 1px solid var(--line-2); border-radius: var(--r-2); background: var(--ink-1); transition: border-color var(--dur-1); }
+.ask-in:focus-within { border-color: var(--moon); }
+.ask-in input { flex: 1; min-width: 0; border: 0; background: none; font-size: 14px; }
+.ask-in input::placeholder { color: var(--paper-3); }
+.ask-in .btn { height: 28px; }
+
+/* player dock */
+.player { flex: none; display: flex; align-items: center; gap: var(--s-4); height: 60px; padding: 0 20px; border-top: 1px solid var(--line-1); background: var(--ink-2); }
+.pl-ctl { display: flex; align-items: center; gap: 2px; }
+.pl-play { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line-3); color: var(--paper-1); transition: background var(--dur-1), border-color var(--dur-1), transform var(--dur-1); }
+.pl-play:hover { background: var(--ink-4); border-color: var(--moon-line); }
+.pl-play:active { transform: scale(.95); }
+.pl-play .i { fill: currentColor; stroke: none; }
+.pl-time { min-width: 58px; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.pl-time.end { color: var(--paper-3); text-align: right; }
+.wave { position: relative; flex: 1; min-width: 0; height: 36px; cursor: pointer; --p: 0%; }
+.wave svg { position: absolute; inset: 6px 0 0; width: 100%; height: 30px; display: block; }
+.wave .w-base { color: var(--paper-4); }
+.wave .w-play { color: var(--moon); clip-path: inset(0 calc(100% - var(--p)) 0 0); }
+.wave .head { position: absolute; top: 2px; bottom: 0; left: var(--p); width: 1px; background: var(--moon); }
+.wave .head::before { content: ""; position: absolute; left: -3px; top: -1px; width: 7px; height: 7px; border-radius: 50%; background: var(--moon); }
+.wave .mk { position: absolute; top: 0; width: 7px; height: 7px; margin-left: -3px; border-radius: 50%; border: 1px solid var(--paper-3); background: var(--ink-2); transition: border-color var(--dur-1), transform var(--dur-1); }
+.wave .mk:hover { border-color: var(--moon); transform: scale(1.4); }
+.wave .mk span { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 4px 8px; border-radius: 6px; background: var(--ink-4); box-shadow: var(--shadow-pop); font-size: var(--fs-xs); color: var(--paper-1); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity var(--dur-1); }
+.wave .mk:hover span, .wave .mk:focus-visible span { opacity: 1; }
+
+/* ---------- 8. STUDY ---------- */
+.study-grid { display: grid; grid-template-columns: minmax(0, 640px) minmax(300px, 380px); gap: var(--s-8); align-items: start; justify-content: center; }
+.pane-study.col { max-width: 1180px; }
+.study-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3); padding-bottom: 10px; border-bottom: 1px solid var(--line-3); }
+.study-head h2 { font: 600 17px/1.4 var(--font-serif); }
+.study-head span { font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.quiz { display: grid; grid-template-columns: 44px minmax(0, 1fr); padding: var(--s-5) 0; border-bottom: 1px solid var(--line-1); }
+.quiz .qn { font: 400 26px/1.25 var(--font-serif); color: var(--paper-3); font-variant-numeric: tabular-nums; transition: color var(--dur-2); }
+.quiz.answered .qn { color: var(--paper-2); }
+.quiz h3 { font: 600 17px/1.6 var(--font-serif); letter-spacing: -.02em; text-wrap: pretty; }
+.choices { margin-top: 12px; }
+.choice { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: baseline; gap: 12px; width: 100%; padding: 9px 12px 9px 8px; margin-left: -8px; width: calc(100% + 8px); border-radius: var(--r-2); font-size: 15px; line-height: 1.6; color: var(--paper-2); transition: background var(--dur-1), color var(--dur-1); }
+.choice .k { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line-3); font-size: var(--fs-2xs); font-weight: 650; color: var(--paper-3); transform: translateY(-1px); transition: background var(--dur-2), border-color var(--dur-2), color var(--dur-2); }
+.choice .mk { font-size: var(--fs-xs); font-weight: 600; }
+.quiz:not(.answered) .choice:hover { background: var(--ink-3); color: var(--paper-1); }
+.quiz:not(.answered) .choice:hover .k { border-color: var(--moon); color: var(--moon); }
+.quiz:not(.answered) .choice:active { background: var(--ink-4); }
+.quiz.answered .choice { cursor: default; }
+.quiz.answered .choice:not(.right):not(.wrong) { color: var(--paper-3); }
+.choice.right { color: var(--paper-1); background: var(--sage-soft); }
+.choice.right .k { background: var(--sage); border-color: var(--sage); color: var(--ink-1); }
+.choice.right .mk { color: var(--sage); }
+.choice.wrong { color: var(--paper-1); background: var(--ember-soft); }
+.choice.wrong .k { background: var(--ember); border-color: var(--ember); color: var(--ink-1); }
+.choice.wrong .mk { color: var(--ember); }
+.explain { margin-top: 12px; padding-left: 14px; border-left: 1px solid var(--line-3); font-size: 14px; line-height: 1.75; color: var(--paper-2); animation: pop-in var(--dur-3) var(--ease); }
+.explain b { color: var(--paper-1); font-weight: 650; }
+
+.deck { position: sticky; top: 72px; }
+.card { position: relative; display: block; width: 100%; aspect-ratio: 3 / 2; margin-top: var(--s-4); perspective: 1200px; border-radius: var(--r-3); }
+.card-in { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .6s var(--ease); }
+.card[aria-pressed="true"] .card-in { transform: rotateY(180deg); }
+.face { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 28px; text-align: center; border-radius: var(--r-3); border: 1px solid var(--line-2); background: var(--ink-2); -webkit-backface-visibility: hidden; backface-visibility: hidden; overflow: hidden; transition: border-color var(--dur-1); }
+.card:hover .face { border-color: var(--line-3); }
+.face::before { content: ""; position: absolute; right: -90px; bottom: -90px; width: 260px; height: 260px; border-radius: 50%; background: repeating-radial-gradient(circle, transparent 0, transparent 21px, var(--line-1) 21px, var(--line-1) 22px); pointer-events: none; }
+.face.front b { font: 600 25px/1.4 var(--font-serif); letter-spacing: -.03em; }
+.face.back { transform: rotateY(180deg); background: var(--ink-3); }
+.face.back .bk { font-size: 15.5px; line-height: 1.8; color: var(--paper-1); text-wrap: pretty; }
+.face small { position: absolute; left: 16px; top: 13px; font-size: var(--fs-2xs); letter-spacing: .06em; color: var(--paper-3); }
+.face .turn { position: absolute; right: 16px; bottom: 13px; font-size: var(--fs-2xs); color: var(--paper-3); }
+.deck-nav { display: flex; align-items: center; gap: 8px; margin-top: var(--s-4); }
+.deck-nav .mid { flex: 1; display: flex; justify-content: center; gap: 8px; }
+.deck .ticks { justify-content: center; margin-top: var(--s-4); }
+.deck .hint { margin-top: var(--s-3); text-align: center; font-size: var(--fs-xs); color: var(--paper-3); }
+.btn.know:hover { border-color: var(--sage-line); color: var(--sage); background: var(--sage-soft); }
+.btn.again:hover { border-color: var(--ember-line); color: var(--ember); background: var(--ember-soft); }
+
+/* ---------- 9. RECORDING — always night ---------- */
+.rec { grid-template-columns: minmax(380px, 44%) minmax(0, 1fr); overflow: hidden; color: var(--paper-1); background: radial-gradient(110% 90% at 22% 58%, #0C1528 0%, var(--ink-0) 62%); }
+.pond { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.rec-bar { position: absolute; inset: 0 0 auto 0; z-index: 3; display: flex; align-items: center; gap: var(--s-3); height: 56px; padding: 0 20px; }
+.rec-home { display: none; align-items: center; gap: 4px; height: 30px; padding: 0 10px 0 6px; border-radius: var(--r-2); font-size: var(--fs-sm); color: var(--paper-3); transition: color var(--dur-1), background var(--dur-1); }
+.rec-home:hover { color: var(--paper-1); background: var(--ink-3); }
+.rec[data-rec="armed"] .rec-home, .rec[data-rec="done"] .rec-home { display: inline-flex; }
+.rec-brand { display: inline-flex; align-items: center; gap: 8px; font: 600 14px/1 var(--font-serif); color: var(--paper-2); }
+.rec-brand svg { width: 20px; height: 20px; }
+.rec-bar-r { margin-left: auto; display: flex; align-items: center; gap: var(--s-4); }
+.chip { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-xs); color: var(--paper-3); white-space: nowrap; }
+.chip .eng-dot { margin: 0 3px; }
+
+.rec-left { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 0; padding: clamp(112px, 20vh, 196px) 24px 24px; text-align: center; }
+.rec-status { display: flex; align-items: center; gap: 9px; font-size: var(--fs-sm); font-weight: 600; letter-spacing: .04em; color: var(--paper-2); }
+.rec-status .sep { color: var(--paper-4); }
+.rec-status #recSrc { font-weight: 500; color: var(--paper-3); }
+.live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ember); animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: .35; } }
+.rec[data-rec="armed"] .live-dot { background: var(--paper-4); animation: none; }
+.rec[data-rec="final"] .live-dot, .rec[data-rec="done"] .live-dot { background: var(--moon); animation: none; }
+.timer { margin-top: 10px; font: 200 clamp(64px, 12.5vh, 112px)/1 var(--font-ui); letter-spacing: -.045em; font-variant-numeric: tabular-nums; color: var(--paper-1); transition: color var(--dur-3), opacity var(--dur-3); }
+.rec[data-rec="armed"] .timer { color: var(--paper-4); }
+.rec[data-rec="silent"] .timer { opacity: .55; }
+.rec-title { margin-top: 10px; max-width: 22em; padding: 2px 8px; font: 500 17px/1.5 var(--font-serif); letter-spacing: -.02em; color: var(--paper-2); border-radius: var(--r-1); cursor: text; }
+.rec-title:hover { box-shadow: 0 1px 0 var(--line-2); }
+.rec-title:focus-visible { outline: none; box-shadow: 0 1px 0 var(--moon); color: var(--paper-1); }
+.strip { display: block; width: 300px; height: 40px; margin-top: var(--s-4); }
+.rec[data-rec="armed"] .strip, .rec[data-rec="final"] .strip, .rec[data-rec="done"] .strip { visibility: hidden; }
+.rec-warn { display: none; position: absolute; top: 60px; left: 24px; right: 24px; max-width: 452px; margin: 0 auto; text-align: left; background: color-mix(in srgb, var(--ember) 11%, var(--ink-1)); animation: pop-in var(--dur-3) var(--ease); }
+.rec[data-rec="silent"] .rec-status { color: var(--ember); }
+.rec[data-rec="silent"] .rec-warn { display: flex; }
+.rec .core-xl { margin-top: clamp(20px, 4.5vh, 44px); box-shadow: 0 0 0 calc(var(--lvl, 0) * 16px) rgba(255, 123, 102, .09); transition: box-shadow 90ms linear, border-color var(--dur-2), background var(--dur-2); }
+.rec .core-xl::before, .rec .core-xl::after { display: none; }
+.rec .core-xl:hover { border-color: var(--ember); }
+.rec .core-xl:active .core-glyph { transform: scale(.86); }
+.rec[data-rec="silent"] .core-xl { border-style: dashed; }
+.rec[data-rec="final"] .core-xl, .rec[data-rec="done"] .core-xl { border-color: var(--line-2); background: none; pointer-events: none; }
+.rec[data-rec="final"] .core-xl .core-glyph { background: var(--moon); border-radius: 50%; width: 9%; height: 9%; }
+.rec[data-rec="final"] .core-xl .core-prog, .rec[data-rec="done"] .core-xl .core-prog { opacity: 1; }
+.rec[data-rec="done"] .core-xl .core-glyph { background: none; width: 0; height: 0; }
+.core-check { position: absolute; left: 50%; top: 50%; margin: -15px 0 0 -15px; width: 30px; height: 30px; color: var(--moon); opacity: 0; transform: scale(.6); transition: opacity var(--dur-2), transform var(--dur-3) var(--ease); stroke-width: 1.2; }
+.rec[data-rec="done"] .core-check { opacity: 1; transform: none; }
+.core-label { display: flex; align-items: center; gap: 10px; margin-top: var(--s-4); font-size: 14px; font-weight: 600; color: var(--paper-2); }
+.rec[data-rec="final"] .core-label kbd, .rec[data-rec="done"] .core-label kbd { display: none; }
+.rec-opts { display: flex; align-items: center; justify-content: center; gap: var(--s-5); flex-wrap: wrap; margin-top: clamp(20px, 4vh, 40px); }
+.rec-hint { margin-top: var(--s-3); max-width: 420px; min-height: 40px; font-size: var(--fs-xs); line-height: 1.65; color: var(--paper-3); }
+.rec[data-rec="final"] .rec-opts, .rec[data-rec="done"] .rec-opts, .rec[data-rec="final"] .rec-hint, .rec[data-rec="done"] .rec-hint { display: none; }
+.final-steps { display: none; width: 300px; margin-top: clamp(20px, 4vh, 36px); text-align: left; }
+.rec[data-rec="final"] .final-steps, .rec[data-rec="done"] .final-steps { display: block; }
+.final-steps li { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-1); font-size: 14px; color: var(--paper-3); transition: color var(--dur-2); }
+.final-steps li .st { justify-self: center; width: 7px; height: 7px; border-radius: 50%; border: 1px solid var(--paper-4); }
+.final-steps li.on { color: var(--paper-1); }
+.final-steps li.on .st { border: 0; background: var(--moon); position: relative; }
+.final-steps li.on .st::before { content: ""; position: absolute; inset: -1px; border: 1px solid var(--moon); border-radius: 50%; animation: ripple 1.9s var(--ease-out) infinite; }
+.final-steps li.ok { color: var(--paper-2); }
+.final-steps li.ok .st { border-color: var(--sage); background: var(--sage); }
+.final-steps li span:last-child { font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
+.final-go { display: none; margin-top: var(--s-4); width: 300px; height: 40px; font-size: 14px; }
+.rec[data-rec="done"] .final-go { display: inline-flex; animation: pop-in var(--dur-3) var(--ease); }
+
+.rec-right { position: relative; z-index: 1; display: flex; flex-direction: column; min-height: 0; padding: 72px clamp(24px, 6vw, 96px) 13vh 16px; }
+.flow-head { display: flex; align-items: baseline; gap: var(--s-4); padding-left: 72px; }
+.flow-head span:last-child { font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.flow { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 7%, #000 50%); mask-image: linear-gradient(to bottom, transparent 0, transparent 7%, #000 50%); }
+.flow-in { will-change: transform; }
+.line { display: grid; grid-template-columns: 56px minmax(0, 600px); column-gap: var(--s-4); padding: 11px 0; color: var(--paper-3); transition: color .8s var(--ease); }
+.line:nth-last-child(-n+4) { color: var(--paper-2); }
+.line:last-child { color: var(--paper-1); }
+.line .lt { padding-top: 6px; text-align: right; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; letter-spacing: 0; color: var(--paper-3); }
+.line .lk { font-size: 19px; line-height: 1.75; letter-spacing: -.02em; text-wrap: pretty; }
+.line .lk .pg { margin-left: 8px; vertical-align: 2px; }
+.line .le { margin-top: 3px; font-size: 14.5px; line-height: 1.65; letter-spacing: 0; word-break: normal; color: var(--paper-3); }
+.rec[data-tr="off"] .line .le, .ph-rec[data-tr="off"] .line .le { display: none; }
+.line.is-new { animation: line-in .7s var(--ease) both; }
+@keyframes line-in { from { opacity: 0; } }
+.line.pending .lk { display: flex; align-items: center; gap: 12px; font-size: 15px; color: var(--paper-3); min-height: 33px; }
+.rec[data-rec="final"] .flow, .rec[data-rec="done"] .flow { opacity: .45; transition: opacity var(--dur-3); }
+.flow-empty { display: none; flex: 1; flex-direction: column; justify-content: flex-end; max-width: 520px; padding-left: 72px; }
+.rec[data-rec="armed"] .flow-empty { display: flex; }
+.rec[data-rec="armed"] .flow, .rec[data-rec="armed"] .flow-head { display: none; }
+.flow-empty h2 { font: 600 24px/1.45 var(--font-serif); letter-spacing: -.03em; text-wrap: balance; }
+.flow-empty li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 10px; padding: 12px 0; border-top: 1px solid var(--line-1); font-size: 14px; line-height: 1.7; color: var(--paper-2); }
+.flow-empty ul { margin-top: var(--s-5); }
+.flow-empty li .ringmark { margin-top: 6px; color: var(--paper-3); }
+.flow-empty li b { color: var(--paper-1); font-weight: 600; }
+
+/* ---------- 10. PHONE ---------- */
+.phones { align-items: flex-start; justify-content: center; gap: clamp(32px, 6vw, 96px); padding: 32px 24px; overflow: auto; background: var(--ink-0); color: var(--paper-1); }
+.phone-fig { flex: none; }
+.phone-box { width: calc(375px * var(--k, 1)); height: calc(812px * var(--k, 1)); }
+.phone { position: relative; width: 375px; height: 812px; transform: scale(var(--k, 1)); transform-origin: 0 0; border-radius: 44px; overflow: hidden; background: var(--ink-1); box-shadow: 0 0 0 1px var(--line-3), 0 0 0 9px #0B101C, 0 0 0 10px var(--line-2), 0 40px 80px rgba(0, 0, 0, .5); isolation: isolate; }
+.phone-fig figcaption { margin-top: 26px; text-align: center; font-size: var(--fs-sm); color: var(--paper-3); line-height: 1.6; }
+.phone-fig figcaption b { display: block; font: 600 15px/1.5 var(--font-serif); color: var(--paper-1); }
+.ph-status { position: absolute; inset: 0 0 auto 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 6px 30px 0; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.ph-status span:last-child { display: flex; align-items: center; gap: 5px; }
+.ph-status .bat { width: 23px; height: 11px; border: 1px solid currentColor; border-radius: 3.5px; padding: 1px; opacity: .9; }
+.ph-status .bat::before { content: ""; display: block; width: 72%; height: 100%; border-radius: 1.5px; background: currentColor; }
+
+.ph-home { display: flex; flex-direction: column; height: 100%; padding-top: 48px; }
+.ph-top { display: flex; align-items: center; gap: 9px; padding: 10px 20px 0; }
+.ph-top svg.ic { width: 26px; height: 26px; }
+.ph-top b { font: 600 17px/1 var(--font-serif); }
+.ph-top .sp { flex: 1; }
+.ph-top .chip { font-size: 11.5px; }
+.ph-iconbtn { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: var(--paper-2); }
+.ph-iconbtn:active { background: var(--ink-3); }
+.ph-home h1 { padding: 22px 20px 0; font: 600 25px/1.35 var(--font-serif); letter-spacing: -.035em; }
+.ph-home .sum { padding: 6px 20px 0; font-size: var(--fs-sm); color: var(--paper-3); }
+.ph-list { flex: 1; min-height: 0; overflow-y: auto; margin-top: 18px; padding: 0 20px 150px; border-top: 1px solid var(--line-2); -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 92%); mask-image: linear-gradient(to bottom, #000 62%, transparent 92%); }
+.ph-row { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 12px; align-items: start; width: 100%; padding: 14px 0; border-bottom: 1px solid var(--line-1); }
+.ph-row .em { display: grid; place-items: center; width: 32px; height: 32px; margin-top: 2px; }
+.ph-row b { display: block; font: 600 16px/1.45 var(--font-serif); letter-spacing: -.02em; }
+.ph-row small { display: flex; align-items: center; gap: 7px; margin-top: 2px; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.ph-row small.err { color: var(--ember); }
+.ph-dock { position: absolute; inset: auto 0 0 0; z-index: 4; display: flex; align-items: center; justify-content: space-between; padding: 0 34px 34px; height: 150px; background: linear-gradient(to top, var(--ink-1) 42%, transparent); }
+.ph-dock .side-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 64px; font-size: 11.5px; color: var(--paper-3); }
+.ph-dock .core { --d: 72px; }
+.ph-dock .core .field { width: 900px; height: 900px; margin: -450px 0 0 -450px; background: repeating-radial-gradient(circle, transparent 0, transparent 55px, var(--line-2) 55px, var(--line-2) 56px); }
+.ph-bar { position: absolute; left: 50%; bottom: 8px; z-index: 6; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--paper-1); opacity: .5; }
+
+.ph-rec { position: relative; display: flex; flex-direction: column; align-items: center; height: 100%; padding: 62px 22px 0; background: radial-gradient(120% 60% at 50% 86%, #0C1528 0%, var(--ink-0) 70%); }
+.ph-rec .pond { z-index: 0; }
+.ph-rec > *:not(.pond) { position: relative; z-index: 1; }
+.ph-rec .rec-status { font-size: var(--fs-xs); }
+.ph-rec .timer { margin-top: 6px; font-size: 68px; }
+.ph-rec .rec-title { margin-top: 4px; font-size: 14.5px; cursor: default; }
+.ph-rec .strip { width: 220px; height: 30px; margin-top: 10px; }
+.ph-rec .flow { align-self: stretch; margin-top: 8px; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 46%); mask-image: linear-gradient(to bottom, transparent 0, #000 46%); }
+.ph-rec .line { grid-template-columns: minmax(0, 1fr); padding: 8px 0; }
+.ph-rec .line .lt { display: none; }
+.ph-rec .line .lk { font-size: 16.5px; line-height: 1.7; }
+.ph-rec .line .le { font-size: 13px; }
+.ph-rec .line.pending .lk { font-size: 13.5px; min-height: 28px; }
+.ph-rec-dock { align-self: stretch; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 18px 2px 12px; }
+.ph-rec-dock .core { --d: 76px; }
+.ph-rec-dock .core::before, .ph-rec-dock .core::after { display: none; }
+.ph-chip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border: 1px solid var(--line-2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 550; color: var(--paper-2); }
+.ph-chip:last-child { justify-self: end; }
+.ph-chip[aria-pressed="true"] { color: var(--moon); border-color: var(--moon-line); background: var(--moon-soft); }
+.ph-rec .core-label { margin: 0 0 40px; font-size: var(--fs-sm); }
+
+/* ---------- 11. SYSTEM SHEET ---------- */
+.system { overflow-y: auto; background: var(--ink-1); }
+.sys-wrap { max-width: 1120px; margin: 0 auto; padding: 48px 48px 96px; }
+.sys-wrap > h1 { font: 600 30px/1.3 var(--font-serif); letter-spacing: -.035em; }
+.sys-wrap > p { margin-top: 8px; max-width: 44em; color: var(--paper-2); line-height: 1.8; }
+.sys-sec { margin-top: var(--s-8); }
+.sys-sec > h2 { display: flex; align-items: baseline; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line-3); font: 600 16px/1.4 var(--font-serif); }
+.sys-sec > h2 small { font: 400 var(--fs-xs)/1.4 var(--font-ui); color: var(--paper-3); }
+.icons { display: flex; align-items: flex-end; gap: var(--s-7); flex-wrap: wrap; padding-top: var(--s-5); }
+.icons figure { text-align: center; }
+.icons figcaption { margin-top: 10px; font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.icons .tile-light { padding: 20px; border-radius: var(--r-3); background: #F5F1E8; }
+.icons .tile-mid { padding: 20px; border-radius: var(--r-3); background: #3B4660; }
+.icons .tabmock { display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border-radius: 8px 8px 0 0; background: var(--ink-3); font-size: var(--fs-xs); color: var(--paper-2); }
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: var(--s-4); padding-top: var(--s-5); }
+.sw i { display: block; height: 56px; border-radius: var(--r-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+.sw b { display: block; margin-top: 8px; font-size: var(--fs-sm); font-weight: 600; }
+.sw small { display: block; font-size: 11.5px; color: var(--paper-3); }
+.types { padding-top: var(--s-3); }
+.types > div { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: var(--s-5); align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--line-1); }
+.types small { font-size: var(--fs-xs); color: var(--paper-3); font-variant-numeric: tabular-nums; }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s-6) var(--s-7); padding-top: var(--s-5); }
+.states h3 { margin-bottom: 12px; font-size: var(--fs-xs); font-weight: 600; letter-spacing: .06em; color: var(--paper-3); }
+.states .rowf { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.states .stack { display: grid; gap: 12px; }
+.is-hover.btn { background: var(--ink-3); border-color: var(--line-3); color: var(--paper-1); }
+.is-focus { outline: 2px solid var(--moon); outline-offset: 2px; }
+.mini-engine { display: flex; align-items: center; gap: 12px; font-size: var(--fs-sm); }
+.mini-engine .eng-dot { margin: 0 4px; }
+.mini-engine .eng-dot.boot { background: var(--moon); }
+.mini-engine .eng-dot.boot::before { border-color: var(--moon); inset: -1px; animation: ripple 1.9s var(--ease-out) infinite; }
+.mini-engine .eng-dot.bad { background: var(--ember); }
+.mini-engine .eng-dot.bad::before { border-color: var(--ember-line); }
+
+/* shutdown */
+.off { position: fixed; inset: var(--bar-h) 0 0 0; z-index: 60; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; background: var(--ink-0); color: var(--paper-1); }
+body.is-off .off { display: flex; animation: fade-in .6s var(--ease); }
+.off .still { position: relative; width: 9px; height: 9px; margin-bottom: 28px; border-radius: 50%; background: var(--paper-4); }
+.off .still::before { content: ""; position: absolute; inset: -32px; border-radius: 50%; border: 1px solid var(--line-2); }
+.off h1 { font: 600 26px/1.4 var(--font-serif); letter-spacing: -.03em; }
+.off p { font-size: 14px; color: var(--paper-3); line-height: 1.8; }
+.off .btn { margin-top: 16px; }
+@keyframes fade-in { from { opacity: 0; } }
+
+/* toast */
+.toast { position: fixed; left: 50%; bottom: 84px; z-index: 80; transform: translate(-50%, 12px); padding: 9px 14px; border-radius: var(--r-2); background: var(--ink-4); box-shadow: var(--shadow-pop); font-size: var(--fs-sm); color: var(--paper-1); opacity: 0; pointer-events: none; transition: opacity var(--dur-2), transform var(--dur-2) var(--ease); }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- 12. RESPONSIVE + MOTION ---------- */
+@media (max-width: 1320px) {
+  :root { --rail-w: 328px; --gutter: 64px; --margin: 52px; }
+  .col { padding-left: 20px; padding-right: 20px; }
+}
+@media (max-width: 1160px) {
+  .v-note .rail { position: absolute; right: 0; top: 0; bottom: 60px; z-index: 20; box-shadow: var(--shadow-pop); }
+  .first-top { grid-template-columns: minmax(0, 1fr); }
+  .toc { max-width: 420px; }
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+  .study-grid { grid-template-columns: minmax(0, 640px); }
+  .deck { position: static; max-width: 420px; }
+}
+@media (max-width: 900px) {
+  :root { --side-w: 0px; --gutter: 52px; --margin: 0px; }
+  .side { display: none; }
+  .mar { display: none; }
+  .first-wrap, .home-wrap { padding-left: 24px; padding-right: 24px; }
+  .how { grid-template-columns: minmax(0, 1fr); }
+  .rec { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .rec-left { padding-top: 72px; }
+  .rec-right { padding: 16px 24px 24px; }
+  .rec-opts, .rec-hint { display: none; }
+  .player .pl-time.end, .player .pl-extra { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+  .card-in { transition: none; }
+  .pulse::before, .pulse::after, .core::before, .core::after { display: none; }
+  .pulse { box-shadow: 0 0 0 3px var(--moon-soft); }
+}
+</style>
+</head>
+<body data-screen="2" data-shell="app" data-view="home">
+
+<!-- ================= SVG sprite: app icon + UI glyphs ================= -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="ic-bg" cx="34%" cy="66%" r="92%">
+      <stop offset="0" stop-color="#1C2B4C"/><stop offset=".55" stop-color="#0D1528"/><stop offset="1" stop-color="#060A14"/>
+    </radialGradient>
+    <clipPath id="ic-clip"><rect width="64" height="64" rx="15"/></clipPath>
+    <clipPath id="ic-clip-16"><rect width="16" height="16" rx="3.75"/></clipPath>
+  </defs>
+  <!-- App icon. A pebble (the moon-gold dot) and the rings it leaves; rings are cropped by the tile so it never reads as a Wi-Fi mark. -->
+  <symbol id="meari" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="15" fill="url(#ic-bg)"/>
+    <g clip-path="url(#ic-clip)" fill="none" stroke="#ECE8DE">
+      <circle cx="22" cy="42" r="12.5" stroke-width="2.8" opacity=".97"/>
+      <circle cx="22" cy="42" r="23" stroke-width="2.5" opacity=".64"/>
+      <circle cx="22" cy="42" r="33.5" stroke-width="2.2" opacity=".38"/>
+      <circle cx="22" cy="42" r="44" stroke-width="1.9" opacity=".21"/>
+      <circle cx="22" cy="42" r="54.5" stroke-width="1.6" opacity=".11"/>
+    </g>
+    <circle cx="22" cy="42" r="4.8" fill="#EBC98A"/>
+    <rect x=".5" y=".5" width="63" height="63" rx="14.5" fill="none" stroke="#fff" stroke-opacity=".1"/>
+  </symbol>
+  <!-- 16 px cut: two rings, heavier strokes, snapped to the pixel grid -->
+  <symbol id="meari-16" viewBox="0 0 16 16">
+    <rect width="16" height="16" rx="3.75" fill="#0B1222"/>
+    <g clip-path="url(#ic-clip-16)" fill="none" stroke="#ECE8DE">
+      <circle cx="5.5" cy="10.5" r="4.5" stroke-width="1.3"/>
+      <circle cx="5.5" cy="10.5" r="8.5" stroke-width="1.2" opacity=".6"/>
+      <circle cx="5.5" cy="10.5" r="12.5" stroke-width="1.1" opacity=".28"/>
+    </g>
+    <circle cx="5.5" cy="10.5" r="1.9" fill="#EBC98A"/>
+  </symbol>
+
+  <symbol id="i-search" viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4 14 14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 16 16"><path d="M8 10.5v-8M4.8 5.5 8 2.3l3.2 3.2M2.5 10.5v2a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-2"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 16 16"><rect x="6" y="1.5" width="4" height="7.5" rx="2"/><path d="M3.5 7.5a4.5 4.5 0 0 0 9 0M8 12v2.5"/></symbol>
+  <symbol id="i-tab" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="9" rx="1.5"/><path d="M5.5 14h5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 16 16"><path d="M5.2 3v10l7.6-5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 16 16"><rect x="4" y="3" width="2.8" height="10" rx=".8"/><rect x="9.2" y="3" width="2.8" height="10" rx=".8"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 16 16"><path d="m10.8 2.7 2.5 2.5-7.7 7.7-3 .5.5-3z"/></symbol>
+  <symbol id="i-export" viewBox="0 0 16 16"><path d="M8 2.5v8M4.8 7.5 8 10.7l3.2-3.2M2.5 13.5h11"/></symbol>
+  <symbol id="i-more" viewBox="0 0 16 16"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01" stroke-width="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></symbol>
+  <symbol id="i-chev-r" viewBox="0 0 16 16"><path d="M6 3.5 10.5 8 6 12.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="m3 8.5 3.2 3L13 4.5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 16 16"><path d="M4 1.5h5.5L13 5v9.5H4zM9.5 1.5V5H13M6.2 8.5h4.6M6.2 11h4.6"/></symbol>
+  <symbol id="i-ask" viewBox="0 0 16 16"><path d="M2.5 3h11v8H8.2L5 13.6V11H2.5z"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M10 2.5v11"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.2 14.3 13H1.7zM8 6.6v3M8 11.3v.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.6-3.7M13 2.2v3h-3"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9.5 4.5 13 8l-3.5 3.5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 16 16"><path d="M2.5 4.5h11M6 4.5v-2h4v2M4 4.5l.6 9h6.8l.6-9"/></symbol>
+</svg>
+
+<!-- ================= Mock switcher (not part of the product) ================= -->
+<nav class="mock night" aria-label="시안 화면 전환">
+  <span class="mock-name"><svg aria-hidden="true"><use href="#meari-16"/></svg>메아리 · Nocturne</span>
+  <div class="mock-tabs">
+    <button data-go="1"><kbd>1</kbd>첫 실행</button>
+    <button data-go="2"><kbd>2</kbd>홈</button>
+    <button data-go="3"><kbd>3</kbd>녹음</button>
+    <button data-go="4"><kbd>4</kbd>노트</button>
+    <button data-go="5"><kbd>5</kbd>복습</button>
+    <button data-go="6"><kbd>6</kbd>휴대폰</button>
+    <button data-go="7"><kbd>7</kbd>아이콘·시스템</button>
+  </div>
+  <div class="mock-states" id="states"></div>
+  <button class="mock-theme" id="themeBtn" title="노트 화면의 낮(종이) 변형. 녹음 화면은 언제나 밤입니다.">낮 보기</button>
+</nav>
+
+<!-- ================= App shell: sidebar + main ================= -->
+<div class="shell app">
+  <aside class="side" aria-label="노트 목록">
+    <a class="brand" href="#2" data-go="2">
+      <svg class="brand-ic" aria-hidden="true"><use href="#meari"/></svg>
+      <span><b>메아리</b><small>로컬 강의·회의 노트</small></span>
+    </a>
+    <div class="side-actions">
+      <button class="new-rec" data-go-rec="armed"><span class="core core-xs"><i class="core-glyph"></i></span>새 노트 녹음<kbd>N</kbd></button>
+      <label class="new-file" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>파일로 만들기<input type="file" accept="audio/*,video/*" hidden></label>
+    </div>
+    <label class="search">
+      <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+      <input id="search" type="search" placeholder="모든 노트에서 검색" autocomplete="off" aria-label="모든 노트에서 검색">
+      <kbd>/</kbd>
+    </label>
+    <div class="nl" id="noteList"></div>
+    <div class="pop" id="offPop" role="alertdialog" aria-labelledby="offPopT" hidden>
+      <b id="offPopT">엔진과 앱을 끌까요?</b>
+      GPU 메모리 약 42GB가 비워져요. 다시 쓰려면 start-sorinote.cmd를 실행하세요.
+      <div class="row-btns"><button class="btn sm" id="offCancel">취소</button><button class="btn sm danger" id="offGo">끄기</button></div>
+    </div>
+    <div class="engine" id="engine" data-state="ready">
+      <span class="eng-dot" aria-hidden="true"></span>
+      <span class="eng-text"><b id="engT">엔진 준비됨</b><small id="engS">Nemotron · 이 노트북 안에서만</small></span>
+      <button class="btn sm quiet" id="offBtn" title="엔진을 끄고 GPU 메모리를 비웁니다">끄기</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ===== 1. First run ===== -->
+    <section class="view v-first" aria-label="첫 실행">
+      <div class="clipper"><div class="first-wrap">
+        <div class="first-top">
+          <div class="first-copy">
+            <p class="kicker"><i class="ringmark"></i>처음 오셨네요</p>
+            <h1 class="display">말은 사라져도,<br>메아리는 남아요.</h1>
+            <p class="lead">강의와 회의를 녹음하면 실시간으로 받아쓰고, 끝나면 화자별 원고·요약 노트·복습 퀴즈까지 만들어 드려요. 모든 처리는 이 노트북 안에서만 이루어져요.</p>
+            <div class="cta-row">
+              <button class="rec-cta" id="firstRec" data-go-rec="fresh">
+                <span class="core core-lg" id="firstCore"><i class="field"></i><svg class="core-prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48.5" pathLength="100" id="firstProg"/></svg><i class="core-glyph"></i></span>
+                <span class="cta-text"><b id="firstB">지금 녹음 시작</b><small id="firstS">마이크 · 온라인 강의 탭 소리</small></span>
+              </button>
+              <label class="file-cta" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>파일로 만들기 <small>녹음·영상 파일</small><input type="file" accept="audio/*,video/*" hidden></label>
+            </div>
+            <p class="first-note" id="firstNote"></p>
+          </div>
+          <aside class="toc" aria-label="할 수 있는 일">
+            <h2>차례 <small>메아리가 남기는 것</small></h2>
+            <ul>
+              <li><span>실시간 받아쓰기</span><i></i><span>8–16초마다</span></li>
+              <li><span>실시간 영어 번역</span><i></i><span>문장 바로 아래</span></li>
+              <li><span>화자별 원고</span><i></i><span>멈춘 뒤 자동</span></li>
+              <li><span>요약 노트</span><i></i><span>멈춘 뒤 자동</span></li>
+              <li><span>복습 퀴즈 · 암기카드</span><i></i><span>필요할 때</span></li>
+              <li><span>강의 자료 연결</span><i></i><span>p.3</span></li>
+              <li><span>질문하기</span><i></i><span>노트에게</span></li>
+              <li><span>전체 검색</span><i></i><span>모든 노트</span></li>
+              <li><span>마크다운 내보내기</span><i></i><span>.md</span></li>
+            </ul>
+          </aside>
+        </div>
+        <ol class="how" aria-label="이렇게 쓰여요">
+          <li>
+            <svg viewBox="0 0 132 56" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="22" cy="28" r="4" fill="var(--ember)" stroke="none"/>
+              <circle cx="22" cy="28" r="12" opacity=".9"/><circle cx="22" cy="28" r="23" opacity=".62"/><circle cx="22" cy="28" r="36" opacity=".42"/>
+              <circle cx="22" cy="28" r="51" opacity=".27"/><circle cx="22" cy="28" r="68" opacity=".16"/><circle cx="22" cy="28" r="87" opacity=".09"/>
+            </svg>
+            <h3>듣기</h3>
+            <p>마이크로 강의실 소리를, 탭 공유로 온라인 강의 소리를 그대로 받아요. 둘을 함께 받을 수도 있어요.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 132 56" fill="currentColor" aria-hidden="true">
+              <rect x="0" y="9" width="16" height="2" rx="1" opacity=".4"/><rect x="26" y="9" width="98" height="2" rx="1" opacity=".85"/>
+              <rect x="0" y="27" width="16" height="2" rx="1" opacity=".4"/><rect x="26" y="27" width="76" height="2" rx="1" opacity=".85"/>
+              <rect x="0" y="45" width="16" height="2" rx="1" opacity=".4"/><rect class="shimmer" x="26" y="45" width="44" height="2" rx="1" fill="var(--moon)"/>
+            </svg>
+            <h3>받아쓰기</h3>
+            <p>말이 멈춘 자리에서 끊어 8–16초마다 한 줄씩 흘러 들어와요. 켜 두면 바로 아래 영어 번역도 따라와요.</p>
+          </li>
+          <li>
+            <svg viewBox="0 0 132 56" fill="none" stroke="currentColor" aria-hidden="true">
+              <circle cx="6" cy="9" r="4.5" stroke="var(--moon)"/><circle cx="6" cy="9" r="1.6" fill="var(--moon)" stroke="none"/>
+              <rect x="18" y="7.5" width="56" height="3" rx="1.5" fill="currentColor" stroke="none"/>
+              <rect x="18" y="24" width="86" height="2" rx="1" fill="currentColor" stroke="none" opacity=".55"/>
+              <rect x="18" y="34" width="78" height="2" rx="1" fill="currentColor" stroke="none" opacity=".55"/>
+              <rect x="18" y="44" width="50" height="2" rx="1" fill="currentColor" stroke="none" opacity=".55"/>
+              <rect x="106.5" y="38.5" width="24" height="13" rx="2.5" stroke="var(--moon)"/>
+              <text x="118.5" y="48" text-anchor="middle" font-size="8" font-weight="600" fill="var(--moon)" stroke="none">p.3</text>
+            </svg>
+            <h3>남기기</h3>
+            <p>멈추면 전체를 다시 받아써 화자별 원고와 요약 노트를 만들어요. 올려 둔 강의 자료의 쪽수도 문장 옆에 붙어요.</p>
+          </li>
+        </ol>
+      </div></div>
+    </section>
+
+    <!-- ===== 2. Home with notes ===== -->
+    <section class="view v-home" aria-label="홈">
+      <div class="clipper"><div class="home-wrap">
+        <header class="home-head">
+          <div>
+            <p class="kicker"><i class="ringmark"></i>2026년 11월 17일 화요일</p>
+            <h1>지난 말들이, 여기 남아 있어요.</h1>
+            <p class="sum">노트 6개 · 모두 4시간 20분</p>
+          </div>
+          <div class="home-rec">
+            <button class="rec-cta" data-go-rec="fresh">
+              <span class="core"><i class="field"></i><i class="core-glyph"></i></span>
+              <span class="cta-text"><b>지금 녹음 시작</b><small>마이크 · 탭 소리</small></span>
+            </button>
+          </div>
+        </header>
+        <div class="home-grid">
+          <div>
+            <div class="sec-head"><h2>최근 노트</h2><small>고리는 화자별 말한 비율이에요</small></div>
+            <div id="homeList"></div>
+          </div>
+          <aside>
+            <div class="aside-block">
+              <div class="sec-head"><h2>이어서 복습</h2></div>
+              <button class="cont" data-go="5">
+                <small>열역학 제2법칙과 엔트로피</small>
+                <b>퀴즈 8문제 중 2문제 풀었어요</b>
+                <span class="ticks" aria-hidden="true"><i class="on"></i><i class="miss"></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              </button>
+              <button class="cont" data-go="5">
+                <small>열역학 제2법칙과 엔트로피</small>
+                <b>암기카드 12장 중 3장 익혔어요</b>
+                <span class="ticks" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              </button>
+            </div>
+            <div class="aside-block">
+              <div class="sec-head"><h2>기억해 둘 말</h2></div>
+              <div class="quote">
+                <p>“이 ‘순환’이라는 단어, 시험에서 빠뜨리면 감점입니다.”</p>
+                <small>화자 1 · 열역학 제2법칙과 엔트로피 · 03:11</small>
+              </div>
+              <div class="quote">
+                <p>“가입 직후 단계를 셋에서 하나로 줄입시다. 실험은 12월 첫 주부터.”</p>
+                <small>화자 2 · 주간 제품 회의 · 28:40</small>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div></div>
+    </section>
+
+    <!-- ===== 4 / 5. Note ===== -->
+    <section class="view v-note rail-open" id="note" data-tab="note" aria-label="노트">
+      <div class="note-body">
+        <div class="reader" id="reader">
+          <header class="note-head col">
+            <div class="emblem-box" id="noteEmblem"></div>
+            <div>
+              <div class="head-top">
+                <p class="kicker">2026년 11월 17일 화요일 · 오전 10:30</p>
+                <div class="head-actions">
+                  <button class="btn quiet" id="editBtn" aria-pressed="false" title="원고를 직접 고칩니다"><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg><span>편집</span></button>
+                  <button class="btn quiet" id="exportBtn" title="요약·원고·번역·암기카드·퀴즈·질문을 마크다운으로 저장"><svg class="i" aria-hidden="true"><use href="#i-export"/></svg>내보내기</button>
+                  <details class="menu">
+                    <summary class="btn quiet icon" aria-label="더 보기"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></summary>
+                    <div class="menu-list">
+                      <button data-toast="요약 노트를 다시 만들기 시작했어요"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>다시 정리하기</button>
+                      <button data-toast="요약을 직접 고치는 편집기가 열려요"><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg>요약 고치기</button>
+                      <hr>
+                      <button class="danger" data-toast="삭제는 한 번 더 확인한 뒤에 지워요"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>노트 삭제</button>
+                    </div>
+                  </details>
+                </div>
+              </div>
+              <h1 class="title" contenteditable="plaintext-only" spellcheck="false">열역학 제2법칙과 엔트로피</h1>
+              <p class="meta">
+                <span>1시간 14분</span>
+                <span class="who-key" style="--c:var(--spk-1)"><i></i>화자 1 · 86%</span>
+                <span class="who-key" style="--c:var(--spk-2)"><i></i>화자 2 · 14%</span>
+                <span>문장 523개</span>
+                <span>자료 2개</span>
+              </p>
+              <dl class="terms">
+                <dt>용어</dt>
+                <dd><input value="엔트로피, 클라우지우스 부등식, 카르노 기관, 볼츠만 상수" aria-label="자주 나올 용어·이름" title="요약 노트에서 표기를 바로잡는 데 쓰여요 (쉼표로 구분)"></dd>
+              </dl>
+            </div>
+          </header>
+
+          <nav class="note-tabs" aria-label="노트 보기">
+            <div class="col">
+              <div class="tabs-in" role="tablist">
+                <button class="tab" role="tab" data-tab="note" aria-selected="true">노트</button>
+                <button class="tab" role="tab" data-tab="script" aria-selected="false">원고<small>523</small></button>
+                <button class="tab" role="tab" data-tab="study" aria-selected="false">복습<small>2/8</small></button>
+                <span class="sp"></span>
+                <button class="btn sm" id="railBtn" aria-pressed="true" title="자료와 질문을 옆에 펼칩니다"><svg class="i" aria-hidden="true"><use href="#i-panel"/></svg>자료 · 질문</button>
+              </div>
+            </div>
+          </nav>
+
+          <!-- 노트: the summary, set as a document -->
+          <article class="pane pane-note col">
+            <div class="doc-row lede-row">
+              <div class="gut"><span class="kicker">요약</span></div>
+              <p class="lede">엔트로피는 ‘무질서’라는 비유보다 <b>가능한 미시 상태의 수</b>로 이해해야 하고, 고립계에서는 줄어들지 않는다. 오늘 강의는 이 한 문장을 열기관, 부등식, 통계의 세 길로 다시 걸었다.</p>
+              <div class="mar"></div>
+            </div>
+
+            <section class="doc-row sec">
+              <div class="gut"><button class="ts" data-t="2">00:02</button></div>
+              <div>
+                <h2><i class="ringmark"></i>제2법칙의 두 가지 진술</h2>
+                <ul>
+                  <li><b>켈빈–플랑크 진술</b> — 하나의 열원에서 열을 받아 전부 일로 바꾸는 순환 기관은 만들 수 없다.</li>
+                  <li><b>클라우지우스 진술</b> — 다른 변화 없이 차가운 곳에서 뜨거운 곳으로 열이 저절로 흐르지 않는다.</li>
+                  <li>두 진술은 동치다. 하나가 깨지면 다른 하나도 깨진다는 것을 귀류법으로 보였다.</li>
+                </ul>
+              </div>
+              <div class="mar"><button class="pg" data-p="3">p.3</button><button class="pg" data-p="4">p.4</button><button class="pg" data-p="5">p.5</button></div>
+            </section>
+
+            <section class="doc-row sec">
+              <div class="gut"><button class="ts" data-t="862">14:22</button></div>
+              <div>
+                <h2><i class="ringmark"></i>카르노 기관과 효율의 상한</h2>
+                <ul>
+                  <li>가역 기관의 효율은 작동 물질과 무관하고 두 열원의 온도로만 정해진다. <span class="eq">η = 1 − T<sub>c</sub> / T<sub>h</sub></span></li>
+                  <li>300 K와 600 K 사이에서 작동하면 최대 효율은 50 %. 실제 기관은 언제나 이보다 낮다.</li>
+                  <li>효율 문제는 온도를 반드시 <b>켈빈</b>으로 바꾸고 시작할 것.</li>
+                </ul>
+              </div>
+              <div class="mar"><button class="pg" data-p="7">p.7</button><button class="pg" data-p="8">p.8</button><button class="pg" data-p="9">p.9</button></div>
+            </section>
+
+            <section class="doc-row sec">
+              <div class="gut"><button class="ts" data-t="1865">31:05</button></div>
+              <div>
+                <h2><i class="ringmark"></i>클라우지우스 부등식과 엔트로피의 정의</h2>
+                <ul>
+                  <li>임의의 순환 과정에서 <span class="eq">∮ δQ / T ≤ 0</span>. 등호는 가역 과정에서만 성립한다.</li>
+                  <li>여기서 상태 함수 <span class="eq">dS = δQ<sub>rev</sub> / T</span> 를 정의한다.</li>
+                  <li>고립계에서는 <span class="eq">ΔS ≥ 0</span> — <b>엔트로피 증가의 법칙</b>.</li>
+                </ul>
+              </div>
+              <div class="mar"><button class="pg" data-p="10">p.10</button><button class="pg" data-p="12">p.12</button><button class="pg" data-p="13">p.13</button></div>
+            </section>
+
+            <section class="doc-row sec">
+              <div class="gut"><button class="ts" data-t="3160">52:40</button></div>
+              <div>
+                <h2><i class="ringmark"></i>통계적 해석</h2>
+                <ul>
+                  <li>볼츠만의 식 <span class="eq">S = k<sub>B</sub> ln W</span>. W는 하나의 거시 상태에 대응하는 미시 상태의 수.</li>
+                  <li>기체의 자유 팽창: 부피가 두 배가 되면 <span class="eq">ΔS = N k<sub>B</sub> ln 2</span>. 열이 드나들지 않아도 엔트로피는 늘어난다.</li>
+                  <li>‘무질서’는 비유일 뿐이다. 답안에는 미시 상태의 수로 쓸 것.</li>
+                </ul>
+              </div>
+              <div class="mar"><button class="pg" data-p="16">p.16</button><button class="pg" data-p="18">p.18</button></div>
+            </section>
+
+            <section class="doc-row sec">
+              <div class="gut"><button class="ts" data-t="4180">1:09:40</button></div>
+              <div>
+                <h2><i class="ringmark"></i>시험과 과제</h2>
+                <div class="callout">
+                  <span class="kicker">교수님이 짚은 것</span>
+                  <ul>
+                    <li>기말 서술형 — 클라우지우스 부등식에서 엔트로피 증가의 법칙을 유도하는 문제. <button class="ts" data-t="2015">33:35</button></li>
+                    <li>켈빈–플랑크 진술에서 ‘순환’을 빠뜨리면 감점. <button class="ts" data-t="191">03:11</button></li>
+                  </ul>
+                </div>
+                <ul>
+                  <li>과제 7 — 교재 20장 연습문제 12, 17, 23번. <b>11월 24일(화) 수업 전</b>까지 제출.</li>
+                  <li>다음 시간 — 열역학 퍼텐셜과 자유 에너지.</li>
+                </ul>
+              </div>
+              <div class="mar"><button class="pg" data-p="12">p.12</button></div>
+            </section>
+
+            <div class="doc-end"><div>
+              <span>오전 11:46에 정리됨 · 용어 4개 반영 · 자료 1개 참고</span><span class="sp"></span>
+              <button class="btn sm" data-toast="요약을 직접 고치는 편집기가 열려요">요약 고치기</button>
+              <button class="btn sm" data-toast="요약 노트를 다시 만들기 시작했어요">다시 정리하기</button>
+            </div></div>
+          </article>
+
+          <!-- 원고: speaker transcript ⇄ raw live transcript, with language as a display setting -->
+          <article class="pane pane-script script col" id="script" data-view="final" data-lang="ko">
+            <div class="script-bar"><div>
+              <div class="seg-ctl" role="radiogroup" aria-label="원고 종류" id="viewCtl">
+                <button role="radio" aria-checked="true" data-v="final">화자별 정리본</button>
+                <button role="radio" aria-checked="false" data-v="raw">받아쓴 그대로</button>
+              </div>
+              <div class="seg-ctl" role="radiogroup" aria-label="언어" id="langCtl">
+                <button role="radio" aria-checked="true" data-l="ko">한</button>
+                <button role="radio" aria-checked="false" data-l="both">한·EN</button>
+                <button role="radio" aria-checked="false" data-l="en">EN</button>
+              </div>
+              <span class="count" id="scriptCount">문단 15개</span>
+              </div>
+              <div class="busy-line tr-busy" id="trBusy" hidden><i class="pulse"></i><span id="trBusyT">영어로 번역하는 중… 0%</span><span class="bar"><i id="trBar" style="width:0%"></i></span></div>
+              <div class="edit-hint"><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg>편집 모드 — 문장을 눌러 고치면 자동 저장돼요. 화자 이름을 누르면 화자를 바꿀 수 있어요.</div>
+            </div>
+            <div class="script-view view-final" id="paras"></div>
+            <div class="script-view view-raw" id="raw"></div>
+          </article>
+
+          <!-- 복습 -->
+          <article class="pane pane-study col">
+            <div class="study-grid">
+              <section aria-label="퀴즈">
+                <div class="study-head"><h2>퀴즈</h2><span id="score"></span></div>
+                <div id="quiz"></div>
+                <div class="doc-end" style="display:block"><div>
+                  <span>원고와 자료를 바탕으로 만든 문제예요</span><span class="sp"></span>
+                  <button class="btn sm" data-toast="복습 자료를 새로 만들기 시작했어요"><svg class="i" aria-hidden="true"><use href="#i-refresh"/></svg>새로 만들기</button>
+                </div></div>
+              </section>
+              <section class="deck" aria-label="암기카드">
+                <div class="study-head"><h2>암기카드</h2><span id="deckCount"></span></div>
+                <button class="card" id="card" aria-pressed="false" aria-label="암기카드 뒤집기">
+                  <span class="card-in">
+                    <span class="face front"><small>앞</small><b id="cardF"></b><span class="turn">눌러서 뒤집기</span></span>
+                    <span class="face back"><small>뒤</small><span class="bk" id="cardB"></span></span>
+                  </span>
+                </button>
+                <div class="deck-nav">
+                  <button class="btn icon" id="cardPrev" aria-label="이전 카드"><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+                  <div class="mid">
+                    <button class="btn again" id="cardAgain">아직 헷갈려요</button>
+                    <button class="btn know" id="cardKnow">알아요</button>
+                  </div>
+                  <button class="btn icon" id="cardNext" aria-label="다음 카드"><svg class="i" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+                </div>
+                <div class="ticks" id="deckTicks" aria-hidden="true"></div>
+                <p class="hint"><kbd>Space</kbd> 뒤집기 &nbsp; <kbd>←</kbd> <kbd>→</kbd> 넘기기</p>
+              </section>
+            </div>
+          </article>
+        </div>
+
+        <!-- rail: 자료 · 질문 live beside the text instead of replacing it -->
+        <aside class="rail" id="rail" data-rail="mat" aria-label="자료와 질문">
+          <div class="rail-tabs" role="tablist">
+            <button class="tab" role="tab" data-rail="mat" aria-selected="true">자료<small>2</small></button>
+            <button class="tab" role="tab" data-rail="qa" aria-selected="false">질문<small id="qaCount">2</small></button>
+            <button class="btn quiet icon sm" id="railClose" aria-label="닫기"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="rail-pane rail-mat">
+            <button class="mat is-active">
+              <svg class="i" aria-hidden="true"><use href="#i-doc"/></svg>
+              <span class="mat-name"><b>11주차_열역학_제2법칙.pdf</b><small>24쪽 · 원고 41곳과 연결됨</small></span>
+            </button>
+            <button class="mat" data-toast="스캔본은 보기만 할 수 있어요. 글자가 없어 원고와 연결되지 않아요.">
+              <svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>
+              <span class="mat-name"><b>보충자료_스캔본.pdf</b><small class="warn">6쪽 · 글자를 찾지 못해 연결되지 않았어요</small></span>
+            </button>
+            <div class="slide-nav">
+              <button class="btn icon sm" id="pgPrev" aria-label="이전 쪽"><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg></button>
+              <b id="pgNow">p.12 / 24</b>
+              <button class="btn icon sm" id="pgNext" aria-label="다음 쪽"><svg class="i" aria-hidden="true"><use href="#i-chev-r"/></svg></button>
+              <a href="#4" data-toast="PDF를 새 창에서 열어요">새 창에서 열기</a>
+            </div>
+            <div class="slide" id="slide"></div>
+            <div class="backrefs" id="backrefs"></div>
+            <p style="margin-top:20px"><label class="btn sm" tabindex="0"><svg class="i" aria-hidden="true"><use href="#i-upload"/></svg>자료 올리기 (PDF·PPTX·TXT)<input type="file" accept=".pdf,.pptx,.txt,.md" hidden></label></p>
+          </div>
+          <div class="rail-pane rail-qa" id="qa"></div>
+          <form class="ask" id="askForm">
+            <div class="ask-sug"><button type="button">과제 마감일은?</button><button type="button">카르노 효율 공식만</button></div>
+            <div class="ask-in">
+              <input id="question" placeholder="이 노트에 물어보기" autocomplete="off" aria-label="이 노트에 물어보기">
+              <button class="btn sm solid">질문</button>
+            </div>
+          </form>
+        </aside>
+      </div>
+
+      <footer class="player" aria-label="녹음 재생">
+        <div class="pl-ctl">
+          <button class="btn quiet sm num" id="plBack" aria-label="10초 뒤로">−10</button>
+          <button class="pl-play" id="plPlay" aria-label="재생"><svg class="i" aria-hidden="true"><use href="#i-play" id="plIcon"/></svg></button>
+          <button class="btn quiet sm num" id="plFwd" aria-label="10초 앞으로">+10</button>
+        </div>
+        <span class="pl-time num" id="plNow">33:35</span>
+        <div class="wave" id="wave" role="slider" aria-label="재생 위치" tabindex="0" aria-valuemin="0" aria-valuemax="4442" aria-valuenow="2015"></div>
+        <span class="pl-time end num">1:14:02</span>
+        <button class="btn quiet sm num pl-extra" id="plSpeed" title="재생 속도">1.0×</button>
+        <button class="btn sm pl-extra" id="plFollow" aria-pressed="true" title="재생 위치를 따라 원고가 움직여요">따라 읽기</button>
+      </footer>
+    </section>
+  </main>
+</div>
+
+<!-- ================= 3. Recording focus mode ================= -->
+<div class="shell rec night" id="rec" data-rec="live" data-tr="on">
+  <canvas class="pond" id="pond" aria-hidden="true"></canvas>
+  <header class="rec-bar">
+    <button class="rec-home" data-go="2"><svg class="i" aria-hidden="true"><use href="#i-chev-l"/></svg>홈</button>
+    <span class="rec-brand"><svg aria-hidden="true"><use href="#meari"/></svg>메아리</span>
+    <span class="rec-bar-r">
+      <span class="chip"><svg class="i" aria-hidden="true"><use href="#i-doc"/></svg>11주차_열역학_제2법칙.pdf 연결됨</span>
+      <span class="chip"><i class="eng-dot"></i>엔진 준비됨</span>
+    </span>
+  </header>
+
+  <section class="rec-left" aria-label="녹음">
+    <p class="rec-status"><i class="live-dot"></i><span id="recLabel">녹음 중</span><span class="sep">·</span><span id="recSrc">마이크 · 배열 마이크(Realtek)</span></p>
+    <div class="timer" id="timer" role="timer" aria-label="녹음 시간">23:41</div>
+    <h1 class="rec-title" contenteditable="plaintext-only" spellcheck="false">열역학 제2법칙과 엔트로피</h1>
+    <canvas class="strip" id="strip" aria-hidden="true"></canvas>
+    <div class="err-line rec-warn" role="alert">
+      <svg class="i" aria-hidden="true"><use href="#i-alert"/></svg>
+      <span><b>소리가 들어오지 않아요.</b> 마이크가 음소거된 것 같아요. 키보드의 마이크 키나 Windows 설정 › 시스템 › 소리 › 입력을 확인해 주세요. 지금은 아무것도 녹음되지 않고 있어요.</span>
+    </div>
+    <button class="core core-xl is-stop" id="recBtn" aria-label="멈추고 정리하기">
+      <svg class="core-prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48.5" pathLength="100" id="recProg"/></svg>
+      <i class="core-glyph"></i>
+      <svg class="i core-check" aria-hidden="true"><use href="#i-check"/></svg>
+    </button>
+    <p class="core-label"><span id="recAction">멈추고 정리하기</span><kbd>Space</kbd></p>
+    <div class="rec-opts">
+      <div class="seg-ctl" role="radiogroup" aria-label="소리를 가져올 곳" id="srcCtl">
+        <button role="radio" aria-checked="true" data-src="mic"><svg class="i" aria-hidden="true"><use href="#i-mic"/></svg>마이크</button>
+        <button role="radio" aria-checked="false" data-src="tab"><svg class="i" aria-hidden="true"><use href="#i-tab"/></svg>탭 소리</button>
+        <button role="radio" aria-checked="false" data-src="both">둘 다</button>
+      </div>
+      <button class="switch" role="switch" aria-checked="true" id="trSwitch"><i></i>실시간 영어 번역</button>
+    </div>
+    <p class="rec-hint" id="recHint"></p>
+    <ol class="final-steps" id="finalSteps">
+      <li><i class="st"></i><span>남은 부분 받아쓰기</span><span></span></li>
+      <li><i class="st"></i><span>화자별 원고</span><span></span></li>
+      <li><i class="st"></i><span>요약 노트</span><span></span></li>
+    </ol>
+    <button class="btn solid final-go" data-go="4">노트 열기 <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+  </section>
+
+  <section class="rec-right" aria-label="실시간 원고">
+    <header class="flow-head"><span class="kicker">실시간 원고</span><span id="flowCount">문장 142개</span></header>
+    <div class="flow" id="flow" aria-live="polite"><div class="flow-in"></div></div>
+    <div class="flow-empty">
+      <h2>녹음을 시작하면 여기로 문장이 흘러 들어와요.</h2>
+      <ul>
+        <li><i class="ringmark"></i><span><b>8–16초마다 한 줄.</b> 말이 멈춘 자리에서 끊어 받아써요.</span></li>
+        <li><i class="ringmark"></i><span><b>온라인 강의라면 ‘탭 소리’.</b> 공유 창에서 ‘탭 오디오 공유’를 켜 주세요.</span></li>
+        <li><i class="ringmark"></i><span><b>멈추면 자동으로 정리.</b> 화자별 원고와 요약 노트가 만들어져요.</span></li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 6. Phone ================= -->
+<div class="shell phones night" id="phones">
+  <figure class="phone-fig">
+    <div class="phone-box"><div class="phone">
+      <div class="ph-status"><span>10:53</span><span><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".8"/><rect x="4.6" y="5" width="3" height="6" rx=".8"/><rect x="9.2" y="2.5" width="3" height="8.5" rx=".8"/><rect x="13.8" y="0" width="3" height="11" rx=".8"/></svg><i class="bat"></i></span></div>
+      <div class="ph-home">
+        <div class="ph-top">
+          <svg class="ic" aria-hidden="true"><use href="#meari"/></svg><b>메아리</b><span class="sp"></span>
+          <span class="chip"><i class="eng-dot"></i>준비됨</span>
+          <button class="ph-iconbtn" aria-label="검색"><svg class="i" style="width:20px;height:20px" aria-hidden="true"><use href="#i-search"/></svg></button>
+        </div>
+        <h1>지난 말들이,<br>여기 남아 있어요.</h1>
+        <p class="sum">노트 6개 · 모두 4시간 20분</p>
+        <div class="ph-list" id="phList"></div>
+        <div class="ph-dock">
+          <button class="side-btn"><svg class="i" style="width:20px;height:20px" aria-hidden="true"><use href="#i-upload"/></svg>파일로</button>
+          <button class="core" aria-label="지금 녹음 시작" data-go-rec="fresh"><i class="field"></i><i class="core-glyph"></i></button>
+          <button class="side-btn"><svg class="i" style="width:20px;height:20px" aria-hidden="true"><use href="#i-doc"/></svg>노트</button>
+        </div>
+      </div>
+      <i class="ph-bar"></i>
+    </div></div>
+    <figcaption><b>홈</b>녹음 버튼은 엄지가 닿는 아래쪽에.<br>목록이 곧 첫 화면이에요.</figcaption>
+  </figure>
+
+  <figure class="phone-fig">
+    <div class="phone-box"><div class="phone">
+      <div class="ph-status"><span>10:53</span><span><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="3" height="4" rx=".8"/><rect x="4.6" y="5" width="3" height="6" rx=".8"/><rect x="9.2" y="2.5" width="3" height="8.5" rx=".8"/><rect x="13.8" y="0" width="3" height="11" rx=".8"/></svg><i class="bat"></i></span></div>
+      <div class="ph-rec" id="phRec" data-tr="on">
+        <canvas class="pond" id="pond2" aria-hidden="true"></canvas>
+        <p class="rec-status"><i class="live-dot"></i><span>녹음 중</span><span class="sep">·</span><span style="font-weight:500;color:var(--paper-3)">마이크</span></p>
+        <div class="timer" id="timer2">23:41</div>
+        <p class="rec-title">열역학 제2법칙과 엔트로피</p>
+        <canvas class="strip" id="strip2" aria-hidden="true"></canvas>
+        <div class="flow" id="flow2"><div class="flow-in"></div></div>
+        <div class="ph-rec-dock">
+          <span class="ph-chip"><svg class="i" style="width:14px;height:14px" aria-hidden="true"><use href="#i-lock"/></svg>마이크</span>
+          <button class="core is-stop" id="recBtn2" aria-label="멈추고 정리하기"><i class="core-glyph"></i></button>
+          <button class="ph-chip" id="trChip" aria-pressed="true">EN 번역</button>
+        </div>
+        <p class="core-label">멈추고 정리하기</p>
+      </div>
+      <i class="ph-bar"></i>
+    </div></div>
+    <figcaption><b>녹음</b>화면은 꺼지지 않게 유지하고,<br>고리는 멈춤 버튼에서 퍼져요.</figcaption>
+  </figure>
+</div>
+
+<!-- ================= 7. Icon + system sheet ================= -->
+<div class="shell system" id="system">
+  <div class="sys-wrap">
+    <p class="kicker"><i class="ringmark"></i>Nocturne</p>
+    <h1>밤의 공책 — 아이콘과 시스템</h1>
+    <p>조약돌 하나와 그것이 남기는 고리. 아이콘, 녹음 버튼, 진행 표시, 절 머리표까지 같은 모양을 크기만 바꿔 씁니다. 색은 잉크와 종이, 그리고 달빛 하나.</p>
+
+    <section class="sys-sec">
+      <h2>앱 아이콘 <small>256 · 64 · 32 · 16 px — 16 px는 고리를 둘로 줄이고 획을 굵게</small></h2>
+      <div class="icons">
+        <figure><svg width="256" height="256" aria-label="메아리 아이콘 256px"><use href="#meari"/></svg><figcaption>256</figcaption></figure>
+        <figure><svg width="64" height="64" aria-hidden="true"><use href="#meari"/></svg><figcaption>64</figcaption></figure>
+        <figure><svg width="32" height="32" aria-hidden="true"><use href="#meari"/></svg><figcaption>32</figcaption></figure>
+        <figure><svg width="16" height="16" aria-hidden="true"><use href="#meari-16"/></svg><figcaption>16</figcaption></figure>
+        <figure><div class="tile-light"><svg width="64" height="64" aria-hidden="true"><use href="#meari"/></svg></div><figcaption>밝은 바탕</figcaption></figure>
+        <figure><div class="tile-mid"><svg width="64" height="64" aria-hidden="true"><use href="#meari"/></svg></div><figcaption>중간 바탕</figcaption></figure>
+        <figure><div class="tabmock"><svg width="16" height="16" aria-hidden="true"><use href="#meari-16"/></svg>메아리</div><figcaption>브라우저 탭</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="sys-sec">
+      <h2>색 <small>CSS 사용자 속성 — 본문 글자는 모두 4.5:1 이상</small></h2>
+      <div class="swatches" id="swatches"></div>
+    </section>
+
+    <section class="sys-sec">
+      <h2>글자 <small>본문 Pretendard · 제목과 인용 Noto Serif KR</small></h2>
+      <div class="types">
+        <div><small>display · 44 / 1.3 · serif 600</small><span style="font:600 44px/1.3 var(--font-serif);letter-spacing:-.035em">말은 사라져도, 메아리는 남아요.</span></div>
+        <div><small>title · 31 / 1.32 · serif 600</small><span style="font:600 31px/1.32 var(--font-serif);letter-spacing:-.035em">열역학 제2법칙과 엔트로피</span></div>
+        <div><small>h2 · 20 / 1.45 · serif 600</small><span style="font:600 20px/1.45 var(--font-serif);letter-spacing:-.025em">클라우지우스 부등식과 엔트로피의 정의</span></div>
+        <div><small>lede · 19 / 1.85 · serif 400</small><span style="font:400 19px/1.85 var(--font-serif);letter-spacing:-.02em">엔트로피는 가능한 미시 상태의 수로 이해해야 한다.</span></div>
+        <div><small>read · 16.5 / 1.9 · 400</small><span style="font-size:16.5px;line-height:1.9">등호는 가역 과정일 때만 성립해요. 12쪽 유도 과정을 꼭 직접 손으로 따라 써 보세요.</span></div>
+        <div><small>ui · 15 / 1.6 · 400–650</small><span>멈추고 정리하기 · 파일로 만들기 · 모든 노트에서 검색</span></div>
+        <div><small>meta · 12 · tabular</small><span class="num" style="font-size:12px;color:var(--paper-3)">오전 10:30 · 1시간 14분 · 33:35 · p.12</span></div>
+        <div><small>timer · 112 · 200</small><span class="num" style="font:200 72px/1 var(--font-ui);letter-spacing:-.045em">23:41</span></div>
+      </div>
+    </section>
+
+    <section class="sys-sec">
+      <h2>상태 <small>기다림은 언제나 고리로, 문제는 언제나 문장으로</small></h2>
+      <div class="states">
+        <div><h3>엔진</h3><div class="stack">
+          <span class="mini-engine"><i class="eng-dot"></i>엔진 준비됨</span>
+          <span class="mini-engine"><i class="eng-dot boot"></i>엔진 켜는 중… 62% · 약 3분</span>
+          <span class="mini-engine"><i class="eng-dot bad"></i>엔진과 연결이 끊겼어요</span>
+        </div></div>
+        <div><h3>버튼</h3><div class="rowf">
+          <button class="btn">기본</button><button class="btn is-hover">올림</button><button class="btn is-focus">초점</button><button class="btn" disabled>비활성</button><button class="btn solid">강조</button><button class="btn danger">위험</button>
+        </div></div>
+        <div><h3>기다림</h3><div class="stack">
+          <div class="busy-line"><i class="pulse"></i><span>요약 노트 만드는 중… 62%</span><span class="bar"><i style="width:62%"></i></span></div>
+          <div class="busy-line"><i class="pulse"></i><span>받아쓰는 중</span></div>
+        </div></div>
+        <div><h3>문제</h3><div class="stack">
+          <div class="err-line"><svg class="i" aria-hidden="true"><use href="#i-alert"/></svg><span><b>받아쓰기에 실패했어요.</b> 엔진과 연결이 끊겼어요. 녹음 파일은 그대로 있어요.</span></div>
+        </div></div>
+        <div><h3>참조</h3><div class="rowf">
+          <button class="ts">33:35</button><button class="pg">p.12</button><span class="tag">수정됨</span><span class="tag ok">저장됨</span><kbd>Space</kbd>
+        </div></div>
+        <div><h3>녹음 버튼</h3><div class="rowf" style="gap:28px;padding:10px 12px">
+          <span class="core"><i class="core-glyph"></i></span>
+          <span class="core is-stop"><i class="core-glyph"></i></span>
+          <span class="core is-wait"><svg class="core-prog" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="48.5" pathLength="100" style="stroke-dasharray:62 100"/></svg><i class="core-glyph"></i></span>
+        </div></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- shutdown -->
+<div class="off night" role="status">
+  <i class="still" aria-hidden="true"></i>
+  <h1>메아리를 껐어요</h1>
+  <p>GPU 메모리 약 42GB를 비웠어요. 이 창을 닫아도 됩니다.<br>다시 쓰려면 start-sorinote.cmd를 실행하세요.</p>
+  <button class="btn" id="offBack">시안으로 돌아가기</button>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+(() => {
+"use strict";
+
+/* ------------------------------------------------------------------ helpers */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const pad = (n) => String(n).padStart(2, "0");
+const fmt = (t) => { t = Math.max(0, Math.floor(t)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`; };
+const dur = (t) => { const h = Math.floor(t / 3600), m = Math.round((t % 3600) / 60); return h ? `${h}시간 ${m}분` : `${m}분`; };
+const icon = (id) => `<svg class="i" aria-hidden="true"><use href="#i-${id}"/></svg>`;
+const tsBtn = (t) => `<button class="ts" data-t="${t}">${fmt(t)}</button>`;
+const pgBtn = (p) => `<button class="pg" data-p="${p}">p.${p}</button>`;
+const fx = (s) => esc(s).replace(/_([A-Za-z0-9]+|[가-힣]+)/g, "<sub>$1</sub>");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+const seeded = (seed) => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); };
+
+/* speaker-ring emblem: one ring per speaker, arc length = share of talk time */
+function emblem(shares, size) {
+  const c = size / 2, gap = size >= 44 ? 5 : size >= 40 ? 4.2 : 3.6;
+  let out = `<svg class="emblem" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true">`;
+  shares.forEach((s, i) => {
+    const r = c - 1.5 - i * gap, C = 2 * Math.PI * r;
+    out += `<circle class="em-track" cx="${c}" cy="${c}" r="${r.toFixed(1)}"/>` +
+      `<circle class="em-arc" cx="${c}" cy="${c}" r="${r.toFixed(1)}" style="stroke:var(--spk-${(i % 4) + 1})" stroke-dasharray="${(C * s).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 ${c} ${c})"/>`;
+  });
+  return out + `<circle class="em-dot" cx="${c}" cy="${c}" r="1.5"/></svg>`;
+}
+
+/* ------------------------------------------------------------------ fake data */
+const NOTES = [
+  { id: "n1", group: "오늘", day: "오늘", when: "오전 10:30", title: "열역학 제2법칙과 엔트로피", dur: 4442, spk: [.86, .14], mats: 2, quiz: "퀴즈 2/8",
+    ex: "엔트로피는 ‘무질서’보다 가능한 미시 상태의 수로 이해해야 하고, 고립계에서는 줄어들지 않는다. 기말 서술형으로 클라우지우스 부등식 유도가 예고됐다." },
+  { id: "n2", group: "오늘", day: "오늘", when: "오후 1:00", title: "자료구조 — 균형 이진 탐색 트리", dur: 3125, spk: [1], busy: { label: "요약 노트 만드는 중", pct: 62 } },
+  { id: "n3", group: "어제", day: "어제", when: "오후 2:00", title: "주간 제품 회의 · 온보딩 개편", dur: 2534, spk: [.38, .27, .21, .14],
+    ex: "가입 직후 단계를 셋에서 하나로 줄이기로 결정. 디자인 시안은 금요일까지, 실험은 12월 첫 주에 시작한다." },
+  { id: "n4", group: "지난주", day: "11월 13일 금", when: "오전 9:00", title: "한국 근현대사 — 개항기의 경제 변화", dur: 3920, spk: [.93, .07], mats: 1, quiz: "퀴즈 10/10",
+    ex: "강화도 조약 이후 무역 구조가 어떻게 바뀌었는지, 방곡령 사건을 중심으로 정리했다." },
+  { id: "n5", group: "지난주", day: "11월 11일 수", when: "오후 4:30", title: "졸업 프로젝트 지도교수 면담", dur: 1594, spk: [.55, .45],
+    ex: "평가 지표를 정확도에서 F1으로 바꾸고, 12월 4일까지 초안을 제출하기로 했다." },
+  { id: "n6", group: "지난주", day: "11월 9일 월", when: "오후 8:12", title: "세미나 녹화본_1107.mp4", dur: 0, spk: [],
+    err: "엔진과 연결이 끊겨 받아쓰지 못했어요. 올린 파일은 그대로 있어요." },
+];
+
+const HITS = [
+  { title: "열역학 제2법칙과 엔트로피", where: "제목", text: "열역학 제2법칙과 엔트로피" },
+  { title: "열역학 제2법칙과 엔트로피", where: "요약", text: "고립계에서는 ΔS ≥ 0 — 엔트로피 증가의 법칙." },
+  { title: "열역학 제2법칙과 엔트로피", where: "원고", t: 3160, text: "볼츠만은 엔트로피를 전혀 다른 방식으로 썼습니다." },
+  { title: "열역학 제2법칙과 엔트로피", where: "자료 p.13", p: 13, text: "엔트로피의 정의 dS = δQ_rev / T" },
+  { title: "열역학 제2법칙과 엔트로피", where: "원고", t: 4180, text: "마지막으로 과제입니다. 교재 20장 연습문제 12번, 17번, 23번." },
+  { title: "열역학 제2법칙과 엔트로피", where: "원고", t: 1421, text: "최대 효율이 50퍼센트입니다. 온도는 반드시 켈빈으로 바꾸고 시작하세요." },
+  { title: "졸업 프로젝트 지도교수 면담", where: "원고", t: 912, text: "손실 함수는 교차 엔트로피 그대로 두고, 평가 지표만 F1으로 바꾸죠." },
+  { title: "주간 제품 회의 · 온보딩 개편", where: "요약", text: "온보딩 단계를 셋에서 하나로. 실험은 12월 첫 주 시작." },
+  { title: "한국 근현대사 — 개항기의 경제 변화", where: "원고", t: 1830, text: "방곡령은 곡물 수출을 막으려던 조치였고, 시험에 자주 나옵니다." },
+  { title: "자료구조 — 균형 이진 탐색 트리", where: "원고", t: 640, text: "회전 연산은 과제에서 직접 구현해야 합니다." },
+];
+
+const DUR = 4442;
+const SECTIONS = [
+  { t: 2, h: "제2법칙의 두 가지 진술" }, { t: 862, h: "카르노 기관과 효율의 상한" }, { t: 1865, h: "클라우지우스 부등식" },
+  { t: 3160, h: "통계적 해석" }, { t: 4180, h: "시험과 과제" },
+];
+
+const PARAS = [
+  { t: 2, s: 0, ko: "자, 시작하겠습니다. 지난 시간에 열역학 제1법칙, 그러니까 에너지 보존까지 봤죠. 그런데 제1법칙만으로는 설명이 안 되는 게 있습니다. 뜨거운 커피를 책상에 두면 식기만 하지, 방 안의 열을 모아서 저절로 다시 뜨거워지는 일은 없잖아요. 에너지는 보존되는데도 말이죠.",
+    en: "All right, let's begin. Last time we covered the first law of thermodynamics — conservation of energy. But there are things the first law alone cannot explain. Leave a hot coffee on the desk and it only cools; it never gathers heat from the room and warms itself back up, even though energy would still be conserved." },
+  { t: 41, s: 0, p: 3, ko: "이 ‘방향’을 정해 주는 게 오늘 배울 제2법칙입니다. 슬라이드 3쪽 보시면 진술이 두 가지 있어요. 켈빈–플랑크 진술, 그리고 클라우지우스 진술.",
+    en: "What sets this direction is the second law, today's topic. On slide 3 you'll see two statements: the Kelvin–Planck statement and the Clausius statement." },
+  { t: 135, s: 0, p: 4, ko: "켈빈–플랑크 진술은 이겁니다. 열원 하나에서 열을 받아서 그걸 전부 일로 바꾸는 순환 기관은 만들 수 없다. 효율 100퍼센트짜리 엔진은 없다는 얘기예요.",
+    en: "The Kelvin–Planck statement says this: no cyclic engine can take heat from a single reservoir and convert all of it into work. In other words, there is no engine with 100 percent efficiency." },
+  { t: 182, s: 1, ko: "교수님, 그러면 등온 팽창에서는 받은 열이 전부 일로 바뀌지 않나요?",
+    en: "Professor, in an isothermal expansion, isn't all the absorbed heat converted into work?" },
+  { t: 191, s: 0, p: 4, ko: "좋은 질문이에요. 등온 팽창 한 번은 그렇죠. 하지만 ‘순환’이 아닙니다. 기체가 원래 상태로 돌아오지 않았잖아요. 다시 압축해서 돌아오려면 반드시 어딘가로 열을 버려야 합니다. 이 ‘순환’이라는 단어, 시험에서 빠뜨리면 감점입니다.",
+    en: "Good question. For a single isothermal expansion, yes. But that isn't a cycle — the gas hasn't returned to its initial state. To compress it back, you must dump heat somewhere. Leave out the word ‘cycle’ on the exam and you lose points." },
+  { t: 348, s: 0, p: 5, ko: "클라우지우스 진술로 넘어가죠. 다른 아무 변화 없이, 차가운 물체에서 뜨거운 물체로 열이 저절로 흐르는 일은 없다. 냉장고는요? 냉장고는 전기라는 일을 넣어 주니까 ‘다른 변화 없이’가 아니죠.",
+    en: "On to the Clausius statement. Heat never flows spontaneously from a colder body to a hotter one with no other change. What about a refrigerator? We feed it electrical work, so it isn't ‘with no other change’." },
+  { t: 862, s: 0, p: 7, ko: "이제 카르노 기관을 봅시다. 등온 과정 둘, 단열 과정 둘로 이루어진 가역 순환이에요. 이 기관의 효율은 작동 물질이 뭐든 상관없이 두 열원의 온도로만 정해집니다.",
+    en: "Now let's look at the Carnot engine: a reversible cycle made of two isothermal and two adiabatic processes. Its efficiency is set only by the two reservoir temperatures, whatever the working substance." },
+  { t: 1421, s: 0, p: 8, ko: "예를 들어 300켈빈과 600켈빈 사이에서 돌아가는 기관이면 최대 효율이 50퍼센트입니다. 여기서 꼭 기억할 것, 온도는 반드시 켈빈으로 바꾸고 시작하세요. 섭씨로 넣어서 틀리는 학생이 매 학기 꼭 나옵니다.",
+    en: "For example, an engine running between 300 K and 600 K has a maximum efficiency of 50 percent. Remember: always convert temperatures to kelvin first. Every semester someone gets it wrong with Celsius." },
+  { t: 1865, s: 0, p: 10, part: true, ko: "이제 오늘의 핵심, 클라우지우스 부등식입니다. 임의의 순환 과정에 대해서 델타 큐 나누기 티를 한 바퀴 적분하면 항상 0보다 작거나 같다. 등호는 가역 과정일 때만 성립해요.",
+    en: "Now the heart of today's lecture, the Clausius inequality. For any cyclic process, the integral of δQ over T around the cycle is always less than or equal to zero. Equality holds only for reversible processes." },
+  { t: 2007, s: 1, ko: "비가역 과정에서 왜 부등호가 되는지 다시 한번 설명해 주실 수 있나요?",
+    en: "Could you explain once more why it becomes an inequality for irreversible processes?" },
+  { t: 2015, s: 0, p: 12, ko: "네. 카르노 정리에서 비가역 기관의 효율이 가역 기관보다 항상 낮다고 했죠. 그 부등식을 열량과 온도로 다시 쓰면 그대로 나옵니다. 12쪽 유도 과정을 꼭 직접 손으로 따라 써 보세요. 기말 서술형으로 낼 겁니다.",
+    en: "Sure. Carnot's theorem told us an irreversible engine is always less efficient than a reversible one. Rewrite that inequality in terms of heat and temperature and it follows directly. Work through the derivation on slide 12 by hand — it will be an essay question on the final." },
+  { t: 3160, s: 0, p: 16, ko: "볼츠만은 엔트로피를 전혀 다른 방식으로 썼습니다. S는 k 로그 W. W는 지금 보이는 거시 상태를 만들 수 있는 미시 상태의 개수예요. ‘무질서’라는 말은 비유일 뿐이니까, 답안에는 미시 상태의 수라고 쓰세요.",
+    en: "Boltzmann wrote entropy in an entirely different way: S equals k log W, where W is the number of microstates that produce the macrostate we see. ‘Disorder’ is only a metaphor, so write ‘number of microstates’ in your answers." },
+  { t: 3545, s: 1, ko: "자유 팽창에서는 열이 드나들지 않는데도 엔트로피가 늘어나는 건가요?",
+    en: "In a free expansion no heat flows in or out, yet the entropy still increases?" },
+  { t: 3554, s: 0, p: 18, ko: "맞아요. 열이 0이어도 늘어납니다. 그래서 dS는 실제 경로의 열이 아니라, 같은 처음과 끝을 잇는 가역 경로의 열로 계산해요. 부피가 두 배면 델타 S는 N k 로그 2.",
+    en: "Right. It increases even with zero heat. That's why dS is computed not from the heat along the actual path, but along a reversible path joining the same end states. Double the volume and ΔS is N k log 2." },
+  { t: 4180, s: 0, ko: "마지막으로 과제입니다. 교재 20장 연습문제 12번, 17번, 23번. 다음 주 화요일 수업 전까지 제출하세요. 다음 시간에는 자유 에너지로 넘어갑니다.",
+    en: "Finally, the homework: exercises 12, 17 and 23 from chapter 20, due before class next Tuesday. Next time we move on to free energy." },
+];
+
+const STREAM = [
+  { p: 7, ko: "그래서 카르노 기관의 효율은 작동 물질이 뭐든 상관이 없습니다.", en: "So the efficiency of a Carnot engine doesn't depend on the working substance at all." },
+  { p: 7, ko: "오직 두 열원의 온도, 그러니까 높은 쪽 온도와 낮은 쪽 온도로만 정해져요.", en: "It is fixed only by the two reservoir temperatures — the hot one and the cold one." },
+  { p: 8, ko: "식으로 쓰면 효율은 1 빼기, 낮은 온도 나누기 높은 온도.", en: "As a formula, efficiency is one minus the cold temperature over the hot temperature." },
+  { p: 8, ko: "예를 들어 300켈빈과 600켈빈 사이에서 돌아가는 기관이면 최대 효율이 50퍼센트입니다.", en: "For example, an engine running between 300 K and 600 K has a maximum efficiency of 50 percent." },
+  { ko: "여기서 꼭 기억할 것, 온도는 반드시 켈빈으로 바꾸고 시작하세요.", en: "One thing to remember here: always convert temperatures to kelvin before you start." },
+  { ko: "섭씨로 넣어서 틀리는 학생이 매 학기 꼭 나옵니다.", en: "Every semester someone gets it wrong by plugging in Celsius." },
+  { p: 9, ko: "그럼 실제 자동차 엔진은 어떨까요? 이론 상한보다 한참 낮죠.", en: "What about a real car engine? It sits far below the theoretical limit." },
+  { p: 9, ko: "마찰이 있고, 열이 새고, 과정이 빠르게 일어나니까 가역이 아니에요.", en: "There is friction, heat leaks, and the process runs fast, so it is not reversible." },
+  { p: 9, ko: "비가역 기관의 효율은 가역 기관보다 항상 낮다, 이게 카르노 정리입니다.", en: "An irreversible engine is always less efficient than a reversible one — that is Carnot's theorem." },
+  { p: 10, ko: "질문 있나요? 없으면 이걸 가지고 클라우지우스 부등식으로 넘어가겠습니다.", en: "Any questions? If not, we'll use this to move on to the Clausius inequality." },
+  { ko: "잠깐, 뒤쪽에서 질문이 있네요. 네, 말씀하세요.", en: "Hold on, there's a question in the back. Yes, go ahead." },
+  { ko: "열원이 세 개 이상이면 효율을 어떻게 정의하나요?", en: "How do we define efficiency when there are three or more reservoirs?" },
+];
+const RAW_POOL = STREAM.concat([
+  { ko: "자, 여기까지 질문 없으면 다음 슬라이드로 넘어갈게요.", en: "If there are no questions so far, let's move to the next slide." },
+  { p: 6, ko: "이 그림에서 가로축은 부피, 세로축은 압력입니다.", en: "In this diagram the horizontal axis is volume and the vertical axis is pressure." },
+  { p: 6, ko: "등온선 두 개와 단열선 두 개가 만나서 닫힌 곡선을 만들죠.", en: "Two isotherms and two adiabats meet to form a closed curve." },
+  { p: 6, ko: "닫힌 곡선의 넓이가 한 순환 동안 한 일입니다.", en: "The area of the closed curve is the work done in one cycle." },
+  { ko: "이건 다음 주 과제에도 나오니까 표시해 두세요.", en: "This will show up in next week's homework, so mark it." },
+  { ko: "칠판에 다시 한번 써 볼게요.", en: "Let me write it on the board once more." },
+]);
+
+const SLIDES = {
+  3: { h: "열역학 제2법칙 — 두 가지 진술", b: ["켈빈–플랑크 진술", "클라우지우스 진술", "두 진술은 서로 동치"] },
+  4: { h: "켈빈–플랑크 진술", f: "η = W / Q_h < 1", b: ["하나의 열원 → 전부 일: 불가능", "핵심어: 순환 과정"] },
+  5: { h: "클라우지우스 진술", b: ["저온 → 고온, 저절로는 불가능", "냉장고: 외부에서 일 W를 공급"] },
+  7: { h: "카르노 기관", f: "η_C = 1 − T_c / T_h", b: ["등온 과정 2 + 단열 과정 2", "작동 물질과 무관"] },
+  8: { h: "카르노 효율 — 예제", f: "η = 1 − 300 / 600 = 0.5", b: ["온도는 반드시 켈빈(K)", "실제 기관의 효율 < η_C"] },
+  9: { h: "카르노 정리", f: "η_비가역 < η_가역", b: ["같은 두 열원 사이에서 성립", "마찰 · 열 누설 · 유한한 속도"] },
+  10: { h: "클라우지우스 부등식", f: "∮ δQ / T ≤ 0", b: ["등호: 가역 순환 과정", "부등호: 비가역 순환 과정"] },
+  12: { h: "부등식의 유도", f: "Q_h / T_h − Q_c / T_c ≤ 0", b: ["카르노 정리에서 출발", "임의의 순환을 작은 카르노 순환으로 분할", "기말 서술형 범위"] },
+  13: { h: "엔트로피의 정의", f: "dS = δQ_rev / T", b: ["상태 함수 — 경로와 무관", "고립계: ΔS ≥ 0"] },
+  16: { h: "볼츠만의 엔트로피", f: "S = k_B ln W", b: ["W: 거시 상태에 대응하는 미시 상태의 수", "‘무질서’는 비유"] },
+  18: { h: "자유 팽창", f: "ΔS = N k_B ln 2", b: ["Q = 0, W = 0 인 비가역 과정", "가역 등온 경로로 계산"] },
+};
+
+const QUIZ = [
+  { q: "켈빈–플랑크 진술이 금지하는 것은 무엇인가요?", a: 1, picked: 1, t: 191, p: 4,
+    c: ["열이 뜨거운 곳에서 차가운 곳으로 흐르는 것", "하나의 열원에서 받은 열을 전부 일로 바꾸는 순환 기관", "일을 전부 열로 바꾸는 과정", "등온 팽창에서 열을 일로 바꾸는 것"],
+    ex: "핵심은 ‘순환’이에요. 등온 팽창 한 번은 가능하지만, 원래 상태로 돌아오려면 반드시 열을 버려야 해요." },
+  { q: "300 K와 600 K 열원 사이에서 작동하는 카르노 기관의 효율은?", a: 1, picked: 2, t: 1421, p: 8,
+    c: ["25 %", "50 %", "67 %", "100 %"],
+    ex: "η = 1 − T_c / T_h = 1 − 300/600 = 0.5. 온도를 켈빈으로 넣었는지 먼저 확인하세요." },
+  { q: "클라우지우스 부등식 ∮ δQ / T ≤ 0 에서 등호가 성립하는 경우는?", a: 1, t: 1865, p: 10,
+    c: ["모든 순환 과정", "가역 순환 과정", "단열 과정", "고립계의 비가역 과정"],
+    ex: "등호는 가역 과정에서만 성립하고, 비가역 과정에서는 항상 0보다 작아요." },
+  { q: "이상 기체 N개가 자유 팽창으로 부피가 두 배가 될 때 엔트로피 변화는?", a: 1, t: 3554, p: 18,
+    c: ["0", "N k_B ln 2", "−N k_B ln 2", "2 N k_B"],
+    ex: "열 출입이 없어도 엔트로피는 늘어나요. 같은 처음과 끝을 잇는 가역 등온 경로로 계산하면 N k_B ln 2." },
+  { q: "교수님이 답안에서 엔트로피를 설명할 때 쓰라고 한 표현은?", a: 1, t: 3160, p: 16,
+    c: ["무질서한 정도", "가능한 미시 상태의 수", "열의 총량", "온도의 변화율"],
+    ex: "‘무질서’는 비유일 뿐이라고 하셨어요. S = k_B ln W 의 W가 미시 상태의 수예요." },
+  { q: "냉장고가 클라우지우스 진술을 어기지 않는 이유는?", a: 2, t: 348, p: 5,
+    c: ["열이 실제로는 흐르지 않아서", "냉매가 이상 기체가 아니라서", "외부에서 일을 넣어 주기 때문에", "고립계가 아니라 열린 계라서"],
+    ex: "진술의 조건은 ‘다른 변화 없이’예요. 냉장고는 전기라는 일을 받아요." },
+  { q: "엔트로피 변화 dS를 계산할 때 쓰는 열은?", a: 3, t: 3554, p: 13,
+    c: ["실제 경로에서 드나든 열", "계가 주위에 한 일", "고온 열원이 내놓은 열", "같은 처음과 끝을 잇는 가역 경로의 열"],
+    ex: "dS = δQ_rev / T. 엔트로피는 상태 함수라서 가역 경로를 골라 계산해도 돼요." },
+  { q: "과제 7의 제출 기한은 언제인가요?", a: 1, t: 4180,
+    c: ["11월 20일(금) 자정", "11월 24일(화) 수업 전", "11월 27일(금) 자정", "기말시험 당일"],
+    ex: "교재 20장 연습문제 12, 17, 23번을 다음 주 화요일 수업 전까지 내면 돼요." },
+];
+
+const CARDS = [
+  { f: "엔트로피 S", b: "거시 상태 하나에 대응하는 미시 상태의 수를 세는 상태 함수. 고립계에서는 줄어들지 않는다." },
+  { f: "켈빈–플랑크 진술", b: "하나의 열원에서 받은 열을 전부 일로 바꾸는 순환 기관은 만들 수 없다." },
+  { f: "클라우지우스 진술", b: "다른 변화 없이 차가운 곳에서 뜨거운 곳으로 열이 저절로 흐르지 않는다." },
+  { f: "카르노 효율", b: "η = 1 − T_c / T_h. 두 열원의 온도로만 정해지며, 온도는 반드시 켈빈으로 넣는다." },
+  { f: "클라우지우스 부등식", b: "∮ δQ / T ≤ 0. 등호는 가역 순환 과정에서만 성립한다." },
+  { f: "엔트로피의 정의", b: "dS = δQ_rev / T. 실제 경로가 아니라 가역 경로의 열로 계산한다." },
+  { f: "볼츠만의 식", b: "S = k_B ln W. W는 미시 상태의 수." },
+  { f: "미시 상태의 수 W", b: "지금 보이는 거시 상태를 만들 수 있는 미시적 배열의 개수." },
+  { f: "자유 팽창", b: "열 출입 없이 부피가 늘어나는 비가역 과정. 부피가 두 배면 ΔS = N k_B ln 2." },
+  { f: "가역 과정", b: "계와 주위를 모두 원래 상태로 되돌릴 수 있는 이상적인 과정." },
+  { f: "카르노 정리", b: "같은 두 열원 사이에서 비가역 기관의 효율은 가역 기관보다 항상 낮다." },
+  { f: "엔트로피 증가의 법칙", b: "고립계에서 ΔS ≥ 0. 등호는 가역 과정일 때." },
+];
+
+const QA = [
+  { q: "시험에 나온다고 한 부분은?", a: `두 곳에서 직접 말씀하셨어요.<ul><li>클라우지우스 부등식에서 엔트로피 증가의 법칙을 유도하는 과정 — 기말 서술형 ${tsBtn(2015)} ${pgBtn(12)}</li><li>켈빈–플랑크 진술에서 ‘순환’을 빠뜨리면 감점 ${tsBtn(191)} ${pgBtn(4)}</li></ul>` },
+  { q: "자유 팽창에서 엔트로피가 왜 늘어나나요?", a: `열이 드나들지 않아도 기체가 차지할 수 있는 미시 상태의 수가 늘어나기 때문이에요. 계산할 때는 같은 처음과 끝을 잇는 가역 등온 경로를 써서 <span class="eq">ΔS = N k<sub>B</sub> ln 2</span> 를 얻어요. ${tsBtn(3554)} ${pgBtn(18)}` },
+];
+const CANNED = {
+  "과제 마감일은?": `과제 7은 교재 20장 연습문제 12, 17, 23번이고, <b>11월 24일(화) 수업 전</b>까지 제출이에요. ${tsBtn(4180)}`,
+  "카르노 효율 공식만": `<span class="eq">η = 1 − T<sub>c</sub> / T<sub>h</sub></span> — 온도는 켈빈으로 넣어야 해요. 300 K와 600 K 사이라면 50 %예요. ${tsBtn(1421)} ${pgBtn(8)}`,
+};
+const CANNED_DEFAULT = "시안이라 준비해 둔 답만 보여 드려요. 실제로는 원고와 강의 자료에서 근거를 찾아, 말한 시각과 쪽수를 붙여 답해요.";
+
+/* ------------------------------------------------------------------ state + refs */
+const body = document.body, root = document.documentElement;
+const noteEl = $("#note"), script = $("#script"), reader = $("#reader"), rail = $("#rail"), wave = $("#wave");
+const recEl = $("#rec"), phRec = $("#phRec"), recBtn = $("#recBtn");
+const flows = [$("#flow .flow-in"), $("#flow2 .flow-in")];
+const SCREENS = { 1: { shell: "app", view: "first" }, 2: { shell: "app", view: "home" }, 3: { shell: "rec" }, 4: { shell: "app", view: "note", tab: "note" }, 5: { shell: "app", view: "note", tab: "study" }, 6: { shell: "phone" }, 7: { shell: "system" } };
+let screen = 0, editing = false, recState = "live", src = "mic";
+
+/* ------------------------------------------------------------------ toast */
+let toastT;
+function toast(msg) {
+  const el = $("#toast"); el.textContent = msg; el.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove("on"), 2400);
+}
+const closeMenus = () => $$("details.menu[open]").forEach((d) => (d.open = false));
+
+/* ------------------------------------------------------------------ engine */
+const engine = { state: "ready", pct: 100 };
+let bootT;
+function setEngine(state, pct = 100) {
+  engine.state = state; engine.pct = pct;
+  const wait = state !== "ready", n = Math.round(pct), eng = $("#engine");
+  eng.dataset.state = state; eng.style.setProperty("--pct", pct + "%");
+  $("#engT").textContent = wait ? `엔진 켜는 중… ${n}%` : "엔진 준비됨";
+  $("#engS").textContent = wait ? "약 3분 · GPU 메모리 42GB" : "Nemotron · 이 노트북 안에서만";
+  $("#firstCore").classList.toggle("is-wait", wait);
+  $("#firstRec").setAttribute("aria-disabled", String(wait));
+  $("#firstProg").style.strokeDasharray = `${pct} 100`;
+  $("#firstB").textContent = wait ? "엔진을 켜는 중이에요" : "지금 녹음 시작";
+  $("#firstS").textContent = wait ? `준비되면 바로 시작할 수 있어요 · ${n}%` : "마이크 · 온라인 강의 탭 소리";
+  $("#firstNote").innerHTML = wait
+    ? `<i class="pulse"></i><span>처음 켤 때는 모델을 GPU에 올리느라 3분쯤 걸려요. 그동안 파일을 먼저 올려 두셔도 돼요.</span>`
+    : `<i class="eng-dot"></i><span>준비됐어요. 이 노트북 밖으로 나가는 소리는 없어요.</span>`;
+  renderStates();
+}
+function bootEngine() {
+  clearInterval(bootT);
+  let p = 46; setEngine("booting", p);
+  bootT = setInterval(() => {
+    p += 2 + Math.random() * 5;
+    if (p >= 100) { clearInterval(bootT); setEngine("ready"); } else setEngine("booting", p);
+  }, 520);
+}
+
+/* ------------------------------------------------------------------ lists */
+function renderSide() {
+  const list = $("#noteList"), q = $("#search").value.trim();
+  if (q) {
+    const ql = q.toLowerCase(), re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    const hits = screen === 1 ? [] : HITS.filter((h) => h.text.toLowerCase().includes(ql));
+    list.innerHTML = `<div class="nl-group">검색 결과 ${hits.length}곳</div>` + (hits.map((h) =>
+      `<button class="nl-item" data-hit="${HITS.indexOf(h)}"><span class="nl-t">${esc(h.title)}</span>` +
+      `<span class="nl-s">${esc(h.where)}${h.t != null ? " · " + fmt(h.t) : ""}</span>` +
+      `<span class="nl-snip">${esc(h.text).replace(re, (m) => `<mark>${m}</mark>`)}</span></button>`).join("") ||
+      `<p class="nl-empty">‘${esc(q)}’에 맞는 곳을 찾지 못했어요.<br>제목·원고·요약·번역·자료를 모두 살펴봤어요.</p>`);
+    return;
+  }
+  if (screen === 1) { list.innerHTML = `<p class="nl-empty">아직 노트가 없어요.<br>첫 녹음이 여기에 쌓여요.</p>`; return; }
+  let g = "", html = "";
+  for (const n of NOTES) {
+    if (n.group !== g) { g = n.group; html += `<div class="nl-group">${g}</div>`; }
+    const active = (screen === 4 || screen === 5) && n.id === "n1";
+    const sub = n.busy ? `<i class="pulse"></i>${n.busy.label} ${n.busy.pct}%` : n.err ? "받아쓰기 실패" : `${n.group === "지난주" ? n.day : n.when} · ${dur(n.dur)}`;
+    html += `<button class="nl-item${active ? " is-active" : ""}" data-note="${n.id}"><span class="nl-t">${esc(n.title)}</span><span class="nl-s${n.err ? " err" : ""}">${sub}</span></button>`;
+  }
+  list.innerHTML = html;
+}
+
+function renderHome() {
+  $("#homeList").innerHTML = NOTES.map((n, i) => {
+    const em = n.busy ? `<i class="pulse"></i>` : n.err ? `<span style="color:var(--ember)">${icon("alert")}</span>` : emblem(n.spk, 40);
+    const meta = [`화자 ${n.spk.length}명`, n.mats ? `자료 ${n.mats}개` : "", n.quiz || ""].filter(Boolean).map((m) => `<span>${m}</span>`).join("");
+    const main = n.busy ? `<span class="busy-line"><span>${n.busy.label}… ${n.busy.pct}%</span><span class="bar"><i style="width:${n.busy.pct}%"></i></span></span>`
+      : n.err ? `<span class="err-line">${icon("alert")}<span><b>받아쓰기에 실패했어요.</b> ${esc(n.err)}</span><button class="btn sm" data-toast="다시 받아쓰기 시작했어요">다시 시도</button></span>`
+      : `<span class="row-ex">${esc(n.ex)}</span><span class="row-meta">${meta}</span>`;
+    return `<article class="row${i === 0 ? " is-first" : ""}" tabindex="0" data-note="${n.id}">` +
+      `<span class="row-emblem">${em}</span><span><span class="row-title">${esc(n.title)}</span>${main}</span>` +
+      `<span class="row-when"><b>${n.day}</b>${n.when}${n.dur ? "<br>" + dur(n.dur) : ""}</span></article>`;
+  }).join("");
+  $("#phList").innerHTML = NOTES.map((n) => {
+    const em = n.busy ? `<i class="pulse"></i>` : n.err ? `<span style="color:var(--ember)">${icon("alert")}</span>` : emblem(n.spk, 32);
+    const sub = n.busy ? `${n.busy.label} ${n.busy.pct}%` : n.err ? "받아쓰기 실패 · 다시 시도" : `${n.day} ${n.when} · ${dur(n.dur)}`;
+    return `<button class="ph-row"><span class="em">${em}</span><span><b>${esc(n.title)}</b><small class="${n.err ? "err" : ""}">${sub}</small></span></button>`;
+  }).join("");
+  $("#noteEmblem").innerHTML = emblem(NOTES[0].spk, 52);
+}
+
+/* ------------------------------------------------------------------ note: transcript */
+function renderParas() {
+  $("#paras").innerHTML = PARAS.map((p, i) =>
+    (p.part ? `<div class="part"><span>30:00부터 · 화자 번호는 30분 구간마다 새로 매겨져요</span></div>` : "") +
+    `<div class="para" data-t="${p.t}" data-i="${i}"><div class="gut"><button class="who" style="--c:var(--spk-${p.s + 1})" data-s="${p.s}">화자 ${p.s + 1}</button>${tsBtn(p.t)}</div>` +
+    `<div class="body"><p class="tx">${esc(p.ko)}</p><p class="en" lang="en">${esc(p.en)}</p></div><div class="mar">${p.p ? pgBtn(p.p) : ""}</div></div>`).join("");
+}
+let rawTimes = null;
+function renderRaw() {
+  if (rawTimes) return;
+  const rnd = seeded(11), out = []; rawTimes = [];
+  let t = 2;
+  for (let i = 0; i < 523; i++) {
+    const l = RAW_POOL[(i * 7 + (i >> 4)) % RAW_POOL.length];
+    rawTimes.push(Math.floor(t));
+    out.push(`<div class="seg" data-t="${Math.floor(t)}"><div class="gut">${tsBtn(Math.floor(t))}</div><div class="body"><p class="tx">${esc(l.ko)}</p><p class="en" lang="en">${esc(l.en)}</p></div>` +
+      `<div class="mar">${l.p ? pgBtn(l.p) : ""}${i % 97 === 41 ? `<span class="tag" style="margin:0">수정됨</span>` : ""}</div></div>`);
+    t += 6.5 + rnd() * 3.98;
+  }
+  $("#raw").innerHTML = out.join("") + `<div class="raw-note"><p>문장 523개 · 시안에서는 같은 문장을 되풀이해 길이만 맞췄어요. 화면 밖 문장은 그리지 않아 길어져도 가벼워요.</p></div>`;
+  if (editing) applyEditable(true);
+}
+function setView(v) {
+  script.dataset.view = v;
+  $$("#viewCtl button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.v === v)));
+  if (v === "raw") renderRaw();
+  $("#scriptCount").textContent = v === "raw" ? "문장 523개" : `문단 ${PARAS.length}개`;
+}
+let translated = false, trT = null;
+function setLang(l) {
+  const apply = () => { script.dataset.lang = l; $$("#langCtl button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.l === l))); };
+  if (l === "ko" || translated) return apply();
+  if (trT) return;
+  let p = 0; $("#trBusy").hidden = false;
+  trT = setInterval(() => {
+    p += 7 + Math.random() * 12;
+    if (p >= 100) { clearInterval(trT); trT = null; translated = true; $("#trBusy").hidden = true; apply(); }
+    else { $("#trBar").style.width = p + "%"; $("#trBusyT").textContent = `영어로 번역하는 중… ${Math.round(p)}%`; }
+  }, 180);
+}
+
+/* edit mode */
+function applyEditable(on) {
+  $$("#script .tx").forEach((el) => { if (on) { el.setAttribute("contenteditable", "plaintext-only"); el.spellcheck = false; } else el.removeAttribute("contenteditable"); });
+}
+function setEdit(on) {
+  editing = on; body.classList.toggle("editing", on);
+  const b = $("#editBtn"); b.setAttribute("aria-pressed", String(on)); $("span", b).textContent = on ? "편집 끝" : "편집";
+  if (on && noteEl.dataset.tab !== "script") setTab("script");
+  applyEditable(on);
+  renderStates();
+}
+script.addEventListener("focusin", (e) => { const t = e.target.closest(".tx"); if (t && editing) t.dataset.orig = t.textContent; });
+script.addEventListener("focusout", (e) => {
+  const t = e.target.closest(".tx"); if (!t || !editing) return;
+  if (!t.textContent.trim()) { t.textContent = t.dataset.orig || ""; return; }
+  if (t.textContent === t.dataset.orig) return;
+  t.classList.add("saved"); setTimeout(() => t.classList.remove("saved"), 1100);
+  const mar = t.closest(".para, .seg").querySelector(".mar");
+  if (mar && !mar.querySelector(".tag")) mar.insertAdjacentHTML("beforeend", `<span class="tag" style="margin:0">수정됨</span>`);
+  toast("고친 문장을 저장했어요");
+});
+script.addEventListener("keydown", (e) => {
+  const t = e.target.closest(".tx"); if (!t || !editing) return;
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); t.blur(); }
+  if (e.key === "Escape") { t.textContent = t.dataset.orig || t.textContent; t.blur(); }
+});
+
+/* ------------------------------------------------------------------ note: tabs + rail */
+function syncMock() {
+  body.dataset.screen = screen;
+  $$(".mock-tabs [data-go]").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.go === screen)));
+  try { history.replaceState(null, "", "#" + screen); } catch (_) {}
+  renderStates();
+}
+function setTab(tab, fromGo) {
+  noteEl.dataset.tab = tab;
+  $$(".note-tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
+  if (tab !== "script" && editing) setEdit(false);
+  if (!fromGo) { screen = tab === "study" ? 5 : 4; syncMock(); renderSide(); }
+}
+function setRail(r) {
+  rail.dataset.rail = r;
+  $$(".rail-tabs .tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.rail === r)));
+}
+function openRail(on) {
+  noteEl.classList.toggle("rail-open", on);
+  $("#railBtn").setAttribute("aria-pressed", String(on));
+}
+let page = 12;
+function openPage(p, reveal) {
+  page = clamp(p, 1, 24);
+  if (reveal) { openRail(true); setRail("mat"); }
+  $("#pgNow").textContent = `p.${page} / 24`;
+  const s = SLIDES[page], el = $("#slide");
+  el.className = "slide" + (s ? "" : " is-blank");
+  el.innerHTML = s
+    ? `<small>일반물리학 2 · 11주차 · ${page}</small><h4>${esc(s.h)}</h4>${s.f ? `<div class="f">${fx(s.f)}</div>` : ""}<ul>${s.b.map((x) => `<li>${fx(x)}</li>`).join("")}</ul>`
+    : `<p>${page}쪽<br>시안에는 이 쪽의 내용을 담지 않았어요</p>`;
+  const refs = PARAS.filter((x) => x.p === page);
+  $("#backrefs").innerHTML = `<h4>이 쪽을 말한 곳 · ${refs.length}</h4>` + (refs.map((r) =>
+    `<button class="backref" data-t="${r.t}"><span>${fmt(r.t)}</span><span>${esc(r.ko.slice(0, 58))}…</span></button>`).join("") ||
+    `<p class="none">이 쪽과 이어진 문장이 아직 없어요.</p>`);
+}
+
+/* questions */
+function renderQA() {
+  $("#qa").innerHTML = QA.map((x) => `<div class="qa-item"><p class="qa-q">${esc(x.q)}</p><div class="qa-a">${x.a ?? `<div class="busy-line"><i class="pulse"></i><span>원고와 자료를 살펴보는 중</span></div>`}</div></div>`).join("");
+  $("#qaCount").textContent = QA.length;
+}
+function ask(q) {
+  q = q.trim(); if (!q) return;
+  const item = { q, a: null }; QA.push(item);
+  openRail(true); setRail("qa"); renderQA();
+  const pane = $("#qa"); pane.scrollTop = pane.scrollHeight;
+  setTimeout(() => { item.a = CANNED[q] || CANNED_DEFAULT; renderQA(); pane.scrollTop = pane.scrollHeight; }, 1500);
+}
+$("#askForm").addEventListener("submit", (e) => { e.preventDefault(); const i = $("#question"); ask(i.value); i.value = ""; });
+$(".ask-sug").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) ask(b.textContent); });
+
+/* ------------------------------------------------------------------ player */
+let pt = 2015, playing = false, playT = null, speed = 1, follow = true, nowIdx = -2;
+function buildWave() {
+  const rnd = seeded(7), N = 220; let bars = "";
+  for (let i = 0; i < N; i++) {
+    const x = i / N, env = .32 + .68 * Math.abs(Math.sin(x * 9.2) * Math.cos(x * 3.1 + .6));
+    const hush = (x > .395 && x < .41) || (x > .7 && x < .712) ? .15 : 1;
+    const h = Math.max(1.5, (4 + rnd() * 22) * env * hush);
+    bars += `<rect x="${i * 4}" y="${(15 - h / 2).toFixed(1)}" width="1.6" height="${h.toFixed(1)}" rx=".8"/>`;
+  }
+  const svg = (c) => `<svg class="${c}" viewBox="0 0 ${N * 4} 30" preserveAspectRatio="none" fill="currentColor" aria-hidden="true">${bars}</svg>`;
+  wave.innerHTML = svg("w-base") + svg("w-play") + `<i class="head"></i>` +
+    SECTIONS.map((s) => `<button class="mk" style="left:${((s.t / DUR) * 100).toFixed(2)}%" data-t="${s.t}" aria-label="${fmt(s.t)} ${esc(s.h)}"><span>${fmt(s.t)} · ${esc(s.h)}</span></button>`).join("");
+}
+function setTime(t) {
+  pt = clamp(t, 0, DUR);
+  $("#plNow").textContent = fmt(pt);
+  wave.style.setProperty("--p", ((pt / DUR) * 100).toFixed(2) + "%");
+  wave.setAttribute("aria-valuenow", String(Math.round(pt)));
+  let k = -1;
+  for (let i = 0; i < PARAS.length; i++) if (PARAS[i].t <= pt) k = i;
+  if (k === nowIdx) return false;
+  nowIdx = k;
+  $$("#paras .para.now").forEach((x) => x.classList.remove("now"));
+  const el = $(`#paras .para[data-i="${k}"]`);
+  if (el) el.classList.add("now");
+  return true;
+}
+function flash(el) {
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 1900);
+}
+function reveal(el) { el.scrollIntoView({ block: "center", behavior: reduced.matches ? "auto" : "smooth" }); }
+function jump(t) {
+  setTime(t);
+  if (noteEl.dataset.tab !== "script") setTab("script");
+  let target;
+  if (script.dataset.view === "raw" && rawTimes) {
+    let lo = 0, hi = rawTimes.length - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (rawTimes[mid] <= t) lo = mid; else hi = mid - 1; }
+    target = $("#raw").children[lo];
+  } else target = $(`#paras .para[data-i="${Math.max(0, nowIdx)}"]`);
+  if (target) { reveal(target); flash(target); }
+}
+function setPlaying(on) {
+  playing = on; clearInterval(playT);
+  $("#plIcon").setAttribute("href", on ? "#i-pause" : "#i-play");
+  $("#plPlay").setAttribute("aria-label", on ? "일시정지" : "재생");
+  if (!on) return;
+  playT = setInterval(() => {
+    if (pt >= DUR) return setPlaying(false);
+    const moved = setTime(pt + .25 * speed);
+    if (moved && follow && noteEl.dataset.tab === "script" && script.dataset.view === "final") { const el = $("#paras .para.now"); if (el) reveal(el); }
+  }, 250);
+}
+$("#plPlay").addEventListener("click", () => setPlaying(!playing));
+$("#plBack").addEventListener("click", () => setTime(pt - 10));
+$("#plFwd").addEventListener("click", () => setTime(pt + 10));
+$("#plSpeed").addEventListener("click", (e) => { const steps = [1, 1.25, 1.5, 2, .75]; speed = steps[(steps.indexOf(speed) + 1) % steps.length]; e.currentTarget.textContent = speed.toFixed(speed % 1 && speed * 10 % 1 ? 2 : 1) + "×"; });
+$("#plFollow").addEventListener("click", (e) => { follow = !follow; e.currentTarget.setAttribute("aria-pressed", String(follow)); });
+wave.addEventListener("click", (e) => {
+  if (e.target.closest(".mk")) return;
+  const r = wave.getBoundingClientRect(); setTime(((e.clientX - r.left) / r.width) * DUR);
+});
+wave.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") { e.preventDefault(); setTime(pt - 10); }
+  if (e.key === "ArrowRight") { e.preventDefault(); setTime(pt + 10); }
+});
+
+/* ------------------------------------------------------------------ study */
+function updateScore() {
+  const done = QUIZ.filter((q) => q.picked != null), right = done.filter((q) => q.picked === q.a).length;
+  $("#score").textContent = `${QUIZ.length}문제 중 ${done.length}문제 풂 · ${right}개 맞음`;
+  const s = $('.note-tabs .tab[data-tab="study"] small'); if (s) s.textContent = `${done.length}/${QUIZ.length}`;
+}
+function answer(i, k) {
+  const q = QUIZ[i], el = $(`.quiz[data-i="${i}"]`);
+  if (!el || el.classList.contains("answered")) return;
+  q.picked = k; el.classList.add("answered");
+  const bs = $$(".choice", el), ok = k === q.a;
+  bs[q.a].classList.add("right"); $(".mk", bs[q.a]).textContent = "정답";
+  if (!ok) { bs[k].classList.add("wrong"); $(".mk", bs[k]).textContent = "내가 고른 답"; }
+  const ex = $(".explain", el); ex.hidden = false;
+  ex.innerHTML = `<b>${ok ? "맞았어요." : `정답은 ${"ABCD"[q.a]}예요.`}</b> ${fx(q.ex)} ${tsBtn(q.t)}${q.p ? " " + pgBtn(q.p) : ""}`;
+  updateScore();
+}
+function renderQuiz() {
+  $("#quiz").innerHTML = QUIZ.map((q, i) =>
+    `<article class="quiz" data-i="${i}"><span class="qn">${i + 1}</span><div><h3>${fx(q.q)}</h3><ol class="choices">` +
+    q.c.map((c, k) => `<li><button class="choice" data-k="${k}"><span class="k">${"ABCD"[k]}</span><span>${fx(c)}</span><span class="mk"></span></button></li>`).join("") +
+    `</ol><p class="explain" hidden></p></div></article>`).join("");
+  QUIZ.forEach((q, i) => { if (q.picked != null) answer(i, q.picked); });
+  updateScore();
+}
+$("#quiz").addEventListener("click", (e) => { const b = e.target.closest(".choice"); if (b) answer(+b.closest(".quiz").dataset.i, +b.dataset.k); });
+
+let ci = 3; const known = new Set([0, 1, 2]);
+const card = $("#card");
+function paintCard() {
+  $("#cardF").innerHTML = fx(CARDS[ci].f); $("#cardB").innerHTML = fx(CARDS[ci].b);
+  $("#deckCount").textContent = `${ci + 1} / ${CARDS.length} · ${known.size}장 익힘`;
+  $("#deckTicks").innerHTML = CARDS.map((_, i) => `<i class="${known.has(i) ? "on" : ""}${i === ci ? " cur" : ""}"></i>`).join("");
+}
+function moveCard(d) {
+  const flipped = card.getAttribute("aria-pressed") === "true";
+  ci = (ci + d + CARDS.length) % CARDS.length;
+  card.setAttribute("aria-pressed", "false");
+  if (flipped && !reduced.matches) setTimeout(paintCard, 230); else paintCard();
+}
+const flipCard = () => card.setAttribute("aria-pressed", String(card.getAttribute("aria-pressed") !== "true"));
+card.addEventListener("click", flipCard);
+$("#cardPrev").addEventListener("click", () => moveCard(-1));
+$("#cardNext").addEventListener("click", () => moveCard(1));
+$("#cardKnow").addEventListener("click", () => { known.add(ci); moveCard(1); });
+$("#cardAgain").addEventListener("click", () => { known.delete(ci); moveCard(1); });
+
+/* ------------------------------------------------------------------ recording: transcript stream */
+let tsec = 1421, lineCount = 142, si = 4, streamT = null, pendT = 0, finalT = null;
+const streamOn = () => (screen === 3 && recState === "live") || screen === 6;
+const timerOn = () => (screen === 3 && (recState === "live" || recState === "silent")) || screen === 6;
+const paintTimer = () => { const s = fmt(tsec); $("#timer").textContent = s; $("#timer2").textContent = s; };
+const paintCount = () => { $("#flowCount").textContent = `문장 ${lineCount}개`; };
+const lineHTML = (t, l, fresh) =>
+  `<div class="line${fresh ? " is-new" : ""}"><span class="lt">${fmt(t)}</span><div><p class="lk">${esc(l.ko)}${l.p ? `<span class="pg">p.${l.p}</span>` : ""}</p><p class="le" lang="en">${esc(l.en)}</p></div></div>`;
+
+/* newest line enters at the bottom; older lines glide up by exactly its height */
+function flip(inner, mutate) {
+  const before = inner.offsetHeight; mutate();
+  if (reduced.matches) return;
+  const d = inner.offsetHeight - before; if (d <= 0) return;
+  inner.style.transition = "none"; inner.style.transform = `translateY(${d}px)`;
+  void inner.offsetHeight;
+  inner.style.transition = "transform .7s cubic-bezier(.2,.7,.2,1)"; inner.style.transform = "";
+}
+function seedFlow() {
+  tsec = 1421; lineCount = 142; si = 4;
+  const html = [1378, 1389, 1400, 1411].map((t, i) => lineHTML(t, STREAM[i], false)).join("");
+  flows.forEach((f) => { f.innerHTML = html; f.style.transform = ""; });
+}
+function schedule() {
+  clearTimeout(streamT);
+  flows.forEach((f) => $$(".pending", f).forEach((p) => p.remove()));
+  if (!streamOn()) return;
+  streamT = setTimeout(() => {
+    pendT = tsec;
+    flows.forEach((f) => flip(f, () => f.insertAdjacentHTML("beforeend", `<div class="line pending is-new"><span class="lt">${fmt(pendT)}</span><div><p class="lk"><i class="pulse"></i>받아쓰는 중</p></div></div>`)));
+    streamT = setTimeout(() => {
+      const l = STREAM[si++ % STREAM.length];
+      flows.forEach((f) => {
+        flip(f, () => { const p = $(".pending", f); if (p) p.outerHTML = lineHTML(pendT, l, true); else f.insertAdjacentHTML("beforeend", lineHTML(pendT, l, true)); });
+        while (f.children.length > 40) f.firstElementChild.remove();
+      });
+      lineCount++; paintCount(); schedule();
+    }, 1300);
+  }, 2000 + Math.random() * 1700);
+}
+setInterval(() => { if (timerOn()) { tsec++; paintTimer(); } }, 1000);
+
+const SRC = { mic: "마이크 · 배열 마이크(Realtek)", tab: "탭 소리 · 일반물리학 2 — LMS", both: "마이크 + 탭 소리" };
+function paintHint() {
+  const armed = { mic: "마이크로 강의실 소리를 받아요. 녹음을 시작한 뒤에는 소리 종류를 바꿀 수 없어요.", tab: "공유 창이 뜨면 강의 탭을 고르고 ‘탭 오디오 공유’를 켜 주세요.", both: "마이크와 탭 소리를 함께 받아요. 울림을 줄이려고 에코 제거가 켜져요." };
+  $("#recSrc").textContent = SRC[src];
+  $("#recHint").textContent = recState === "armed" ? armed[src]
+    : recState === "silent" ? "소리가 다시 들어오면 이 경고는 저절로 사라져요."
+    : "말하는 내용이 10초 안팎 간격으로 받아써져요. 소리 종류는 녹음 중에 바꿀 수 없어요.";
+}
+const setProg = (p) => { $("#recProg").style.strokeDasharray = `${p} 100`; };
+function runFinal() {
+  const lis = $$("#finalSteps li"); let k = 0;
+  lis.forEach((li) => { li.className = ""; li.lastElementChild.textContent = ""; });
+  setProg(0);
+  const step = () => {
+    if (k >= lis.length) return setRec("done");
+    const li = lis[k]; let pct = 0; li.className = "on";
+    finalT = setInterval(() => {
+      pct += 8 + Math.random() * 13;
+      if (pct >= 100) { clearInterval(finalT); li.className = "ok"; li.lastElementChild.textContent = "끝"; k++; setProg((k / lis.length) * 100); step(); }
+      else { li.lastElementChild.textContent = Math.round(pct) + "%"; setProg(((k + pct / 100) / lis.length) * 100); }
+    }, 240);
+  };
+  step();
+}
+function setRec(state, reset) {
+  recState = state; recEl.dataset.rec = state;
+  clearTimeout(streamT); clearInterval(finalT);
+  flows.forEach((f) => { const p = $(".pending", f); if (p) p.remove(); });
+  const L = { armed: ["녹음 준비", "녹음 시작"], live: ["녹음 중", "멈추고 정리하기"], silent: ["소리 없음", "멈추고 정리하기"], final: ["정리하는 중", "노트를 정리하고 있어요"], done: ["정리 끝", "노트가 준비됐어요"] }[state];
+  $("#recLabel").textContent = L[0]; $("#recAction").textContent = L[1];
+  recBtn.classList.toggle("is-stop", state !== "armed"); recBtn.setAttribute("aria-label", L[1]);
+  $("#srcCtl").setAttribute("aria-disabled", String(state !== "armed"));
+  if (reset === "zero") { tsec = 0; lineCount = 0; si = 0; flows.forEach((f) => { f.innerHTML = ""; f.style.transform = ""; }); }
+  if (reset === "mid") seedFlow();
+  if (state !== "final" && state !== "done") setProg(0);
+  paintTimer(); paintCount(); paintHint();
+  if (state === "final") runFinal();
+  schedule(); renderStates();
+}
+function pressRec() {
+  if (recState === "armed") setRec("live", "zero");
+  else if (recState === "live" || recState === "silent") setRec("final");
+}
+recBtn.addEventListener("click", pressRec);
+$("#recBtn2").addEventListener("click", () => { go(3); setRec("final"); });
+$("#srcCtl").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (recState !== "armed") return toast("소리 종류는 녹음을 시작하기 전에만 바꿀 수 있어요");
+  src = b.dataset.src; $$("#srcCtl button").forEach((x) => x.setAttribute("aria-checked", String(x === b))); paintHint();
+});
+function setTranslate(on) {
+  recEl.dataset.tr = phRec.dataset.tr = on ? "on" : "off";
+  $("#trSwitch").setAttribute("aria-checked", String(on)); $("#trChip").setAttribute("aria-pressed", String(on));
+}
+$("#trSwitch").addEventListener("click", () => setTranslate(recEl.dataset.tr !== "on"));
+$("#trChip").addEventListener("click", () => setTranslate(recEl.dataset.tr !== "on"));
+
+/* ------------------------------------------------------------------ recording: the pond (canvas) */
+/* A fake voice: phrases and pauses, syllable-rate flutter. Swap for the real RMS level (rec.level in app.js). */
+function makeVoice() {
+  let speaking = true, until = 0, syl = 0, target = 0, lvl = 0;
+  return (now, mode) => {
+    if (mode !== "live") { lvl += (0 - lvl) * .08; return lvl; }
+    if (now > until) { speaking = !speaking; until = now + (speaking ? 1.5 + Math.random() * 3.6 : .25 + Math.random() * .9); }
+    if (now > syl) { syl = now + .08 + Math.random() * .13; target = speaking ? .22 + Math.random() * .78 : .02 + Math.random() * .05; }
+    lvl += (target - lvl) * .2;
+    return lvl;
+  };
+}
+class Pond {
+  constructor(canvas, core, opt) {
+    this.c = canvas; this.core = core; this.g = canvas.getContext("2d");
+    this.rings = []; this.last = 0; this.calm = 0;
+    this.o = Object.assign({ speed: 60, life: 11, grid: 96 }, opt);
+  }
+  measure() {
+    const w = this.c.clientWidth, h = this.c.clientHeight; if (!w || !h) return false;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = Math.round(w * dpr), H = Math.round(h * dpr);
+    if (this.c.width !== W || this.c.height !== H) { this.c.width = W; this.c.height = H; }
+    this.g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cr = this.c.getBoundingClientRect(), br = this.core.getBoundingClientRect(), k = cr.width / w || 1;
+    this.w = w; this.h = h;
+    this.ox = (br.left + br.width / 2 - cr.left) / k; this.oy = (br.top + br.height / 2 - cr.top) / k; this.r0 = br.width / 2 / k;
+    return true;
+  }
+  ring(r, rgb, a, lw) {
+    const g = this.g; g.strokeStyle = `rgba(${rgb},${a.toFixed(3)})`; g.lineWidth = lw;
+    g.beginPath(); g.arc(this.ox, this.oy, r, 0, Math.PI * 2); g.stroke();
+  }
+  draw(now, level, mode) {
+    if (!this.measure()) return;
+    const g = this.g, o = this.o; g.clearRect(0, 0, this.w, this.h);
+    const maxR = Math.hypot(Math.max(this.ox, this.w - this.ox), Math.max(this.oy, this.h - this.oy));
+    /* still water: a faint fixed scale, so the surface exists even in silence */
+    for (let r = this.r0 + o.grid, i = 0; r < maxR; r += o.grid, i++) this.ring(r, "168,188,230", Math.max(.014, .06 - i * .008), 1);
+    if (reduced.matches) {
+      /* no travelling rings: fixed rings whose brightness follows the voice */
+      this.calm += (level - this.calm) * .06;
+      for (let i = 1; i <= 8; i++) this.ring(this.r0 + i * 58, "200,214,240", (.06 + this.calm * .5) * (1 - i / 9), 1);
+      return;
+    }
+    if (mode === "live" && level > .16 && now - this.last > .42) { this.rings.push({ t: now, a: Math.min(1, level * 1.15) }); this.last = now; }
+    else if (mode === "armed" && now - this.last > 3.4) { this.rings.push({ t: now, a: .34 }); this.last = now; }
+    for (let i = this.rings.length - 1; i >= 0; i--) {
+      const q = this.rings[i], age = now - q.t, k = age / o.life;
+      if (k >= 1 || k < 0) { this.rings.splice(i, 1); continue; }
+      const r = this.r0 + 2 + o.speed * age * (1 - k * .22);
+      const m = Math.min(1, k / .2);                           /* ember at the source, cooling to moonlight */
+      const rgb = `${Math.round(255 - 65 * m)},${Math.round(123 + 85 * m)},${Math.round(102 + 138 * m)}`;
+      this.ring(r, rgb, q.a * Math.pow(1 - k, 1.7) * .66, 1 + q.a * .9 * (1 - k));
+    }
+  }
+}
+class Strip {
+  constructor(canvas) { this.c = canvas; this.g = canvas.getContext("2d"); this.v = []; this.last = 0; }
+  draw(now, level, mode) {
+    const w = this.c.clientWidth, h = this.c.clientHeight; if (!w || !h) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = Math.round(w * dpr), H = Math.round(h * dpr);
+    if (this.c.width !== W || this.c.height !== H) { this.c.width = W; this.c.height = H; }
+    const g = this.g, step = 5, n = Math.floor(w / step);
+    if (!this.v.length) { const f = makeVoice(); for (let i = 0; i < n; i++) this.v.push(f(i * .07, "live")); }
+    if (now - this.last > (reduced.matches ? .5 : .07)) {
+      this.v.push(mode === "live" ? level : 0);
+      if (this.v.length > n) this.v.splice(0, this.v.length - n);
+      this.last = now;
+    }
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    const len = this.v.length;
+    for (let i = 0; i < len; i++) {
+      const hh = Math.max(2, this.v[i] * h * .95), x = w - (len - i) * step;
+      g.fillStyle = `rgba(236,232,222,${(.14 + .66 * Math.pow(i / len, 1.6)).toFixed(3)})`;
+      g.fillRect(x, (h - hh) / 2, 2, hh);
+    }
+  }
+}
+const voice = makeVoice();
+const pond = new Pond($("#pond"), recBtn), strip = new Strip($("#strip"));
+const pond2 = new Pond($("#pond2"), $("#recBtn2"), { speed: 46, life: 9, grid: 72 }), strip2 = new Strip($("#strip2"));
+let raf = 0;
+function loop(ms) {
+  raf = 0;
+  const now = ms / 1000;
+  if (screen === 3) {
+    const mode = recState === "live" ? "live" : recState === "armed" ? "armed" : "idle", lv = voice(now, mode);
+    pond.draw(now, lv, mode); strip.draw(now, lv, mode);
+    recBtn.style.setProperty("--lvl", lv.toFixed(3));
+  } else if (screen === 6) {
+    const lv = voice(now, "live");
+    pond2.draw(now, lv, "live"); strip2.draw(now, lv, "live");
+  } else return;
+  if (!document.hidden) raf = requestAnimationFrame(loop);
+}
+const kick = () => { if (!raf && (screen === 3 || screen === 6) && !document.hidden) raf = requestAnimationFrame(loop); };
+document.addEventListener("visibilitychange", kick);
+
+function fitPhones() {
+  const k = clamp((window.innerHeight - 36 - 64 - 96) / 812, .5, 1);
+  $("#phones").style.setProperty("--k", k.toFixed(3));
+}
+window.addEventListener("resize", fitPhones);
+
+/* ------------------------------------------------------------------ system sheet */
+function renderSwatches() {
+  const cs = getComputedStyle(root);
+  const list = [["ink-0", "가장 깊은 밤 · 녹음"], ["ink-1", "바탕"], ["ink-2", "옆 칸 · 받침"], ["ink-3", "올림"], ["ink-4", "선택"],
+    ["paper-1", "본문"], ["paper-2", "보조 글"], ["paper-3", "메타 (4.5:1 이상)"], ["moon", "달빛 · 단 하나의 강조"], ["ember", "불씨 · 녹음과 오류"], ["sage", "준비됨 · 정답"], ["tide", "화자 2 · 정보"]];
+  $("#swatches").innerHTML = list.map(([n, d]) => `<div class="sw"><i style="background:var(--${n})"></i><b>--${n}</b><small>${cs.getPropertyValue("--" + n).trim().toUpperCase()} · ${d}</small></div>`).join("");
+}
+
+/* ------------------------------------------------------------------ mock: states + navigation */
+const STATES = {
+  1: [["engine", "booting", "엔진 켜는 중"], ["engine", "ready", "엔진 준비됨"]],
+  2: [["search", "엔트로피", "검색 시연"]],
+  3: [["rec", "armed", "준비"], ["rec", "live", "녹음 중"], ["rec", "silent", "소리 없음"], ["rec", "final", "정리 중"]],
+  4: [["edit", "off", "읽기"], ["edit", "on", "편집"]],
+};
+function stateOn(k, v) {
+  if (k === "engine") return engine.state === v;
+  if (k === "search") return $("#search").value === v;
+  if (k === "rec") return recState === v || (v === "final" && recState === "done");
+  return editing === (v === "on");
+}
+function renderStates() {
+  const list = STATES[screen] || [];
+  $("#states").innerHTML = list.length ? `<span class="lbl">상태</span>` + list.map(([k, v, l]) => `<button data-state="${k}:${v}" aria-pressed="${stateOn(k, v)}">${l}</button>`).join("") : "";
+}
+$("#states").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-state]"); if (!b) return;
+  const [k, v] = b.dataset.state.split(":");
+  if (k === "engine") { if (v === "booting") bootEngine(); else { clearInterval(bootT); setEngine("ready"); } }
+  else if (k === "search") { const s = $("#search"); s.value = s.value === v ? "" : v; renderSide(); renderStates(); }
+  else if (k === "edit") setEdit(v === "on");
+  else if (v === "armed") setRec("armed", "zero");
+  else if (v === "live") setRec("live", recState === "silent" ? undefined : "mid");
+  else { if (recState !== "live" && recState !== "silent") setRec("live", "mid"); setRec(v); }
+});
+
+function go(n, opt = {}) {
+  n = +n; const s = SCREENS[n]; if (!s) return;
+  const prev = screen; screen = n;
+  body.dataset.shell = s.shell; if (s.view) body.dataset.view = s.view;
+  body.classList.remove("is-off"); $("#offPop").hidden = true; closeMenus();
+  if (s.tab) { setTab(s.tab, true); if (prev !== 4 && prev !== 5) reader.scrollTop = 0; }
+  clearInterval(bootT);
+  if (n === 1) bootEngine(); else setEngine("ready");
+  if (n !== 4 && n !== 5 && playing) setPlaying(false);
+  if (n === 3) {
+    if (opt.rec === "armed") setRec("armed", "zero");
+    else if (opt.rec === "fresh") setRec("live", "zero");
+    else if (recState === "live" || recState === "silent") setRec(recState, flows[0].children.length ? undefined : "mid");
+    else setRec("live", "mid");
+  } else if (n === 6) {
+    fitPhones();
+    if (recState !== "live" || !flows[0].children.length) setRec("live", "mid"); else schedule();
+  } else { schedule(); clearInterval(finalT); if (recState === "final") recState = "done"; }
+  if (n === 7) renderSwatches();
+  syncMock(); renderSide(); kick();
+}
+
+/* one delegated click handler for references and navigation */
+document.addEventListener("click", (e) => {
+  const hit = (sel) => e.target.closest(sel);
+  let x;
+  if (!hit("details.menu")) closeMenus();
+  if ((x = hit("[data-toast]"))) { e.preventDefault(); toast(x.dataset.toast); closeMenus(); return; }
+  if ((x = hit(".pg[data-p]"))) { if (noteEl.dataset.tab === "study") setTab("script"); openPage(+x.dataset.p, true); return; }
+  if ((x = hit(".ts[data-t], .backref[data-t], .wave .mk"))) { jump(+x.dataset.t); return; }
+  if ((x = hit("[data-hit]"))) { const h = HITS[+x.dataset.hit]; go(4); if (h.t != null) jump(h.t); else if (h.p) { setTab("script"); openPage(h.p, true); } return; }
+  if ((x = hit("[data-go-rec]"))) { e.preventDefault(); if (x.getAttribute("aria-disabled") === "true") toast("엔진이 준비되면 바로 시작할 수 있어요"); else go(3, { rec: x.dataset.goRec }); return; }
+  if ((x = hit("[data-go]"))) { e.preventDefault(); go(x.dataset.go); return; }
+  if ((x = hit("[data-note]"))) { go(4); return; }
+  if ((x = hit(".who")) && editing) { const s = (+x.dataset.s + 1) % 4; x.dataset.s = s; x.textContent = `화자 ${s + 1}`; x.style.setProperty("--c", `var(--spk-${s + 1})`); toast("화자를 바꿨어요"); return; }
+  /* reading mode: press a sentence to hear it from there */
+  if ((x = hit("#script .para, #script .seg")) && !editing && !hit("button") && window.getSelection().isCollapsed) { setTime(+x.dataset.t); flash(x); }
+});
+$$(".note-tabs .tab").forEach((b) => b.addEventListener("click", () => { setTab(b.dataset.tab); reader.scrollTop = 0; }));
+$$(".rail-tabs .tab").forEach((b) => b.addEventListener("click", () => setRail(b.dataset.rail)));
+$("#railBtn").addEventListener("click", () => openRail(!noteEl.classList.contains("rail-open")));
+$("#railClose").addEventListener("click", () => openRail(false));
+$("#pgPrev").addEventListener("click", () => openPage(page - 1));
+$("#pgNext").addEventListener("click", () => openPage(page + 1));
+$("#viewCtl").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setView(b.dataset.v); });
+$("#langCtl").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) setLang(b.dataset.l); });
+$("#editBtn").addEventListener("click", () => setEdit(!editing));
+$("#exportBtn").addEventListener("click", () => toast("열역학 제2법칙과 엔트로피.md 로 저장했어요"));
+$("#search").addEventListener("input", () => { renderSide(); renderStates(); });
+$("#offBtn").addEventListener("click", () => { const p = $("#offPop"); p.hidden = !p.hidden; if (!p.hidden) $("#offCancel").focus(); });
+$("#offCancel").addEventListener("click", () => { $("#offPop").hidden = true; });
+$("#offGo").addEventListener("click", () => { $("#offPop").hidden = true; body.classList.add("is-off"); });
+$("#offBack").addEventListener("click", () => body.classList.remove("is-off"));
+$("#themeBtn").addEventListener("click", (e) => {
+  const light = root.dataset.theme !== "light";
+  if (light) root.dataset.theme = "light"; else delete root.dataset.theme;
+  e.currentTarget.textContent = light ? "밤 보기" : "낮 보기";
+  if (screen === 7) renderSwatches();
+});
+
+document.addEventListener("keydown", (e) => {
+  const t = e.target, typing = t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName);
+  if (e.key === "Escape") { $("#offPop").hidden = true; closeMenus(); if (typing) t.blur(); return; }
+  if (e.key === "Enter" && t.matches && t.matches(".row")) { go(4); return; }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (/^[1-7]$/.test(e.key)) { go(+e.key); return; }
+  if (e.key === "/" && body.dataset.shell === "app") { e.preventDefault(); $("#search").focus(); return; }
+  if (e.key === "n" || e.key === "N" || e.key === "ㅜ") { go(3, { rec: "armed" }); return; }
+  const onControl = !!t.closest("button, a, summary, label, [role='slider']");
+  if (e.key === " " && !onControl) {
+    if (screen === 3) { e.preventDefault(); pressRec(); }
+    else if (screen === 5) { e.preventDefault(); flipCard(); }
+    else if (screen === 4) { e.preventDefault(); setPlaying(!playing); }
+  }
+  if (screen === 5 && !onControl) { if (e.key === "ArrowLeft") moveCard(-1); if (e.key === "ArrowRight") moveCard(1); }
+});
+
+/* ------------------------------------------------------------------ boot */
+renderHome(); renderParas(); renderQuiz(); renderQA(); paintCard(); buildWave();
+setTime(pt); openPage(12, false); seedFlow(); setTranslate(true); fitPhones();
+go(/^#[1-7]$/.test(location.hash) ? +location.hash.slice(1) : 3);
+})();
+</script>
+</body>
+</html>
