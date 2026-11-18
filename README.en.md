@@ -17,15 +17,15 @@ Everything runs on the laptop's own GPU with **NVIDIA Nemotron 3.5 Transcribe (N
 
 ![Meari home screen](docs/images/en/home.png)
 
-> The notes in these screenshots are fictional demo data (recorded in Korean); the UI is switched to English.
+> The notes in these screenshots are fictional demo data.
 
 ## Screens
 
 | Note — summary + speaker transcript | Study — quiz + flashcards |
 |---|---|
 | ![Note view](docs/images/en/note.png) | ![Study view](docs/images/en/study.png) |
-| **Recording** | **English translation** |
-| ![Recording view](docs/images/en/rec.png) | ![Translation](docs/images/en/translation.png) |
+| **Recording** | **Ask the note** |
+| ![Recording view](docs/images/en/rec.png) | ![Ask the note](docs/images/en/qa.png) |
 
 <table>
 <tr>
