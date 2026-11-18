@@ -1,6 +1,8 @@
 #!/bin/bash
 # Starts the Nemotron engine (if not already up or loading) and the web app on http://localhost:8020
 APP="$(cd "$(dirname "$0")/.." && pwd)"
+# Private settings of this machine (never committed): Tailscale host name, where notes live, ... see local.env.example
+if [ -f "$APP/local.env" ]; then set -a; . <(tr -d '\r' < "$APP/local.env"); set +a; fi
 VENV=${MEARI_NEMO_DIR:-/root/nemo-speech}/.venv
 mkdir -p "$APP/data"
 ENGINE_PID=""

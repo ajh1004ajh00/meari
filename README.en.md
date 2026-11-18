@@ -170,6 +170,8 @@ copy target\release\meari.exe ..\Meari.exe
 
 ## Configuration (environment variables)
 
+Put machine-specific values (Tailscale name, where notes live, ...) in `local.env` — copy `local.env.example`. `scripts/run.sh` reads it, and git ignores it.
+
 | Variable | Default | Description |
 |---|---|---|
 | `MEARI_NEMO_DIR` | `/root/nemo-speech` | NeMo Speech checkout (its `.venv` is used) |

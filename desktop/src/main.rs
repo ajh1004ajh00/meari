@@ -69,7 +69,7 @@ fn start_server(dir: &str) {
     let distro = std::env::var("MEARI_WSL_DISTRO").unwrap_or_else(|_| DEFAULT_DISTRO.to_string());
     let _ = Command::new("wsl.exe")
         .args(["-d", distro.as_str(), "-u", "root", "--cd", dir, "--", "bash", "-c",
-               "bash scripts/run.sh >> data/run.log 2>&1"])
+               "mkdir -p data && bash scripts/run.sh >> data/run.log 2>&1"])  // data/ is not in git: a fresh checkout has none
         .creation_flags(CREATE_NO_WINDOW)
         .spawn();
 }

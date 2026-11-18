@@ -170,6 +170,8 @@ copy target\release\meari.exe ..\Meari.exe
 
 ## 설정 (환경 변수)
 
+이 PC에만 해당하는 값(Tailscale 이름, 노트 저장 위치 등)은 `local.env.example`을 `local.env`로 복사해서 적어 두세요. `scripts/run.sh`가 읽고, git에는 올라가지 않아요.
+
 | 변수 | 기본값 | 설명 |
 |---|---|---|
 | `MEARI_NEMO_DIR` | `/root/nemo-speech` | NeMo Speech 체크아웃(그 안의 `.venv` 사용) |

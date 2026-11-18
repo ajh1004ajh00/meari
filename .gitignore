@@ -1,6 +1,9 @@
 # recordings, transcripts, notes and logs: personal data, never commit
 data/
 
+# this machine's private settings (copy local.env.example)
+local.env
+
 # builds
 desktop/target/
 desktop/gen/
