@@ -19,7 +19,7 @@ if (!canTab || !["mic", "tab", "both"].includes(S.source)) S.source = "mic";
 
 // every request carries X-SoriNote: 1 (the server rejects writes without it)
 const api = async (path, opts = {}) => {
-  const r = await fetch("/api" + path, { ...opts, headers: { ...(opts.headers || {}), "X-SoriNote": "1" } });
+  const r = await fetch("/api" + path, { ...opts, headers: { ...(opts.headers || {}), "X-SoriNote": "1", "X-Meari-Lang": LANG } });  // summary/quiz/answer language
   if (!r.ok) {
     let msg = r.statusText;
     try { msg = (await r.json()).detail || msg; } catch {}
@@ -52,7 +52,7 @@ function md(src) {
     const h = l.match(/^(#{1,3})\s+(.*)/);
     if (h && h[1].length < 3) {
       if (sec) out.push("</section>");
-      const cls = /한\s*줄/.test(h[2]) ? "sec--key" : /할 일|질문거리|과제|시험|공지/.test(h[2]) ? "sec--exam" : "";
+      const cls = /한\s*줄|one-line/i.test(h[2]) ? "sec--key" : /할 일|질문거리|과제|시험|공지|to-do|open question|assignment|exam/i.test(h[2]) ? "sec--exam" : "";
       out.push(`<section class="${cls}"><h2>${h[2]}</h2>`); sec = true;
     } else if (h) out.push(`<h3>${h[2]}</h3>`);
     else if (l.trim() && !l.startsWith("&lt;!--")) out.push(`<p>${l}</p>`);
@@ -262,7 +262,7 @@ async function refresh() {
   if (document.activeElement !== $("#title")) $("#title").value = m.title;
   if (document.activeElement !== $("#recTitle")) $("#recTitle").value = m.title;
   if (document.activeElement !== $("#terms")) $("#terms").value = m.terms || "";
-  $("#exportBtn").href = `/api/sessions/${id}/export.md`;
+  $("#exportBtn").href = `/api/sessions/${id}/export.md?lang=${LANG}`;
   $("#recorder").hidden = hasAudio || !!rec;
   $("#playerBar").hidden = !hasAudio || !!rec;
   if (hasAudio && !rec) {

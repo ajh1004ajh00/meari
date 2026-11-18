@@ -285,12 +285,21 @@ def strip_special(t: str) -> str:
     return re.sub(r"<\|[^|]*\|>", "", t).strip()
 
 
+# Spoken language of the recordings (independent of the UI language): ko | en | auto (no hint)
+SPEECH_LANG = os.environ.get("MEARI_SPEECH_LANG", "ko").lower()
+
+
 def asr_prompt(speakers: bool) -> str:
     # Context terms are deliberately NOT sent to ASR: in Korean tests the model inserted them
     # into unrelated chunks. Terms are used only when summarizing (spelling correction).
     # Language hint: without it, short (8-16 s) Korean chunks came back in English/German/Chinese or as refusals.
-    p = ("The audio is in Korean (it may contain English words). Transcribe it verbatim in Korean with punctuation. "
-         "Write numbers, years, dates and units with Arabic numerals.")
+    if SPEECH_LANG == "en":
+        p = "The audio is in English. Transcribe it verbatim in English with punctuation. "
+    elif SPEECH_LANG == "auto":
+        p = "Transcribe the audio verbatim in the language it is spoken in, with punctuation. "
+    else:
+        p = "The audio is in Korean (it may contain English words). Transcribe it verbatim in Korean with punctuation. "
+    p += "Write numbers, years, dates and units with Arabic numerals."
     if speakers:
         p += " Put speaker tags <spk:0> <spk:1> <spk:2> <spk:3> on the transcription."
     return p
@@ -340,10 +349,31 @@ def split_by_silence(a: np.ndarray, min_s=8.0, max_s=20.0) -> list[tuple[int, in
 def parse_json_obj(text: str):
     text = strip_special(text)
     text = re.sub(r"^```(?:json)?|```$", "", text.strip(), flags=re.M)
-    s, e = text.find("{"), text.rfind("}")
-    if s < 0 or e <= s:
+    s = text.find("{")
+    if s < 0:
         raise ValueError("no JSON object")
-    return json.loads(text[s:e + 1])
+    # first complete object only: the model sometimes appends a note or a second object after it
+    return json.JSONDecoder().raw_decode(text[s:])[0]
+
+
+def hangul_ratio(s: str) -> float:
+    letters = [c for c in s if c.isalpha()]
+    return sum("가" <= c <= "힣" for c in letters) / len(letters) if letters else 0.0
+
+
+TRANSLATE_MD_SYS = ("You are a professional translator. Translate the Korean in the user's Markdown into English. "
+                    "Keep the Markdown structure exactly (headings, bullets, bold, backticks, line breaks). "
+                    "Text that is already English stays as it is. Output only the translated Markdown.")
+TRANSLATE_JSON_SYS = ("You are a professional translator. Translate every Korean string value in the user's JSON into English. "
+                      "Keep the keys, the structure and all numbers exactly. Output only the JSON.")
+
+
+def ensure_english_md(md: str) -> str:
+    """The model tends to answer in the transcript's language (Korean) even when asked for English; translate if so."""
+    if hangul_ratio(md) < 0.15:
+        return md
+    return strip_special(chat([{"role": "system", "content": TRANSLATE_MD_SYS}, {"role": "user", "content": md}],
+                              max_tokens=4000, temperature=0.1))
 
 
 # ---------------------------------------------------------------- materials (lecture slides / PDFs)
@@ -448,30 +478,67 @@ SUMMARY_FMT = (
 )
 
 
-def reference_block(terms: str, mats: str) -> str:
-    out = ""
+# ---- output language of summaries, quizzes and answers: the UI language the note was processed in
+# (the page sends X-Meari-Lang; it is stored as meta "lang" so resumed jobs keep it)
+SUMMARY_SYS_EN = ("You are a careful assistant who organizes lectures and meetings. Always write in English, "
+                  "using only what is in the transcript (the transcript itself may be in Korean). Do not make things up.")
+SUMMARY_FMT_EN = (
+    "Turn the transcript below into a Markdown study note. Format:\n"
+    "## One-line summary\n(1-2 sentences)\n"
+    "## Key points\n(### subheadings per topic with bullets; keep important numbers and proper nouns)\n"
+    "## Key terms\n(up to 10, `term`: short explanation)\n"
+    "## To-dos · open questions\n(assignments, decisions and next dates mentioned in the transcript; 'None' if there are none)\n"
+    "You may fix obvious speech-recognition errors from context."
+)
+P = {  # prompt pieces by language
+    "ko": {"sys": SUMMARY_SYS, "fmt": SUMMARY_FMT, "tx": "녹취록:\n",
+           "part": "녹취록 {i}/{n}번째 부분의 핵심 내용을 불릿으로 빠짐없이 정리해줘. 숫자·고유명사·과제는 보존.\n\n{p}",
+           "merge": "아래는 긴 녹취록을 부분별로 정리한 메모다. 이것을 하나의 노트로 합쳐줘.\n\n", "partlbl": "(부분 {i})",
+           "terms": "(참고: 이 녹음에 나오는 정확한 용어·이름 표기 — {t}. 녹취록에서 비슷하게 잘못 인식된 말은 이 표기로 바로잡아라.)\n",
+           "mats": "(참고: 강의 자료 내용 — 표기 교정과 맥락 파악에만 쓰고, 녹취록에 없는 내용을 요약에 추가하지 마라.)\n"},
+    "en": {"sys": SUMMARY_SYS_EN, "fmt": SUMMARY_FMT_EN, "tx": "Transcript:\n",
+           "part": "Summarize the key points of part {i}/{n} of the transcript as bullets, in English, leaving nothing out. "
+                   "Keep numbers, proper nouns and assignments.\n\n{p}",
+           "merge": "Below are notes taken part by part from a long transcript. Merge them into one note in English.\n\n",
+           "partlbl": "(part {i})",
+           "terms": "(Note: correct spelling of terms and names in this recording — {t}. Fix words in the transcript that were misrecognized as something similar.)\n",
+           "mats": "(Note: lecture material — use it only to fix spelling and understand context; do not add anything to the summary that is not in the transcript.)\n"},
+}
+
+
+def lang_of(v) -> str:
+    return "en" if str(v or "").lower().startswith("en") else "ko"
+
+
+def req_lang(request: Request) -> str:
+    return lang_of(request.headers.get("x-meari-lang"))
+
+
+def reference_block(terms: str, mats: str, lang: str = "ko") -> str:
+    L, out = P[lang], ""
     if terms.strip():
-        out += f"(참고: 이 녹음에 나오는 정확한 용어·이름 표기 — {terms.strip()}. 녹취록에서 비슷하게 잘못 인식된 말은 이 표기로 바로잡아라.)\n"
+        out += L["terms"].format(t=terms.strip())
     if mats.strip():
-        out += f"(참고: 강의 자료 내용 — 표기 교정과 맥락 파악에만 쓰고, 녹취록에 없는 내용을 요약에 추가하지 마라.)\n{mats}\n"
+        out += L["mats"] + mats + "\n"
     return out + "\n" if out else ""
 
 
-def summarize(text: str, ref: str = "") -> str:
+def summarize(text: str, ref: str = "", lang: str = "ko") -> str:
+    L = P[lang]
     if len(text) <= 24000:
-        return strip_special(chat([{"role": "system", "content": SUMMARY_SYS},
-                                   {"role": "user", "content": SUMMARY_FMT + "\n\n" + ref + "녹취록:\n" + text}],
+        return strip_special(chat([{"role": "system", "content": L["sys"]},
+                                   {"role": "user", "content": L["fmt"] + "\n\n" + ref + L["tx"] + text}],
                                   max_tokens=3000, temperature=0.2))
     parts = [text[i:i + 16000] for i in range(0, len(text), 16000)]
     notes = []
     for i, p in enumerate(parts, 1):
         notes.append(strip_special(chat(
-            [{"role": "system", "content": SUMMARY_SYS},
-             {"role": "user", "content": f"녹취록 {i}/{len(parts)}번째 부분의 핵심 내용을 불릿으로 빠짐없이 정리해줘. 숫자·고유명사·과제는 보존.\n\n{p}"}],
+            [{"role": "system", "content": L["sys"]},
+             {"role": "user", "content": L["part"].format(i=i, n=len(parts), p=p)}],
             max_tokens=1500, temperature=0.2)))
-    merged = "\n\n".join(f"(부분 {i})\n{n}" for i, n in enumerate(notes, 1))
-    return strip_special(chat([{"role": "system", "content": SUMMARY_SYS},
-                               {"role": "user", "content": SUMMARY_FMT + "\n\n" + ref + "아래는 긴 녹취록을 부분별로 정리한 메모다. 이것을 하나의 노트로 합쳐줘.\n\n" + merged}],
+    merged = "\n\n".join(L["partlbl"].format(i=i) + "\n" + n for i, n in enumerate(notes, 1))
+    return strip_special(chat([{"role": "system", "content": L["sys"]},
+                               {"role": "user", "content": L["fmt"] + "\n\n" + ref + L["merge"] + merged}],
                               max_tokens=3000, temperature=0.2))
 
 
@@ -505,8 +572,12 @@ def run_finalize(sid: str, do_segments: bool):
             wj(d / "final.json", {"paragraphs": paragraphs, "parts": len(starts)})
             link_materials(sid)
             set_meta(sid, status="summarizing", progress=None)
-            ref = reference_block(m.get("terms", ""), materials_text(sid))
-            (d / "summary.md").write_text(summarize(transcript_text(sid), ref), encoding="utf-8")
+            lang = lang_of(meta(sid).get("lang"))
+            ref = reference_block(m.get("terms", ""), materials_text(sid), lang)
+            summary = summarize(transcript_text(sid), ref, lang)
+            if lang == "en":
+                summary = ensure_english_md(summary)
+            (d / "summary.md").write_text(summary, encoding="utf-8")
             set_meta(sid, status="done", progress=None, error=None)
         except Exception as ex:  # surface to UI
             set_meta(sid, status="error", error=str(ex)[:500], progress=None)
@@ -541,6 +612,66 @@ STUDY_PROMPT = """아래 녹취록(강의/회의)으로 복습 자료를 만들�
 
 녹취록:
 %s"""
+STUDY_PROMPT_EN = """Make study material from the transcript (lecture/meeting) below. Use only what is in the transcript.
+Write every question, choice, explanation and card in English (the transcript itself may be in Korean).
+Output exactly one JSON object like this, with no explanation and no code fences:
+{"quiz": [{"q": "question", "choices": ["choice 1", "choice 2", "choice 3", "choice 4"], "answer": 0, "explain": "one-sentence explanation"}],
+ "cards": [{"front": "term or question", "back": "meaning or answer"}]}
+- quiz: %d multiple-choice questions. answer is the 0-based index of the correct choice. Spread the correct positions evenly.
+- cards: %d flashcards, focused on key concepts, numbers and names.
+
+Transcript:
+%s"""
+
+
+def json_items(text: str, first_key: str) -> list[dict]:
+    """Every complete JSON object that starts with {"<first_key>" anywhere in the text. The model sometimes writes
+    more items than asked (output cut off mid-object) or closes the wrapper wrongly; intact items still count."""
+    dec, out = json.JSONDecoder(), []
+    for m in re.finditer(r'\{\s*"' + first_key + '"', text):
+        try:
+            out.append(dec.raw_decode(text, m.start())[0])
+        except ValueError:
+            pass
+    return out
+
+
+def clean_quiz(q: dict) -> dict | None:
+    ch, a = q.get("choices"), q.get("answer")
+    if not (q.get("q") and isinstance(ch, list) and len(ch) >= 2):
+        return None
+    if isinstance(a, str):  # "1", "B" or the choice text
+        a = int(a) if a.strip().isdigit() else ("ABCDEFG".index(a.strip().upper()) if len(a.strip()) == 1 and a.strip().upper() in "ABCDEFG"
+                                                 else (ch.index(a) if a in ch else None))
+    if not isinstance(a, int) or not 0 <= a < len(ch):
+        return None
+    return {"q": q["q"], "choices": ch, "answer": a, "explain": q.get("explain") or q.get("explanation") or ""}
+
+
+def english_study(quiz: list[dict], cards: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Asked for English, the model often still writes part of the set (usually the cards) in Korean.
+    Translate whichever part came back Korean; keep the structure so answer indexes stay valid."""
+    ko = lambda x: hangul_ratio(json.dumps(x, ensure_ascii=False)) >= 0.15
+
+    def tr(items):
+        try:
+            out = json_items(strip_special(chat([{"role": "system", "content": TRANSLATE_JSON_SYS},
+                                                 {"role": "user", "content": json.dumps(items, ensure_ascii=False)}],
+                                                max_tokens=5000, temperature=0.1)), next(iter(items[0])))
+            return out if len(out) == len(items) else None
+        except Exception:
+            return None  # keep the Korean part rather than fail the whole set
+
+    if quiz and ko(quiz):
+        tq = tr([{"q": q["q"], "choices": q["choices"], "explain": q["explain"]} for q in quiz])
+        if tq and all(len(a.get("choices", [])) == len(b["choices"]) for a, b in zip(tq, quiz)):
+            quiz = [{**b, "q": a.get("q") or b["q"], "choices": a["choices"], "explain": a.get("explain") or b["explain"]}
+                    for a, b in zip(tq, quiz)]
+    if cards and ko(cards):
+        tc = tr([{"front": c["front"], "back": c["back"]} for c in cards])
+        if tc and all(c.get("front") and c.get("back") for c in tc):
+            cards = tc
+    return quiz, cards
 
 
 def run_study(sid: str):
@@ -550,14 +681,19 @@ def run_study(sid: str):
             wait_engine(sid)
             text = transcript_text(sid)[:24000]
             nq = max(3, min(10, len(text) // 600))
+            prompt = STUDY_PROMPT_EN if lang_of(meta(sid).get("lang")) == "en" else STUDY_PROMPT
             last = None
             for attempt in range(2):
                 try:
-                    obj = parse_json_obj(chat([{"role": "user", "content": STUDY_PROMPT % (nq, nq, text)}],
-                                              max_tokens=4000, temperature=0.3 + 0.2 * attempt))
-                    quiz = [q for q in obj.get("quiz", []) if isinstance(q.get("choices"), list) and len(q["choices"]) >= 2
-                            and isinstance(q.get("answer"), int) and 0 <= q["answer"] < len(q["choices"])]
-                    cards = [c for c in obj.get("cards", []) if c.get("front") and c.get("back")]
+                    raw = strip_special(chat([{"role": "user", "content": prompt % (nq, nq, text)}],
+                                             max_tokens=6000, temperature=0.3 + 0.2 * attempt))
+                    quiz = [q for q in map(clean_quiz, json_items(raw, "q")) if q][:nq]
+                    cards = [c for c in json_items(raw, "front") if c.get("front") and c.get("back")][:nq]
+                    if not quiz:  # a set without questions is not worth keeping; try once more
+                        last = "no quiz in the output"
+                        continue
+                    if prompt is STUDY_PROMPT_EN:
+                        quiz, cards = english_study(quiz, cards)
                     if quiz or cards:
                         wj(d / "study.json", {"quiz": quiz, "cards": cards, "created": time.time()})
                         break
@@ -870,8 +1006,9 @@ threading.Thread(target=resume_interrupted, daemon=True).start()
 
 
 @app.post("/api/sessions/{sid}/finalize")
-def finalize(sid: str):
+def finalize(sid: str, request: Request):
     sdir(sid)
+    set_meta(sid, lang=req_lang(request))
     if duration(sid) < 1:
         raise HTTPException(400, "녹음된 소리가 없어요")
     set_meta(sid, duration=duration(sid))
@@ -884,8 +1021,9 @@ def finalize(sid: str):
 
 
 @app.post("/api/sessions/{sid}/upload")
-async def upload(sid: str, file: UploadFile):
+async def upload(sid: str, file: UploadFile, request: Request):
     d = sdir(sid)
+    set_meta(sid, lang=req_lang(request))
     src = d / ("upload" + Path(file.filename or "a").suffix[:8])
 
     def convert():
@@ -909,10 +1047,11 @@ def translate(sid: str):
 
 
 @app.post("/api/sessions/{sid}/study")
-def study(sid: str):
+def study(sid: str, request: Request):
     sdir(sid)
     if not transcript_text(sid).strip():
         raise HTTPException(400, "원고가 아직 없어요")
+    set_meta(sid, lang=req_lang(request))
     return start_job(sid, "studying", run_study)
 
 
@@ -931,9 +1070,16 @@ async def ask(sid: str, req: Request):
     history = []
     for x in qa[-4:]:
         history += [{"role": "user", "content": x["q"]}, {"role": "assistant", "content": x["a"]}]
-    sys = ("너는 아래 녹취록 내용에 대해 답하는 조수다. 한국어로 간결하게 답하고, 녹취록에 없는 내용이면 없다고 말한 뒤 일반 지식은 구분해서 덧붙인다."
-           + (f"\n\n강의 자료:\n{mats}" if mats else "") + "\n\n녹취록:\n" + text)
+    if req_lang(req) == "en":
+        sys = ("You answer questions about the transcript below (it may be in Korean). Answer concisely in English. "
+               "If something is not in the transcript, say so first, then add general knowledge clearly marked as such."
+               + (f"\n\nLecture material:\n{mats}" if mats else "") + "\n\nTranscript:\n" + text)
+    else:
+        sys = ("너는 아래 녹취록 내용에 대해 답하는 조수다. 한국어로 간결하게 답하고, 녹취록에 없는 내용이면 없다고 말한 뒤 일반 지식은 구분해서 덧붙인다."
+               + (f"\n\n강의 자료:\n{mats}" if mats else "") + "\n\n녹취록:\n" + text)
     ans = strip_special(await run_in_threadpool(chat, [{"role": "system", "content": sys}] + history + [{"role": "user", "content": q}], 1500, 0.3))
+    if req_lang(req) == "en":
+        ans = await run_in_threadpool(ensure_english_md, ans)
     qa.append({"q": q, "a": ans, "t": time.time()})
     wj(d / "qa.json", qa)
     return {"q": q, "a": ans}
@@ -999,29 +1145,32 @@ def audio(sid: str):
 
 
 @app.get("/api/sessions/{sid}/export.md")
-def export(sid: str):
+def export(sid: str, lang: str = "ko"):
     s = get_session(sid)
     m = s["meta"]
+    en = lang_of(lang) == "en"
+    W = (lambda ko, e: e) if en else (lambda ko, e: ko)
+    mins, secs = int(m["duration"] // 60), int(m["duration"] % 60)
     lines = [f"# {m['title']}", "", time.strftime("%Y-%m-%d %H:%M", time.localtime(m["created"])) +
-             f" · {int(m['duration'] // 60)}분 {int(m['duration'] % 60)}초", ""]
+             (f" · {mins} min {secs} s" if en else f" · {mins}분 {secs}초"), ""]
     if s["summary"]:
         lines += [s["summary"], ""]
-    lines += ["## 녹취록", ""]
+    lines += [W("## 녹취록", "## Transcript"), ""]
     if s["final"]:
-        lines += [f"**화자 {p['speaker'] + 1}**: {p['text']}\n" for p in s["final"]["paragraphs"]]
+        lines += [f"**{W('화자', 'Speaker')} {p['speaker'] + 1}**: {p['text']}\n" for p in s["final"]["paragraphs"]]
     else:
         lines += [f"`{int(x['start'] // 60):02d}:{int(x['start'] % 60):02d}` {x['text']}" for x in s["segments"]]
     if s["translation"]:
         lines += ["", "## English translation", "", s["translation"]]
     if s["study"] and s["study"]["cards"]:
-        lines += ["", "## 암기카드", ""] + [f"- **{c['front']}** — {c['back']}" for c in s["study"]["cards"]]
+        lines += ["", W("## 암기카드", "## Flashcards"), ""] + [f"- **{c['front']}** — {c['back']}" for c in s["study"]["cards"]]
     if s["study"] and s["study"]["quiz"]:
-        lines += ["", "## 퀴즈", ""]
+        lines += ["", W("## 퀴즈", "## Quiz"), ""]
         for n, q in enumerate(s["study"]["quiz"], 1):
             lines += [f"{n}. {q['q']}"] + [f"   {'ABCDEFG'[k]}) {c}" for k, c in enumerate(q["choices"])] + \
-                     [f"   정답: {'ABCDEFG'[q['answer']]} — {q.get('explain', '')}", ""]
+                     [f"   {W('정답', 'Answer')}: {'ABCDEFG'[q['answer']]} — {q.get('explain', '')}", ""]
     if s["qa"]:
-        lines += ["", "## 질문과 답", ""] + [f"**Q.** {x['q']}\n\n{x['a']}\n" for x in s["qa"]]
+        lines += ["", W("## 질문과 답", "## Q&A"), ""] + [f"**Q.** {x['q']}\n\n{x['a']}\n" for x in s["qa"]]
     return PlainTextResponse("\n".join(lines), media_type="text/markdown; charset=utf-8",
                              headers={"Content-Disposition": f"attachment; filename=sorinote-{sid}.md"})
 

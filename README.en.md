@@ -56,7 +56,7 @@ The same UI also opens on your phone (optional, over Tailscale).
 | **From a file** | Create a note from an audio or video file |
 | **Safety nets** | Warns right away if you record with a muted mic; the engine turns itself off after 30 idle minutes and frees GPU memory |
 | **Desktop app** | Tray app, global hotkey, mini always-on-top window, low-memory mode while hidden |
-| **Korean / English UI** | One click in the sidebar; defaults to your system language |
+| **Korean / English UI** | One click in the sidebar (defaults to your system language). In English, summaries, quizzes and answers are written in English too |
 
 ## Specs
 
@@ -177,6 +177,7 @@ copy target\release\meari.exe ..\Meari.exe
 | `GPU_UTIL` | `0.38` | vLLM `--gpu-memory-utilization` |
 | `MAX_SEQS` | `8` | Concurrent requests |
 | `ENGINE_MEM_HIGH` | `6G` | Memory ceiling while the engine starts (`max` = off) |
+| `MEARI_SPEECH_LANG` | `ko` | Language spoken in recordings: `ko` / `en` / `auto` (separate from the UI language) |
 | `MEARI_IDLE_OFF_MIN` | `30` | Minutes before the idle engine turns off, `0` = never |
 | `SORINOTE_DATA` | `./data` | Where notes are stored |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | Allowed host names (add your Tailscale name for phone access) |
@@ -185,7 +186,7 @@ copy target\release\meari.exe ..\Meari.exe
 
 ## Known limitations
 
-- Summaries, quizzes and answers are written in Korean (the UI can be English).
+- Speech recognition assumes Korean by default. For English recordings set `MEARI_SPEECH_LANG=en` (or `auto`).
 - Speaker numbers restart every 30-minute part.
 - Translation is English only.
 - Material-to-transcript linking is based on text overlap (no match for scanned PDFs or English slides with a Korean lecture).
