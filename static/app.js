@@ -90,7 +90,7 @@ async function checkEngine() {
     boot: [t("엔진 켜는 중… (약 3분)"), t("녹음은 지금 바로 할 수 있어요"), t("켜는 중")],
     off: [t("엔진 꺼짐 · GPU 비워 둠"), t("녹음하면 자동으로 켜져요 (약 3분)"), t("꺼짐")] }[engineState];
   $("#engineText").textContent = T[0];
-  $("#engineMeta").textContent = st.backlog ? t("밀린 받아쓰기 {n}개 · 켜지면 처리해요", { n: st.backlog }) : T[1];
+  $("#engineMeta").textContent = st.backlog ? t("밀린 받아쓰기 {n}개 · 켜지면 처리해요", { n: st.backlog }) : T[1].replace(/\((약|~) /, "($1 ");  // keep "(약 20초)" on one line
   $$("[data-engine-short]").forEach((e) => (e.textContent = T[2]));
   const b = $("#engineBtn");
   b.textContent = engineState === "off" ? t("엔진 켜기") : t("엔진 끄기"); b.disabled = engineState === "boot";
@@ -321,7 +321,7 @@ function renderFinal(force) {
   let part = null;
   $("#final").innerHTML = f.paragraphs.map((p, i) => {
     let h = "";
-    if (p.part && p.part !== part) { part = p.part; h = `<div class="part">${t("{n}분 ~ (화자 번호는 30분 구간마다 새로 매겨져요)", { n: (part - 1) * 30 })}</div>`; }
+    if (p.part && p.part !== part) { part = p.part; h = `<div class="part">${data.final.linked ? t("{n}분 ~", { n: (part - 1) * 30 }) : t("{n}분 ~ (화자 번호는 30분 구간마다 새로 매겨져요)", { n: (part - 1) * 30 })}</div>`; }
     return h + `<div class="para" data-i="${i}" data-s="${(p.speaker % 4) + 1}"><button class="who" type="button" tabindex="${editMode ? 0 : -1}">${t("화자 {n}", { n: p.speaker + 1 })}</button>` +
       `<p class="tx__ko"><span class="tx__t"${ce()}>${esc(p.text)}</span></p></div>`;
   }).join("");
@@ -1398,13 +1398,14 @@ async function loadLlm() {
   try { r = await api("/llm"); } catch { return; }
   if (!r.native || !r.options.length) return;
   llmCur = r.current;
-  $("#llmSel").innerHTML = r.options.map((o) => `<option value="${esc(o.id)}"${o.id === r.current ? " selected" : ""}>${esc(o.label)} · ${
-    o.kind === "cloud" ? t("구독 · 클라우드") : t("로컬 {n}GB", { n: o.gb })}</option>`).join("");
+  const opt = (o) => `<option value="${esc(o.id)}"${o.id === r.current ? " selected" : ""}>${esc(o.label)}${o.kind === "local" ? ` · ${o.gb}GB` : ""}</option>`;
+  const group = (kind, name) => { const os = r.options.filter((o) => o.kind === kind); return os.length ? `<optgroup label="${esc(name)}">${os.map(opt).join("")}</optgroup>` : ""; };
+  $("#llmSel").innerHTML = group("local", t("로컬 — 이 PC 안에서")) + group("cloud", t("구독 — 클라우드"));
   $("#llmRow").hidden = false;
   $("#llmCloud").hidden = !isCloud(llmCur);
 }
 $("#llmSel").onchange = async (e) => {
-  const v = e.target.value, label = (e.target.selectedOptions[0]?.textContent || v).split(" · ")[0];
+  const v = e.target.value, label = (e.target.selectedOptions[0]?.textContent || v).split(" · ")[0];  // drop the size
   if (isCloud(v) && !await confirmDlg(t("클라우드 엔진으로 바꿀까요?"),
     t("요약·퀴즈·질문 답변을 만들 때 원고가 {s} 쪽으로 보내져요. 녹음 파일은 보내지 않아요. 구독 사용량이 조금씩 쓰여요.", { s: label }), t("바꾸기"))) {
     e.target.value = llmCur;

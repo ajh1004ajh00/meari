@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&display=swap">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body data-engine="boot" data-view="home">
 
@@ -58,6 +58,7 @@
     <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 6.5h14M5 11h14M5 15.5h10M5 20h6"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
     <symbol id="i-ext" viewBox="0 0 24 24"><path d="M13.5 4.5H19.5V10.5M19.5 4.5l-8 8M17 14v5.5H4.5V7H10"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7.5 18.5h9.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 9.6a4.5 4.5 0 0 0 .5 8.9z"/></symbol>
   </defs>
 </svg>
 
@@ -83,16 +84,15 @@
   <div class="engine">
     <div class="engine__row">
       <i id="engineDot" class="led" data-led></i>
-      <span class="engine__tx"><b id="engineText">엔진 확인 중…</b><small id="engineMeta">Nemotron · 이 PC 안에서만</small></span>
+      <span class="engine__tx"><b id="engineText">엔진 확인 중…</b><small id="engineMeta">Nemotron · 이 PC 안에서만</small><small id="engineIdle" class="engine__idle"></small></span>
       <button id="engineBtn" class="btn sm quiet" title="GPU 메모리만 비우고 앱은 그대로 둡니다">엔진 끄기</button>
     </div>
-    <label class="engine__row engine__llm" id="llmRow" hidden>
-      <span>요약 엔진</span>
+    <label class="engine__llm" id="llmRow" hidden>
+      <span class="engine__cap">요약 엔진</span>
       <select id="llmSel" title="요약·퀴즈·질문 답변을 만드는 모델"></select>
     </label>
-    <small class="engine__cloud" id="llmCloud" hidden>원고가 PC 밖(클라우드)으로 보내져요</small>
+    <small class="engine__cloud" id="llmCloud" hidden><svg class="ic s"><use href="#i-cloud"/></svg><span>원고가 PC 밖(클라우드)으로 보내져요</span></small>
     <div class="engine__row engine__row--sub">
-      <small id="engineIdle" class="engine__idle"></small>
       <button id="langBtn" class="btn sm quiet" type="button" data-noi18n></button>
       <button id="shutdownBtn" class="btn sm quiet danger" title="앱과 엔진을 모두 끕니다"><svg class="ic s"><use href="#i-power"/></svg>모두 끄기</button>
     </div>
@@ -365,7 +365,7 @@
   <form method="dialog" class="r"><button class="btn" value="no">취소</button><button class="btn danger-solid" value="yes" id="dlgOk"></button></form>
 </dialog>
 <div class="toasts" id="toasts" aria-live="polite"></div>
-<script src="i18n.js?v=4"></script>
-<script src="app.js?v=19"></script>
+<script src="i18n.js?v=5"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>

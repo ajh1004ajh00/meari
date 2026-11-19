@@ -175,6 +175,7 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 | `MEARI_FFMPEG` | `ffmpeg` | 음성·영상 파일 변환용 ffmpeg |
 | `MEARI_SPEECH_LANG` | `ko` | 녹음되는 말의 언어: `ko` / `en` / `auto` (화면 언어와 별개) |
 | `MEARI_IDLE_OFF_MIN` | `30` | 엔진 자동 끄기까지의 시간(분), `0` = 끔 |
+| `MEARI_FINAL_PIECE_S` / `MEARI_PIECE_OVERLAP_S` | `1800` / `60` | 화자 구분 구간 길이 / 앞 구간과 겹쳐 들을 길이(초) |
 | `SORINOTE_DATA` | `./data` | 노트 저장 위치 |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | 허용할 호스트(휴대폰용 Tailscale 이름 추가) |
 | `MEARI_RUNTIME` | Windows면 `native` | `vllm`이면 WSL 방식 |
@@ -184,7 +185,7 @@ WSL 방식 전용 설정(`MEARI_NEMO_DIR`, `MEARI_MODEL`, `GPU_UTIL`, `MAX_SEQS`
 ## 알려진 한계
 
 - Windows 네이티브 받아쓰기는 AtomicChat의 GGUF 변환본(`AD-NVFP4`)으로 확인했어요. 같은 GGUF 디코더를 llama.cpp에서 글 생성용으로 쓰면 한국어가 반복·오염돼서, 요약은 별도 언어모델을 써요.
-- 화자 번호는 30분 구간마다 새로 매겨져요.
+- 긴 녹음은 30분 구간으로 나눠 화자를 구분해요. 구간마다 앞 구간의 마지막 1분을 겹쳐 다시 듣고, 겹친 부분에서 같은 말을 한 사람을 같은 번호로 이어요. 겹친 1분 동안 말하지 않은 사람은 다음 구간에서 새 번호를 받을 수 있어요.
 - 번역은 영어만 지원해요.
 - 자료-원고 연결은 글자 겹침 기반이에요(스캔본 PDF, 영어 자료 + 한국어 강의에서는 연결 안 됨).
 - 코드 곳곳에 옛 이름 `SoriNote`가 남아 있어요(`SORINOTE_*`, `X-SoriNote`).

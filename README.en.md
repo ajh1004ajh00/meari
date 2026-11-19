@@ -175,6 +175,7 @@ Put machine-specific values in `local.env` — copy `local.env.example`. The ser
 | `MEARI_FFMPEG` | `ffmpeg` | ffmpeg for uploaded audio/video files |
 | `MEARI_SPEECH_LANG` | `ko` | Language spoken in recordings: `ko` / `en` / `auto` (separate from the UI language) |
 | `MEARI_IDLE_OFF_MIN` | `30` | Minutes before idle engines turn off, `0` = never |
+| `MEARI_FINAL_PIECE_S` / `MEARI_PIECE_OVERLAP_S` | `1800` / `60` | Speaker-pass part length / how much of the previous part each part re-reads (s) |
 | `SORINOTE_DATA` | `./data` | Where notes are stored |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | Allowed host names (add your Tailscale name for phone access) |
 | `MEARI_RUNTIME` | `native` on Windows | `vllm` for the WSL setup |
@@ -185,7 +186,7 @@ WSL-only settings (`MEARI_NEMO_DIR`, `MEARI_MODEL`, `GPU_UTIL`, `MAX_SEQS`, `ENG
 
 - Windows-native transcription was verified with AtomicChat's GGUF conversion (`AD-NVFP4`). Used in llama.cpp for text generation, the same decoder repeats and drifts in Korean, so summaries use a separate language model.
 - Speech recognition assumes Korean by default. For English recordings set `MEARI_SPEECH_LANG=en` (or `auto`).
-- Speaker numbers restart every 30-minute part.
+- Long recordings are split into 30-minute parts for speaker labels. Each part re-reads the last minute of the one before, and people heard saying the same words there keep their number. Someone silent during that minute can get a new number in the next part.
 - Translation is English only.
 - Material-to-transcript linking is based on text overlap (no match for scanned PDFs or English slides with a Korean lecture).
 - The old name `SoriNote` still appears in places (`SORINOTE_*`, `X-SoriNote`).

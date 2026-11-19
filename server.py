@@ -16,6 +16,7 @@ import subprocess
 import threading
 import time
 import uuid
+from difflib import SequenceMatcher
 import wave
 from collections import Counter
 from pathlib import Path
@@ -62,7 +63,10 @@ SETTINGS = DATA.parent / "settings.json"   # app settings kept with the notes (e
 ENGINE_URL = os.environ.get("ENGINE_URL", "http://127.0.0.1:8010/v1")
 MODEL = "nemotron-transcribe"
 SR = 16000
-FINAL_PIECE_S = 1800  # final speaker pass works on <=30 min pieces
+FINAL_PIECE_S = int(os.environ.get("MEARI_FINAL_PIECE_S", 1800))  # final speaker pass works on <=30 min pieces
+# Each piece after the first also re-reads this much of the previous one. The speech heard twice tells which
+# speaker number in the new piece is which speaker in the old one (the model numbers speakers per piece).
+PIECE_OVERLAP_S = int(os.environ.get("MEARI_PIECE_OVERLAP_S", 60))
 MATERIAL_EXT = {".pdf", ".pptx", ".txt", ".md"}
 
 app = FastAPI(title="SoriNote")
@@ -534,6 +538,73 @@ def parse_speakers(text: str, part: int | None = None) -> list[dict]:
     return out
 
 
+_NOISE = re.compile(r"[\s.,!?…·'\"~\-]")
+
+
+def _flat(paras: list[dict]) -> tuple[str, list[tuple[int, int]]]:
+    """Paragraph text with spaces and punctuation removed (pieces spell the same speech slightly differently),
+    and for each kept char its (paragraph index, position in that paragraph's text)."""
+    chars, where = [], []
+    for i, p in enumerate(paras):
+        for j, ch in enumerate(p["text"]):
+            if not _NOISE.match(ch):
+                chars.append(ch)
+                where.append((i, j))
+    return "".join(chars), where
+
+
+def stitch_piece(prev: list[dict], cur: list[dict], next_id: int) -> tuple[list[dict], int]:
+    """Joins the next piece's paragraphs onto the earlier ones.
+
+    `cur` starts with PIECE_OVERLAP_S of speech that `prev` already ends with. Text matched in both says which of
+    cur's speaker numbers is which earlier speaker; that repeated text is then dropped from cur. Speakers not heard
+    in the overlap get new numbers from `next_id`. Returns cur's renumbered paragraphs and the next free number.
+    """
+    if not cur:
+        return [], next_id
+    pt, pw = _flat(prev)
+    ct, cw = _flat(cur)
+    off = max(0, len(pt) - 2500)  # ~60 s of speech is a few hundred chars; leave room
+    sm = SequenceMatcher(None, pt[off:], ct[:2500], autojunk=False)
+    blocks = [b for b in sm.get_matching_blocks() if b.size >= 4]
+    votes: Counter = Counter()
+    cut = None  # (paragraph, char) in cur where the new speech starts
+    for b in blocks:
+        for k in range(b.size):
+            votes[(cur[cw[b.b + k][0]]["speaker"], prev[pw[off + b.a + k][0]]["speaker"])] += 1
+        last = b.b + b.size - 1
+        cut = (cw[last][0], cw[last][1] + 1)
+    if sum(b.size for b in blocks) < 15:  # nothing reliable in common (silence, or only noise)
+        cut = None
+    mapping, used = {}, set()
+    for (c, g), n in votes.most_common():
+        if n >= 6 and c not in mapping and g not in used:
+            mapping[c] = g
+            used.add(g)
+    out = []
+    for i, p in enumerate(cur):
+        text = p["text"]
+        if cut and i < cut[0]:
+            continue  # heard in the previous piece already
+        if cut and i == cut[0]:
+            text = text[cut[1]:].lstrip(" .,!?…·")
+        if not text:
+            continue
+        if p["speaker"] not in mapping:
+            mapping[p["speaker"]] = next_id
+            next_id += 1
+        out.append({**p, "speaker": mapping[p["speaker"]], "text": text})
+    return out, next_id
+
+
+def number_by_appearance(paras: list[dict]) -> list[dict]:
+    """Speaker numbers 0, 1, 2... in the order people first speak (no gaps)."""
+    order: dict[int, int] = {}
+    for p in paras:
+        order.setdefault(p["speaker"], len(order))
+    return [{**p, "speaker": order[p["speaker"]]} for p in paras]
+
+
 def transcript_text(sid: str) -> str:
     d = sdir(sid)
     final = rj(d / "final.json", None)
@@ -637,14 +708,22 @@ def run_finalize(sid: str, do_segments: bool):
                 wj(d / "segments.json", segs)
             set_meta(sid, status="speakers", progress=0)
             paragraphs, starts = [], list(np.arange(0, max(total, 0.1), FINAL_PIECE_S))
+            next_id = 0
             for i, st in enumerate(starts):
-                piece = read_pcm(sid, st, min(st + FINAL_PIECE_S, total))
+                # from the second piece on, start PIECE_OVERLAP_S early: that speech links the speaker numbers
+                lead = PIECE_OVERLAP_S if paragraphs else 0
+                piece = read_pcm(sid, st - lead, min(st + FINAL_PIECE_S, total))
                 if len(piece) < SR // 2 or np.abs(piece).max(initial=0) <= SILENCE_PEAK:
                     continue
                 txt = transcribe(piece, asr_prompt(True))
-                paragraphs += parse_speakers(txt, part=i + 1 if len(starts) > 1 else None)
+                cur = parse_speakers(txt, part=i + 1 if len(starts) > 1 else None)
+                if paragraphs:
+                    cur, next_id = stitch_piece(paragraphs, cur, next_id)
+                else:
+                    next_id = max((p["speaker"] for p in cur), default=-1) + 1
+                paragraphs += cur
                 set_meta(sid, progress=round((i + 1) / len(starts) * 100))
-            wj(d / "final.json", {"paragraphs": paragraphs, "parts": len(starts)})
+            wj(d / "final.json", {"paragraphs": number_by_appearance(paragraphs), "parts": len(starts), "linked": True})  # linked: one numbering across pieces
             link_materials(sid)
             # The summary is made when the user asks for it (Make summary), with the engine chosen then.
             set_meta(sid, status="done", progress=None, error=None)
