@@ -83,7 +83,11 @@ async def guard(request: Request, call_next):
         return PlainTextResponse("Missing X-SoriNote header.", status_code=403)
     if request.url.path.startswith("/api/") and request.url.path != "/api/status":
         touch()  # any real use keeps the engine awake; the 5-second status poll of an idle page does not
-    return await call_next(request)
+    resp = await call_next(request)
+    if request.url.path in ("/", "/index.html"):
+        # the page names its scripts with ?v=N; always revalidate the page itself so an update shows on next open
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 
 _last_activity = time.time()
