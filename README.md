@@ -6,10 +6,12 @@
 
 **ARM 노트북 · RTX Spark를 위한 로컬 녹음 노트 앱**
 
+**✅ 100% Windows ARM64 네이티브 — WSL·리눅스 VM·x64 에뮬레이션 없음**
+
 `Ctrl+Alt+M` 한 번으로 녹음하고, 말하는 동안 받아쓰고, 끝나면 요약·번역·복습 퀴즈까지.<br>
 모든 처리는 노트북 GPU 안에서 **NVIDIA Nemotron 3.5 Transcribe (NVFP4)** 로 — 음성은 밖으로 나가지 않아요.
 
-`Windows on ARM` · `RTX Spark (N1X)` · `통합 메모리 128GB` · `NeMo-Speech.cpp` · `llama.cpp` · `Rust/Tauri`
+`ARM64 native` · `Windows on ARM` · `RTX Spark (N1X)` · `통합 메모리 128GB` · `NeMo-Speech.cpp` · `llama.cpp` · `Rust/Tauri`
 
 **한국어** | [English](README.en.md)
 
@@ -42,6 +44,23 @@
 <td width="25%"><img src="docs/images/phone-note.png" alt="작은 창 노트"></td>
 </tr>
 </table>
+
+## ARM64 네이티브
+
+메아리는 **처음부터 끝까지 Windows on ARM에서 네이티브로** 돌아가요. 앱, 서버, 두 AI 엔진, 보조 도구까지 실행 파일이 모두 ARM64 빌드예요.
+WSL이나 리눅스 VM을 띄우지 않고, x64 에뮬레이션(Prism)으로 도는 부분도 없어요. 그래서 GPU 메모리는 **모델이 쓰는 만큼만** 써요.
+
+| 구성 | 만든 것 | 아키텍처 |
+|---|---|---|
+| 데스크톱 앱 `Meari.exe` (창 · 트레이 · 단축키) | Rust · Tauri 2 | **ARM64** (`aarch64-pc-windows-msvc`) |
+| 화면 | WebView2 (Windows 기본 Edge 엔진) | **ARM64** |
+| 앱 서버 (노트 · 작업 큐 · 엔진 관리) | Python 3.13 · FastAPI · numpy | **ARM64** |
+| 받아쓰기 엔진 | NeMo-Speech.cpp 0.3.0 `windows-aarch64-cuda` | **ARM64 + CUDA** |
+| 로컬 요약 엔진 | llama.cpp `llama-server` | **ARM64 + CUDA** |
+| 음성·영상 파일 변환 | ffmpeg | **ARM64** |
+| 구독 엔진 (선택) | Claude Code CLI · Codex CLI | **ARM64** |
+
+> 각 실행 파일의 PE 헤더(Machine = `0xAA64`)로 이 노트북에서 직접 확인했어요.
 
 ## 기능
 

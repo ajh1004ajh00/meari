@@ -6,10 +6,12 @@
 
 **A local lecture & meeting recorder for ARM laptops with RTX Spark**
 
+**✅ 100% Windows ARM64 native — no WSL, no Linux VM, no x64 emulation**
+
 Press `Ctrl+Alt+M` to record, watch it transcribe as you speak, and get a summary, translation and study quiz when you stop.<br>
 Everything runs on the laptop's own GPU with **NVIDIA Nemotron 3.5 Transcribe (NVFP4)** — your audio never leaves the machine.
 
-`Windows on ARM` · `RTX Spark (N1X)` · `128 GB unified memory` · `NeMo-Speech.cpp` · `llama.cpp` · `Rust/Tauri`
+`ARM64 native` · `Windows on ARM` · `RTX Spark (N1X)` · `128 GB unified memory` · `NeMo-Speech.cpp` · `llama.cpp` · `Rust/Tauri`
 
 [한국어](README.md) | **English**
 
@@ -42,6 +44,23 @@ The same UI also opens on your phone (optional, over Tailscale).
 <td width="25%"><img src="docs/images/en/phone-note.png" alt="Mini window, note"></td>
 </tr>
 </table>
+
+## ARM64 native
+
+Meari runs **natively on Windows on ARM from end to end**. The app, the server, both AI engines and the helper tools are all ARM64 builds.
+No WSL or Linux VM is started, and nothing runs under x64 emulation (Prism), so GPU memory goes to **the models and nothing else**.
+
+| Part | Built with | Architecture |
+|---|---|---|
+| Desktop app `Meari.exe` (window · tray · hotkey) | Rust · Tauri 2 | **ARM64** (`aarch64-pc-windows-msvc`) |
+| UI | WebView2 (Windows' built-in Edge engine) | **ARM64** |
+| App server (notes · job queue · engine control) | Python 3.13 · FastAPI · numpy | **ARM64** |
+| Speech engine | NeMo-Speech.cpp 0.3.0 `windows-aarch64-cuda` | **ARM64 + CUDA** |
+| Local summary engine | llama.cpp `llama-server` | **ARM64 + CUDA** |
+| Audio/video file conversion | ffmpeg | **ARM64** |
+| Subscription engines (optional) | Claude Code CLI · Codex CLI | **ARM64** |
+
+> Checked on this laptop from each executable's PE header (Machine = `0xAA64`).
 
 ## Features
 
