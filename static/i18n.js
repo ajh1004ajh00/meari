@@ -261,6 +261,18 @@ const EN = {
 
   // ---- server messages (shown in toasts and on notes)
   "PDF, PPTX, TXT, MD 파일만 올릴 수 있어요": "Only PDF, PPTX, TXT and MD files are supported",
+  "녹음이 끝나면 답할 수 있어요": "I can answer once the recording ends",
+  "정리 중인 노트가 끝난 뒤에 바꿀 수 있어요": "You can change it once the note being processed is done",
+  "요약 엔진": "Summary engine",
+  "요약·퀴즈·질문 답변을 만드는 모델": "Model that writes summaries, quizzes and answers",
+  "원고가 PC 밖(클라우드)으로 보내져요": "Transcripts are sent off this PC (cloud)",
+  "구독 · 클라우드": "subscription · cloud",
+  "로컬 {n}GB": "local {n} GB",
+  "클라우드 엔진으로 바꿀까요?": "Switch to a cloud engine?",
+  "요약·퀴즈·질문 답변을 만들 때 원고가 {s} 쪽으로 보내져요. 녹음 파일은 보내지 않아요. 구독 사용량이 조금씩 쓰여요.": "Transcripts are sent to {s} to write summaries, quizzes and answers. Audio files are not sent. This uses a little of your subscription.",
+  "바꾸기": "Switch",
+  "요약 엔진: {s}": "Summary engine: {s}",
+  "질문에 답할 엔진을 켜는 중이에요(약 20초). 준비되면 다시 질문해 주세요.": "Starting the engine that answers questions (~20 s). Ask again when it is ready.",
   "녹음된 소리가 없어요": "No recorded audio",
   "아직 정리 중인 노트가 있어요. 끝난 뒤에 꺼 주세요": "A note is still being processed. Turn it off when that finishes",
   "엔진을 켜는 중이에요(약 3분). 준비되면 다시 질문해 주세요.": "The engine is starting (~3 min). Ask again when it is ready.",
@@ -274,9 +286,20 @@ const EN = {
 // server messages that end with details after ": "
 const EN_PREFIX = { "오디오를 읽을 수 없어요: ": "Can't read the audio: ", "자료를 읽을 수 없어요: ": "Can't read the material: " };
 
+// The texts say the engine takes ~3 min (vLLM in WSL); the Windows-native engine starts in ~20 s.
+let bootFast = false;
+const fixBoot = (s) => (bootFast ? s.replace(/약 3분/g, "약 20초").replace(/~3 min/g, "~20 s") : s);
 function t(ko, v) {
-  let s = LANG === "en" && EN[ko] != null ? EN[ko] : ko;
+  let s = fixBoot(LANG === "en" && EN[ko] != null ? EN[ko] : ko);
   return v ? s.replace(/\{(\w+)\}/g, (_, k) => (v[k] ?? "")) : s;
+}
+// once the server says its engine starts quickly: fix texts already on the page and in BUSY
+function useFastBoot(busy) {
+  if (bootFast) return;
+  bootFast = true;
+  const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n; (n = tw.nextNode());) if (/약 3분|~3 min/.test(n.nodeValue)) n.nodeValue = fixBoot(n.nodeValue);
+  for (const k in busy) busy[k] = fixBoot(busy[k]);
 }
 // free text from the server (errors): exact match, then known prefixes
 function tMsg(msg) {

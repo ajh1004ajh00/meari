@@ -1,0 +1,8 @@
+# Windows-native runtime (python -m venv .venv-win; .venv-win\Scripts\pip install -r requirements-win.txt)
+fastapi
+uvicorn
+numpy
+requests
+python-multipart
+pypdf
+python-pptx

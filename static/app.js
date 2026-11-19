@@ -82,6 +82,7 @@ let engineState = "boot";
 async function checkEngine() {
   let st = { state: "starting" };
   try { st = await api("/status"); } catch {}
+  if (st.boot_s && st.boot_s < 60) useFastBoot(BUSY);
   engineOn = st.state === "ready";
   engineState = st.state === "ready" ? "on" : st.state === "off" ? "off" : "boot";
   document.body.dataset.engine = engineState;
@@ -1369,6 +1370,31 @@ async function quickRecord() {
 $("#langBtn").textContent = LANG === "en" ? "한국어" : "English";
 $("#langBtn").title = LANG === "en" ? "한국어로 보기" : "View in English";
 $("#langBtn").onclick = () => rec ? toast(t("녹음 중에는 언어를 바꿀 수 없어요."), true) : setLang(LANG === "en" ? "ko" : "en");
+// summary engine (Windows-native runtime): one of Hermes' local models, or a subscription CLI (Claude Code / Codex)
+let llmCur = "";
+const isCloud = (v) => /^(claude|codex):/.test(v || "");
+async function loadLlm() {
+  let r;
+  try { r = await api("/llm"); } catch { return; }
+  if (!r.native || !r.options.length) return;
+  llmCur = r.current;
+  $("#llmSel").innerHTML = r.options.map((o) => `<option value="${esc(o.id)}"${o.id === r.current ? " selected" : ""}>${esc(o.label)} · ${
+    o.kind === "cloud" ? t("구독 · 클라우드") : t("로컬 {n}GB", { n: o.gb })}</option>`).join("");
+  $("#llmRow").hidden = false;
+  $("#llmCloud").hidden = !isCloud(llmCur);
+}
+$("#llmSel").onchange = async (e) => {
+  const v = e.target.value, label = (e.target.selectedOptions[0]?.textContent || v).split(" · ")[0];
+  if (isCloud(v) && !await confirmDlg(t("클라우드 엔진으로 바꿀까요?"),
+    t("요약·퀴즈·질문 답변을 만들 때 원고가 {s} 쪽으로 보내져요. 녹음 파일은 보내지 않아요. 구독 사용량이 조금씩 쓰여요.", { s: label }), t("바꾸기"))) {
+    e.target.value = llmCur;
+    return;
+  }
+  try { await api("/llm", json("POST", { id: v })); llmCur = v; toast(t("요약 엔진: {s}", { s: label })); }
+  catch (err) { e.target.value = llmCur; fail(err); }
+  $("#llmCloud").hidden = !isCloud(llmCur);
+};
+loadLlm();
 // desktop app (Tauri) tray/hotkey while this window is already open: never interrupt a running recording
 window.meariQuickRecord = () => rec ? toast(t("이미 녹음 중이에요")) : quickRecord().catch(fail);
 checkEngine(); engineTimer = setInterval(checkEngine, 5000);

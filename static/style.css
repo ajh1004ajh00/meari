@@ -731,6 +731,13 @@ dialog .r { display: flex; justify-content: flex-end; gap: 8px; margin-top: var(
 /* engine panel: state + two levels of "off" */
 .engine__row--sub { justify-content: space-between; margin-top: 6px; }
 .engine__row--sub #langBtn { margin-left: auto; margin-right: -4px; }
+.engine__llm { margin-top: 8px; gap: 8px; font-size: var(--t-12); color: var(--tx-3); }
+.engine__llm span { flex: none; }
+.engine__llm select { flex: 1; min-width: 0; height: 28px; padding: 0 6px; border: 1px solid var(--line-2); border-radius: var(--r-2);
+  background: var(--ink-3); color: var(--tx-1); font-size: var(--t-12); cursor: pointer; }
+.engine__llm select:focus-visible { outline: 2px solid var(--echo-ln); outline-offset: 1px; }
+.engine__cloud { display: block; margin-top: 4px; font-size: 11px; color: var(--amber); }
+.engine__cloud[hidden] { display: none; }
 .engine__idle { color: var(--tx-3); font-size: 11.5px; }
 body[data-engine="off"] [data-led] { background: var(--tx-4); box-shadow: none; animation: none; }
 .ln--wait .ln__ko { color: var(--tx-3); }

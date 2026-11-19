@@ -1,5 +1,5 @@
 // 메아리 desktop shell: a small native window + tray around the local web app (http://localhost:8020).
-// The app server and the transcription engine still run in WSL; this only starts them and hosts the UI.
+// It starts the app server (Windows-native .venv-win if present, else WSL) and hosts the UI.
 //   meari.exe          open (start the server in WSL if it is down)
 //   meari.exe --rec    open and start recording right away (desktop hotkey Ctrl+Alt+M)
 // A second launch never opens a second window: it focuses this one (and starts recording with --rec).
@@ -66,6 +66,24 @@ fn project_dir() -> Option<String> {
 }
 
 fn start_server(dir: &str) {
+    // Windows-native runtime (no WSL): the app's own venv runs server.py, which starts its engines on demand
+    let pyw = std::path::Path::new(dir).join(".venv-win").join("Scripts").join("pythonw.exe");
+    if pyw.exists() {
+        let data = std::path::Path::new(dir).join("data");
+        let _ = std::fs::create_dir_all(&data);
+        let mut cmd = Command::new(pyw);
+        cmd.args(["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8020", "--log-level", "warning"])
+            .current_dir(dir)
+            .creation_flags(CREATE_NO_WINDOW);
+        if let Ok(log) = std::fs::OpenOptions::new().create(true).append(true).open(data.join("run.log")) {
+            if let Ok(err) = log.try_clone() {
+                cmd.stdout(log).stderr(err);
+            }
+        }
+        let _ = cmd.spawn();
+        return;
+    }
+    // WSL runtime (scripts/run.sh: vLLM engine + server inside Ubuntu)
     let distro = std::env::var("MEARI_WSL_DISTRO").unwrap_or_else(|_| DEFAULT_DISTRO.to_string());
     let _ = Command::new("wsl.exe")
         .args(["-d", distro.as_str(), "-u", "root", "--cd", dir, "--", "bash", "-c",

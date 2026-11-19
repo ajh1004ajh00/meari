@@ -9,7 +9,7 @@
 Press `Ctrl+Alt+M` to record, watch it transcribe as you speak, and get a summary, translation and study quiz when you stop.<br>
 Everything runs on the laptop's own GPU with **NVIDIA Nemotron 3.5 Transcribe (NVFP4)** — your audio never leaves the machine.
 
-`Windows on ARM` · `RTX Spark (N1X)` · `128 GB unified memory` · `WSL2` · `vLLM` · `Rust/Tauri`
+`Windows on ARM` · `RTX Spark (N1X)` · `128 GB unified memory` · `NeMo-Speech.cpp` · `llama.cpp` · `Rust/Tauri`
 
 [한국어](README.md) | **English**
 
@@ -56,6 +56,7 @@ The same UI also opens on your phone (optional, over Tailscale).
 | **From a file** | Create a note from an audio or video file |
 | **Safety nets** | Warns right away if you record with a muted mic; the engine turns itself off after 30 idle minutes and frees GPU memory |
 | **Desktop app** | Tray app, global hotkey, mini always-on-top window, low-memory mode while hidden |
+| **Choose the summary engine** | A local model (Qwen 27B · Flash-Next · Nemotron 120B from Hermes, …) or Claude · GPT through your subscription (CLI), picked in the sidebar |
 | **Korean / English UI** | One click in the sidebar (defaults to your system language). In English, summaries, quizzes and answers are written in English too |
 
 ## Specs
@@ -66,20 +67,22 @@ The same UI also opens on your phone (optional, over Tailscale).
 |---|---|
 | Device | RTX Spark (N1X) laptop — 128 GB unified memory (≈30 GB for Windows, ≈96 GB for the GPU) |
 | GPU | Blackwell generation required (NVFP4 model) |
-| OS | Windows 11 ARM64 + WSL2 `Ubuntu-24.04` (aarch64) |
-| Engine | vLLM 0.32.0 + NeMo Speech (main) plugin, CUDA 13.0, Python 3.13 |
-| Disk | ≈21 GB for the model, plus the environment |
+| OS | Windows 11 ARM64 — runs **without WSL** (the WSL + vLLM setup is still supported) |
+| Speech engine | NVIDIA [NeMo-Speech.cpp](https://github.com/NVIDIA/NeMo-Speech.cpp) 0.3.0 `windows-aarch64-cuda` |
+| Summary engine | llama.cpp `llama-server` (Windows ARM64 CUDA) with a local GGUF model, or the Claude Code / Codex CLI (subscription) |
+| Disk | ≈21 GB speech model + a summary model (e.g. Qwen3.8-27B, 16.5 GB) |
 | App build | Rust (`aarch64-pc-windows-msvc`), Visual Studio Build Tools (ARM64), WebView2 |
 
 ### Measured (on this laptop)
 
 | Item | Value |
 |---|---|
-| Desktop app size | **6.7 MB** (Rust · Tauri 2) |
+| Desktop app size · start | **6.7 MB** (Rust · Tauri 2) · app server in **≈2 s** |
 | App memory | ≈440 MB with the window open · **60–110 MB** when hidden to the tray |
-| Engine GPU memory | ≈42 GB (`GPU_UTIL=0.38`) |
-| Engine start-up | ≈**2 min 30 s** (longer on the very first run while kernels compile). Recording works right away |
-| Peak WSL memory while the engine loads | **9.2 GB** (15.2 GB before the fix) · Windows free memory stays ≥ 5.3 GB |
+| Speech engine | **≈24 GB** of GPU memory, starts in **≈20 s**. Recording works right away and catches up |
+| Transcription speed | 1 min 50 s of audio in 3.9 s · a 5-minute meeting with speakers in 25 s |
+| Stop → speaker transcript + summary | ≈45 s for a 1-minute recording (Qwen3.8-27B + DFlash2) |
+| Summary engines (Korean summary, alongside the speech engine) | Qwen3.8-27B ≈22 GB · Qwen3.8-Flash-Next +62 GB, 32 tok/s · Nemotron Super 120B +62 GB, 15 tok/s |
 | Live transcription chunk | 8–16 s (cut where speech pauses) |
 | Recording format | 16 kHz mono (browser AudioWorklet) |
 
@@ -87,107 +90,93 @@ The same UI also opens on your phone (optional, over Tailscale).
 
 ```mermaid
 flowchart LR
-  subgraph Windows["Windows 11 (ARM64)"]
-    APP["Meari.exe<br/>Rust · Tauri 2<br/>tray · hotkey · mini window"]
-    WV["WebView2<br/>static/ (HTML·JS)"]
-    APP --- WV
-  end
-  subgraph WSL["WSL2 Ubuntu 24.04 (aarch64)"]
-    SRV["server.py · FastAPI :8020<br/>notes · job queue · engine control"]
-    ENG["vLLM :8010<br/>Nemotron 3.5 Transcribe NVFP4"]
-    SRV --> ENG
-  end
+  APP["Meari.exe<br/>Rust · Tauri 2<br/>tray · hotkey · mini window"]
+  WV["WebView2<br/>static/ (HTML·JS)"]
+  SRV["server.py · FastAPI :8020<br/>notes · job queue · engine control"]
+  ASR["NeMo-Speech.cpp :8091<br/>Nemotron 3.5 Transcribe GGUF<br/>transcription · speakers · speech→English"]
+  LLM["llama-server :8092<br/>summary · quiz · Q&A · translation"]
+  CLI["Claude Code / Codex CLI<br/>(subscription, optional)"]
+  APP --- WV
   WV -->|localhost:8020| SRV
   APP -->|starts it if down| SRV
-  ENG --- GPU[("RTX Spark GPU")]
+  SRV --> ASR
+  SRV --> LLM
+  SRV -.-> CLI
 ```
 
-## Install
+Both engines start when needed and stop after 30 idle minutes. Within the GPU budget (`MEARI_GPU_BUDGET_GB`) both stay loaded; above it they take turns. **Recording always wins**: if you start recording while a summary is being written, the audio is saved first and transcribed once the summary is done.
 
-### 1. WSL and the engine (NeMo Speech + vLLM)
+## Install (Windows native)
 
-Install the WSL distro from PowerShell:
+### 1. Speech engine and model
+
+- Download `nemo-speech-0.3.0-windows-aarch64-cuda.zip` from the [NeMo-Speech.cpp releases](https://github.com/NVIDIA/NeMo-Speech.cpp/releases) and unzip it.
+- Model (GGUF): NVIDIA's [`nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-GGUF`](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-GGUF) (sign-in required) or
+  the `AD-NVFP4` decoder + `Encoder-F16` from the [AtomicChat conversion](https://huggingface.co/AtomicChat/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-GGUF) (same folder).
 
 ```powershell
-wsl --install -d Ubuntu-24.04
+hf download AtomicChat/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-GGUF `
+  NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-AD-NVFP4.gguf NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-Encoder-F16.gguf `
+  --local-dir D:\AI-Models\Speech\nemo-speech\models
 ```
 
-Inside WSL (as `root`), follow the official steps from the [model card](https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4).
-Meari uses `/root/nemo-speech` and `/root/models` by default.
+### 2. Summary engine
 
-```bash
-cd /root
-git clone https://github.com/NVIDIA-NeMo/Speech.git nemo-speech
-cd nemo-speech
-uv venv --python 3.13 .venv
-UV_PROJECT_ENVIRONMENT=$PWD/.venv uv sync --extra asr --extra vllm --locked --no-install-project
-uv pip install --python .venv/bin/python --no-deps -e .
-uv pip install --python .venv/bin/python --no-deps av==19.0.2 opencv-python-headless==5.0.0.93
-```
+- **Local**: a Windows ARM64 `llama-server.exe` (llama.cpp CUDA build) and a GGUF language model. If you use Hermes Agent, Meari reads
+  the models and launch settings Hermes already has (`presets.ini`); you pick one in the app.
+- **Subscription (optional)**: sign in to the [Claude Code](https://claude.com/claude-code) CLI or the Codex CLI with your subscription and Claude or GPT become choices (no API keys).
+  With these, **transcripts leave the PC** (audio files do not); the app says so when you pick one.
 
-### 2. Download the model (≈21 GB)
-
-```bash
-source /root/nemo-speech/.venv/bin/activate
-hf download nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4 \
-  --local-dir /root/models/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4
-```
-
-### 3. WSL patches
-
-On a unified-memory GPU under WSL, vLLM refuses to start (it sizes GPU memory from WSL's 15 GB of Linux RAM), and the
-FlashInfer JIT needs CUDA 13.0 paths. The fixes are in **[docs/SETUP-WSL.md](docs/SETUP-WSL.md)** (Korean; the commands are self-explanatory).
-
-### 4. App server packages
-
-```bash
-uv pip install --python /root/nemo-speech/.venv/bin/python \
-  fastapi uvicorn python-multipart requests numpy soundfile pypdf python-pptx
-```
-
-### 5. Get Meari and build the desktop app
-
-Clone on Windows (somewhere WSL can reach under `/mnt/...`) and build:
+### 3. Get Meari, the Python environment and the desktop app
 
 ```powershell
 git clone https://github.com/ajh1004ajh00/meari.git
-cd meari\desktop
-cargo build --release
-copy target\release\meari.exe ..\Meari.exe
+cd meari
+python -m venv .venv-win                      # Python 3.13 ARM64
+.venv-win\Scripts\pip install -r requirements-win.txt
+copy local.env.example local.env               # engine and model paths (see Configuration)
+cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 ```
 
-### 6. Run
+### 4. Run
 
 ```powershell
-.\Meari.exe          # open (starts the server in WSL if it is down)
+.\Meari.exe          # open (starts the app server without a window; engines start when needed)
 .\Meari.exe --rec    # open and start recording
 ```
 
 - Make a desktop shortcut with target `Meari.exe --rec` and shortcut key `Ctrl+Alt+M` to start recording from anywhere.
-- The first engine start takes a few extra minutes for kernel compilation. You can record while it starts.
-- Turning off: **Turn everything off** in the tray menu or the app (engine, server and window). **Engine off** frees only the GPU.
+- Turning off: **Turn all off** in the tray menu or the app (engines, server and window). **Engine off** frees only the GPU.
 - To use it in a browser instead of the desktop app, run `launch.vbs` (`launch.vbs /rec` to record right away).
+
+### Alternative: WSL + vLLM
+
+The original setup (vLLM with the NeMo Speech plugin inside WSL2 Ubuntu) still works; the app uses it when there is no `.venv-win`.
+Install steps and the WSL patches are in **[docs/SETUP-WSL.md](docs/SETUP-WSL.md)** (Korean; the commands are self-explanatory).
 
 ## Configuration (environment variables)
 
-Put machine-specific values (Tailscale name, where notes live, ...) in `local.env` — copy `local.env.example`. `scripts/run.sh` reads it, and git ignores it.
+Put machine-specific values in `local.env` — copy `local.env.example`. The server reads it, and git ignores it.
 
 | Variable | Default | Description |
 |---|---|---|
-| `MEARI_NEMO_DIR` | `/root/nemo-speech` | NeMo Speech checkout (its `.venv` is used) |
-| `MEARI_MODEL` | `/root/models/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4` | Model folder |
-| `GPU_UTIL` | `0.38` | vLLM `--gpu-memory-utilization` |
-| `MAX_SEQS` | `8` | Concurrent requests |
-| `ENGINE_MEM_HIGH` | `6G` | Memory ceiling while the engine starts (`max` = off) |
+| `MEARI_ASR_EXE` / `MEARI_ASR_MODEL` | `D:\AI-Models\Speech\nemo-speech\…` | NeMo-Speech executable / decoder GGUF |
+| `MEARI_LLAMA_SERVER` | `D:\Tools\local-vlm\llamacpp\llama-server.exe` | llama-server for summaries |
+| `MEARI_LLM` | `Qwen3.8-27B-UD-Q4_K_M` | Initial summary model (a name in Hermes' `presets.ini`); changeable in the app |
+| `MEARI_LLM_MODEL` | (none) | GGUF path when not using Hermes |
+| `MEARI_GPU_BUDGET_GB` | `80` | GPU budget for keeping both engines loaded; above it they take turns |
+| `MEARI_FFMPEG` | `ffmpeg` | ffmpeg for uploaded audio/video files |
 | `MEARI_SPEECH_LANG` | `ko` | Language spoken in recordings: `ko` / `en` / `auto` (separate from the UI language) |
-| `MEARI_IDLE_OFF_MIN` | `30` | Minutes before the idle engine turns off, `0` = never |
+| `MEARI_IDLE_OFF_MIN` | `30` | Minutes before idle engines turn off, `0` = never |
 | `SORINOTE_DATA` | `./data` | Where notes are stored |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | Allowed host names (add your Tailscale name for phone access) |
-| `MEARI_WSL_DISTRO` | `Ubuntu-24.04` | WSL distro the desktop app starts the server in |
-| `MEARI_DIR` | found from the exe location | Repository folder used by the desktop app |
+| `MEARI_RUNTIME` | `native` on Windows | `vllm` for the WSL setup |
+
+WSL-only settings (`MEARI_NEMO_DIR`, `MEARI_MODEL`, `GPU_UTIL`, `MAX_SEQS`, `ENGINE_MEM_HIGH`, `MEARI_WSL_DISTRO`) are in [docs/SETUP-WSL.md](docs/SETUP-WSL.md).
 
 ## Known limitations
 
+- Windows-native transcription was verified with AtomicChat's GGUF conversion (`AD-NVFP4`). Used in llama.cpp for text generation, the same decoder repeats and drifts in Korean, so summaries use a separate language model.
 - Speech recognition assumes Korean by default. For English recordings set `MEARI_SPEECH_LANG=en` (or `auto`).
 - Speaker numbers restart every 30-minute part.
 - Translation is English only.

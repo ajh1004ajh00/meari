@@ -28,8 +28,37 @@ from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 APP_DIR = Path(__file__).resolve().parent
-DATA = Path(os.environ.get("SORINOTE_DATA", APP_DIR / "data")) / "sessions"
+
+
+def _load_local_env():
+    """This machine's private settings (git-ignored local.env, see local.env.example). Real env vars win."""
+    p = APP_DIR / "local.env"
+    if p.exists():
+        for line in p.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip())
+
+
+def _host_path(p: str) -> str:
+    """local.env is shared with the WSL runtime: /mnt/d/x means D:\\x when running on Windows."""
+    m = re.match(r"^/mnt/([a-zA-Z])/(.*)$", str(p))
+    return f"{m.group(1).upper()}:\\" + m.group(2).replace("/", "\\") if (m and os.name == "nt") else str(p)
+
+
+_load_local_env()
+# native: Windows, no WSL - NeMo-Speech.cpp for speech + llama.cpp for text (native_engines.py)
+# vllm:   the original WSL setup - one vLLM server (scripts/engine.sh) for both
+NATIVE = os.environ.get("MEARI_RUNTIME", "native" if os.name == "nt" else "vllm") == "native"
+if NATIVE:
+    import cloud_llm
+    from native_engines import ENG, kill_orphans, list_presets
+    kill_orphans()   # engines a crashed/forced-closed earlier app process left on the GPU
+FFMPEG = os.environ.get("MEARI_FFMPEG", "ffmpeg")
+DATA = Path(_host_path(os.environ.get("SORINOTE_DATA", APP_DIR / "data"))) / "sessions"
 DATA.mkdir(parents=True, exist_ok=True)
+SETTINGS = DATA.parent / "settings.json"   # app settings kept with the notes (e.g. the summary engine)
 ENGINE_URL = os.environ.get("ENGINE_URL", "http://127.0.0.1:8010/v1")
 MODEL = "nemotron-transcribe"
 SR = 16000
@@ -164,6 +193,8 @@ def read_pcm(sid: str, start_s: float = 0, end_s: float | None = None) -> np.nda
 
 # ---------------------------------------------------------------- engine
 def engine_ready() -> bool:
+    if NATIVE:
+        return ENG.asr.ready()
     try:
         return requests.get(f"{ENGINE_URL}/models", timeout=2).ok
     except requests.RequestException:
@@ -181,16 +212,23 @@ _seg_lock = threading.Lock()
 
 
 def engine_proc_running() -> bool:
+    if NATIVE:
+        return ENG.any_running()
     return subprocess.run(["pgrep", "-f", "vllm serve"], capture_output=True).returncode == 0
 
 
 def engine_state() -> str:
+    if NATIVE:
+        return ENG.state()
     if engine_ready():
         return "ready"
     return "starting" if engine_proc_running() else "off"
 
 
 def start_engine():
+    if NATIVE:
+        ENG.ensure("asr")
+        return
     with _engine_lock:
         if engine_proc_running():
             return
@@ -201,11 +239,23 @@ def start_engine():
 
 
 def stop_engine():
+    if NATIVE:
+        ENG.stop_all()
+        return
     subprocess.run(["pkill", "-f", "vllm serve"])
 
 
-def wait_engine(sid: str | None = None, timeout: float = 900):
-    """Block a background job until the engine answers, starting it if needed."""
+def wait_engine(sid: str | None = None, timeout: float = 900, role: str = "asr"):
+    """Block a background job until the engine answers, starting it if needed.
+    role (native only): "asr" for speech work, "llm" for text work; the vLLM runtime does both in one engine."""
+    if NATIVE:
+        if role == "llm" and llm_is_cloud():
+            return   # text goes to a subscription CLI; no local engine to start
+        prev = meta(sid).get("status") if sid else None
+        ENG.wait(role, timeout, on_wait=(lambda: set_meta(sid, status="waiting")) if sid else None)
+        if sid and meta(sid).get("status") == "waiting":
+            set_meta(sid, status=prev)
+        return
     if engine_ready():
         return
     start_engine()
@@ -244,7 +294,26 @@ def recording_now() -> bool:
     return False
 
 
+def llm_choice() -> str:
+    """Summary engine: "local:<Hermes preset>", "claude:sonnet|opus" or "codex:" (subscription CLIs). vLLM: "engine"."""
+    if not NATIVE:
+        return "engine"
+    return (rj(SETTINGS, {}) or {}).get("llm") or f"local:{ENG.preset}"
+
+
+def llm_is_cloud() -> bool:
+    return llm_choice().split(":", 1)[0] in ("claude", "codex")
+
+
 def chat(messages, max_tokens=2048, temperature=0.0, timeout=1800) -> str:
+    """Text-only request (summary, quiz, Q&A, translation). Native: the chosen summary engine."""
+    if NATIVE:
+        kind, _, name = llm_choice().partition(":")
+        if kind == "claude":
+            return cloud_llm.claude_chat(messages, name or "sonnet", timeout=min(timeout, 900))
+        if kind == "codex":
+            return cloud_llm.codex_chat(messages, name, timeout=min(timeout, 900))
+        return ENG.llm_chat(messages, max_tokens=max_tokens, temperature=temperature, timeout=timeout)
     r = requests.post(
         f"{ENGINE_URL}/chat/completions",
         json={
@@ -306,6 +375,8 @@ def asr_prompt(speakers: bool) -> str:
 
 
 def transcribe(samples: np.ndarray, prompt: str) -> str:
+    if NATIVE:
+        return ENG.asr_chat(prompt, wav_bytes(samples))
     b64 = base64.b64encode(wav_bytes(samples)).decode()
     dur = len(samples) / SR
     return chat(
@@ -571,7 +642,7 @@ def run_finalize(sid: str, do_segments: bool):
                 set_meta(sid, progress=round((i + 1) / len(starts) * 100))
             wj(d / "final.json", {"paragraphs": paragraphs, "parts": len(starts)})
             link_materials(sid)
-            set_meta(sid, status="summarizing", progress=None)
+            set_meta(sid, status="summarizing", progress=None, llm=llm_choice())
             lang = lang_of(meta(sid).get("lang"))
             ref = reference_block(m.get("terms", ""), materials_text(sid), lang)
             summary = summarize(transcript_text(sid), ref, lang)
@@ -587,7 +658,7 @@ def run_translate(sid: str):
     d = sdir(sid)
     with lock_for(sid):
         try:
-            wait_engine(sid)
+            wait_engine(sid, role="llm")
             text = transcript_text(sid)
             out, buf = [], ""
             for line in text.split("\n"):
@@ -678,7 +749,7 @@ def run_study(sid: str):
     d = sdir(sid)
     with lock_for(sid):
         try:
-            wait_engine(sid)
+            wait_engine(sid, role="llm")
             text = transcript_text(sid)[:24000]
             nq = max(3, min(10, len(text) // 600))
             prompt = STUDY_PROMPT_EN if lang_of(meta(sid).get("lang")) == "en" else STUDY_PROMPT
@@ -720,6 +791,7 @@ def start_job(sid: str, status: str, target, *args):
 def status():
     st = engine_state()
     return {"engine": st == "ready", "state": st, "backlog": backlog_total(), "idle_off_min": IDLE_OFF_MIN,
+            "boot_s": 20 if NATIVE else 180,   # how long the speech engine takes to start (UI wording)
             "idle_left_s": max(0, int(IDLE_OFF_MIN * 60 - (time.time() - _last_activity))) if IDLE_OFF_MIN > 0 else None}
 
 
@@ -738,6 +810,49 @@ def api_engine_stop():
         raise HTTPException(409, "아직 정리 중인 노트가 있어요. 끝난 뒤에 꺼 주세요")
     stop_engine()
     return {"state": "off"}
+
+
+def _llm_label(i: str) -> str:
+    kind, _, name = i.partition(":")
+    if kind == "claude":
+        return cloud_llm.CLAUDE_MODELS.get(name, name)
+    if kind == "codex":
+        return "GPT (Codex)"
+    return re.sub(r"-(UD-)?(I?Q\d\w*|NVFP4|Q\d_K_\w+)$", "", name).replace("NVIDIA-", "")
+
+
+@app.get("/api/llm")
+def llm_get():
+    """Summary engines to choose from: Hermes' local models and the subscription CLIs that are installed."""
+    opts = []
+    if NATIVE:
+        opts += [{"id": f"local:{p['id']}", "label": _llm_label(f"local:{p['id']}"), "kind": "local", "gb": p["gb"]} for p in list_presets()]
+        av = cloud_llm.available()
+        if av["claude"]:
+            opts += [{"id": f"claude:{k}", "label": v, "kind": "cloud"} for k, v in cloud_llm.CLAUDE_MODELS.items()]
+        if av["codex"]:
+            opts.append({"id": "codex:", "label": "GPT (Codex)", "kind": "cloud"})
+    return {"current": llm_choice(), "options": opts, "native": NATIVE}
+
+
+@app.post("/api/llm")
+async def llm_set(req: Request):
+    v = (await req.json()).get("id", "")
+    if v not in {o["id"] for o in llm_get()["options"]}:
+        raise HTTPException(400, "no such engine")
+    if jobs_running():
+        raise HTTPException(409, "정리 중인 노트가 끝난 뒤에 바꿀 수 있어요")
+    if v.startswith("local:"):
+        try:
+            ENG.set_preset(v[6:])
+        except RuntimeError:
+            raise HTTPException(409, "정리 중인 노트가 끝난 뒤에 바꿀 수 있어요")
+    elif ENG.llm.running():
+        ENG.llm.stop()   # a cloud engine needs no local model: free the GPU
+    s = rj(SETTINGS, {}) or {}
+    s["llm"] = v
+    wj(SETTINGS, s)
+    return {"current": v}
 
 
 @app.get("/api/sessions")
@@ -903,10 +1018,14 @@ async def add_chunk(sid: str, req: Request, start: float, translate: int = 0):
     return seg
 
 
+AUDIO_EN_PROMPT = "Translate the speech into English. Output only the English translation."
+
+
 def chunk_text(a: np.ndarray, translate: bool, seg: dict) -> str:
     text = collapse_repeats(strip_special(transcribe(a, asr_prompt(False))))
     if text and translate:
-        seg["en"] = to_english(text, 400)
+        # native: translate the speech itself, so live translation needs no text engine while recording
+        seg["en"] = strip_special(transcribe(a, AUDIO_EN_PROMPT)) if NATIVE else to_english(text, 400)
     return text
 
 
@@ -961,6 +1080,8 @@ def cache_trimmer():
     # While the engine loads, the cache grows ~0.5 GB/s (3.7 -> 15 GB in 20 s killed WSL), so trim every 2 s then.
     # engine.sh also puts the engine under a cgroup memory.high for the load (mapped model pages drop_caches can't
     # free); once it is ready, lift that so transcription is never throttled (its own memory grows to ~5.3 GB).
+    if NATIVE:
+        return  # WSL-only problem
     lifted = False
     while True:
         loading = engine_proc_running() and not engine_ready()
@@ -999,6 +1120,10 @@ def resume_interrupted():
         threading.Thread(target=target, args=(m["id"], *args), daemon=True).start()
 
 
+if NATIVE:
+    ENG.recording_now = recording_now   # recording has priority when the two engines must take turns
+    if llm_choice().startswith("local:"):
+        ENG.preset = llm_choice()[6:]    # the summary engine chosen last time
 threading.Thread(target=backlog_worker, daemon=True).start()
 threading.Thread(target=idle_watcher, daemon=True).start()
 threading.Thread(target=cache_trimmer, daemon=True).start()
@@ -1029,8 +1154,9 @@ async def upload(sid: str, file: UploadFile, request: Request):
     def convert():
         with open(src, "wb") as f:
             shutil.copyfileobj(file.file, f)
-        return subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", str(src), "-ac", "1", "-ar", str(SR),
-                               "-f", "s16le", str(pcm_path(sid))], capture_output=True, text=True)
+        return subprocess.run([FFMPEG, "-loglevel", "error", "-y", "-i", str(src), "-ac", "1", "-ar", str(SR),
+                               "-f", "s16le", str(pcm_path(sid))], capture_output=True, text=True,
+                              creationflags=0x08000000 if os.name == "nt" else 0)  # no console window on Windows
     r = await run_in_threadpool(convert)
     src.unlink(missing_ok=True)
     if r.returncode:
@@ -1061,7 +1187,11 @@ async def ask(sid: str, req: Request):
     q = (await req.json()).get("question", "").strip()
     if not q:
         raise HTTPException(400, "질문이 비어 있어요")
-    if not engine_ready():
+    if NATIVE and not llm_is_cloud() and not ENG.llm.ready():
+        if not ENG.ensure("llm"):
+            raise HTTPException(409, "녹음이 끝나면 답할 수 있어요")
+        raise HTTPException(503, "질문에 답할 엔진을 켜는 중이에요(약 20초). 준비되면 다시 질문해 주세요.")
+    if not NATIVE and not engine_ready():
         start_engine()
         raise HTTPException(503, "엔진을 켜는 중이에요(약 3분). 준비되면 다시 질문해 주세요.")
     text = transcript_text(sid)[-36000:]
@@ -1178,7 +1308,7 @@ def export(sid: str, lang: str = "ko"):
 @app.post("/api/shutdown")
 def shutdown():
     """Stops the engine and this app (frees ~42 GB of GPU memory)."""
-    subprocess.run(["pkill", "-f", "vllm serve"])
+    stop_engine()
     threading.Timer(0.5, lambda: os.kill(os.getpid(), signal.SIGTERM)).start()
     return {"ok": True}
 

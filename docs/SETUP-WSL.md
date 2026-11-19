@@ -70,3 +70,14 @@ ln -sf /usr/lib/wsl/lib/libcuda.so $C/lib64/stubs/libcuda.so
 | 캐시 정리 (켜지는 동안 2초, 평소 20초마다) | `server.py` `cache_trimmer` | 매핑되지 않은 페이지 캐시를 비움 |
 
 측정 결과(같은 노트북, 엔진 켜기): WSL 최대 **15.2GB → 9.2GB**, Windows 여유 메모리 최저 **0.97GB → 5.3GB**.
+
+## WSL 방식 설정 (local.env)
+
+| 변수 | 기본값 | 설명 |
+|---|---|---|
+| `MEARI_NEMO_DIR` | `/root/nemo-speech` | NeMo Speech 체크아웃(그 안의 `.venv` 사용) |
+| `MEARI_MODEL` | `/root/models/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-NVFP4` | 모델 폴더 |
+| `GPU_UTIL` | `0.38` | vLLM `--gpu-memory-utilization` |
+| `MAX_SEQS` | `8` | 동시 처리 요청 수 |
+| `ENGINE_MEM_HIGH` | `6G` | 엔진이 켜지는 동안의 메모리 상한 (`max` = 끔) |
+| `MEARI_WSL_DISTRO` | `Ubuntu-24.04` | 데스크톱 앱이 서버를 켤 WSL 배포판 |
