@@ -49,14 +49,14 @@ The same UI also opens on your phone (optional, over Tailscale).
 |---|---|
 | **Record** | Microphone / tab audio (online lectures and calls) / both. Live transcription in 8–16 s chunks, optional live English translation |
 | **Instant start** | Recording starts immediately even while the engine is off; once the engine is up it catches up on the backlog |
-| **Organize** | Speaker-separated transcript, editable summary note, English translation, ask questions about a note |
+| **Organize** | The speaker transcript is made automatically when you stop; the summary note is made when you press **Make summary note** (editable). English translation, ask questions about a note |
 | **Lecture materials** | Upload PDF / PPTX / TXT and the matching page (p.N) appears next to each transcript line |
 | **Study** | Multiple-choice quiz (graded, with explanations) + flashcards |
 | **Search · export** | Full-text search across all notes, Markdown (.md) export |
 | **From a file** | Create a note from an audio or video file |
 | **Safety nets** | Warns right away if you record with a muted mic; the engine turns itself off after 30 idle minutes and frees GPU memory |
 | **Desktop app** | Tray app, global hotkey, mini always-on-top window, low-memory mode while hidden |
-| **Choose the summary engine** | A local model (Qwen 27B · Flash-Next · Nemotron 120B from Hermes, …) or Claude · GPT through your subscription (CLI), picked in the sidebar |
+| **Choose the summary engine** | Picked in the sidebar: a local model (Qwen3.8-27B · Qwen3.8-Flash-Next · Nemotron 120B from Hermes, …), Claude Sonnet / Opus (Claude Code subscription) or GPT (Codex subscription — Codex's default model, e.g. GPT-6.1 Sol). Used for summaries, quizzes and answers |
 | **Korean / English UI** | One click in the sidebar (defaults to your system language). In English, summaries, quizzes and answers are written in English too |
 
 ## Specs
@@ -81,8 +81,10 @@ The same UI also opens on your phone (optional, over Tailscale).
 | App memory | ≈440 MB with the window open · **60–110 MB** when hidden to the tray |
 | Speech engine | **≈24 GB** of GPU memory, starts in **≈20 s**. Recording works right away and catches up |
 | Transcription speed | 1 min 50 s of audio in 3.9 s · a 5-minute meeting with speakers in 25 s |
-| Stop → speaker transcript + summary | ≈45 s for a 1-minute recording (Qwen3.8-27B + DFlash2) |
-| Summary engines (Korean summary, alongside the speech engine) | Qwen3.8-27B ≈22 GB · Qwen3.8-Flash-Next +62 GB, 32 tok/s · Nemotron Super 120B +62 GB, 15 tok/s |
+| Stop → speaker transcript | ≈6 s for a 1-minute recording |
+| Summary note (button) | ≈38 s for a 1-minute recording (Qwen3.8-27B + DFlash2) |
+| Subscription engines | Quiz: Claude Sonnet ≈12 s · GPT (Codex) ≈18 s; answers ≈10 s |
+| Local summary engines (alongside the speech engine) | Qwen3.8-27B ≈22 GB, DFlash2 speculative decoding · Qwen3.8-Flash-Next ≈95 GB total, **MTP speculative decoding** (50–62% accepted) 32–38 tok/s · Nemotron Super 120B ≈95 GB total, 15 tok/s |
 | Live transcription chunk | 8–16 s (cut where speech pauses) |
 | Recording format | 16 kHz mono (browser AudioWorklet) |
 
@@ -104,6 +106,8 @@ flowchart LR
   SRV -.-> CLI
 ```
 
+When you stop recording, the speech engine finishes the speaker transcript and the note is done. The summary note is written when you press **Make summary note** (or **Redo summary**) in the note, by the summary engine chosen at that moment.
+
 Both engines start when needed and stop after 30 idle minutes. Within the GPU budget (`MEARI_GPU_BUDGET_GB`) both stay loaded; above it they take turns. **Recording always wins**: if you start recording while a summary is being written, the audio is saved first and transcribed once the summary is done.
 
 ## Install (Windows native)
@@ -124,8 +128,11 @@ hf download AtomicChat/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B-GGUF `
 
 - **Local**: a Windows ARM64 `llama-server.exe` (llama.cpp CUDA build) and a GGUF language model. If you use Hermes Agent, Meari reads
   the models and launch settings Hermes already has (`presets.ini`); you pick one in the app.
+  Speculative decoding follows the Hermes settings too (a DFlash2 draft model for Qwen3.8-27B, MTP for Flash-Next).
 - **Subscription (optional)**: sign in to the [Claude Code](https://claude.com/claude-code) CLI or the Codex CLI with your subscription and Claude or GPT become choices (no API keys).
   With these, **transcripts leave the PC** (audio files do not); the app says so when you pick one.
+  - Claude: called as `claude -p` with no tools, MCP or saved session; choose Sonnet or Opus.
+  - GPT: called as `codex exec` (read-only, ephemeral) with the `model` from `~/.codex/config.toml` (e.g. `gpt-6.1-sol`); the app shows that name.
 
 ### 3. Get Meari, the Python environment and the desktop app
 

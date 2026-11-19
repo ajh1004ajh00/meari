@@ -24,6 +24,27 @@ WORK = Path(tempfile.gettempdir()) / "meari-cli"
 CLAUDE_MODELS = {"sonnet": "Claude Sonnet 5.5", "opus": "Claude Opus 5.5"}
 
 
+def codex_model() -> str:
+    """The model Codex uses by default: `model = ...` in its config.toml (empty when not set)."""
+    cfg = Path(os.environ.get("CODEX_HOME") or Path.home() / ".codex") / "config.toml"
+    try:
+        import tomllib
+        return str(tomllib.loads(cfg.read_text(encoding="utf-8")).get("model") or "")
+    except (OSError, ValueError, ImportError):
+        return ""
+
+
+def codex_label(model: str = "") -> str:
+    """"gpt-6.1-sol" -> "GPT-6.1 Sol (Codex)"."""
+    m = model or codex_model()
+    if not m:
+        return "GPT (Codex)"
+    parts = m.split("-")
+    if parts[0].lower() == "gpt" and len(parts) > 1:
+        m = "GPT-" + parts[1] + "".join(" " + w.capitalize() for w in parts[2:])
+    return f"{m} (Codex)"
+
+
 def _split(messages) -> tuple[str, str]:
     """System text, and the rest of the conversation as one prompt (Q&A history becomes plain text)."""
     system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")

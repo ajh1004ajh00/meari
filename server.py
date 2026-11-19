@@ -837,7 +837,7 @@ def _llm_label(i: str) -> str:
     if kind == "claude":
         return cloud_llm.CLAUDE_MODELS.get(name, name)
     if kind == "codex":
-        return "GPT (Codex)"
+        return cloud_llm.codex_label(name)
     return re.sub(r"-(UD-)?(I?Q\d\w*|NVFP4|Q\d_K_\w+)$", "", name).replace("NVIDIA-", "")
 
 
@@ -851,7 +851,7 @@ def llm_get():
         if av["claude"]:
             opts += [{"id": f"claude:{k}", "label": v, "kind": "cloud"} for k, v in cloud_llm.CLAUDE_MODELS.items()]
         if av["codex"]:
-            opts.append({"id": "codex:", "label": "GPT (Codex)", "kind": "cloud"})
+            opts.append({"id": "codex:", "label": cloud_llm.codex_label(), "kind": "cloud"})
     return {"current": llm_choice(), "options": opts, "native": NATIVE}
 
 
