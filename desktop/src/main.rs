@@ -1,6 +1,6 @@
 // 메아리 desktop shell: a small native window + tray around the local web app (http://localhost:8020).
-// It starts the app server (Windows-native .venv-win if present, else WSL) and hosts the UI.
-//   meari.exe          open (start the server in WSL if it is down)
+// It starts the app server (the repo's .venv-win Python, natively on Windows on ARM) and hosts the UI.
+//   meari.exe          open (start the server if it is down)
 //   meari.exe --rec    open and start recording right away (desktop hotkey Ctrl+Alt+M)
 // A second launch never opens a second window: it focuses this one (and starts recording with --rec).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
@@ -16,7 +16,6 @@ use tauri::{AppHandle, LogicalSize, Manager, PhysicalPosition, WebviewUrl, Webvi
 
 const PORT_ADDR: &str = "127.0.0.1:8020";
 const APP_URL: &str = "http://localhost:8020/";
-const DEFAULT_DISTRO: &str = "Ubuntu-24.04"; // override with MEARI_WSL_DISTRO
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 // Runs inside the page. On the web app it calls the page's own functions, so its guards and dialogs apply.
@@ -51,7 +50,7 @@ fn server_up() -> bool {
     TcpStream::connect_timeout(&PORT_ADDR.parse().unwrap(), Duration::from_millis(400)).is_ok()
 }
 
-// The project folder that holds scripts/run.sh: MEARI_DIR, else the exe's folder or one of its parents
+// The project folder that holds server.py: MEARI_DIR, else the exe's folder or one of its parents
 // (Meari.exe copied to the repo root, or run from desktop/target/release).
 fn project_dir() -> Option<String> {
     if let Ok(d) = std::env::var("MEARI_DIR") {
@@ -61,35 +60,25 @@ fn project_dir() -> Option<String> {
     exe.ancestors()
         .skip(1)
         .take(5)
-        .find(|d| d.join("scripts").join("run.sh").exists())
+        .find(|d| d.join("server.py").exists())
         .map(|d| d.to_string_lossy().into_owned())
 }
 
 fn start_server(dir: &str) {
-    // Windows-native runtime (no WSL): the app's own venv runs server.py, which starts its engines on demand
+    // the app's own venv runs server.py, which starts its engines on demand
     let pyw = std::path::Path::new(dir).join(".venv-win").join("Scripts").join("pythonw.exe");
-    if pyw.exists() {
-        let data = std::path::Path::new(dir).join("data");
-        let _ = std::fs::create_dir_all(&data);
-        let mut cmd = Command::new(pyw);
-        cmd.args(["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8020", "--log-level", "warning"])
-            .current_dir(dir)
-            .creation_flags(CREATE_NO_WINDOW);
-        if let Ok(log) = std::fs::OpenOptions::new().create(true).append(true).open(data.join("run.log")) {
-            if let Ok(err) = log.try_clone() {
-                cmd.stdout(log).stderr(err);
-            }
+    let data = std::path::Path::new(dir).join("data"); // not in git: a fresh checkout has none
+    let _ = std::fs::create_dir_all(&data);
+    let mut cmd = Command::new(pyw);
+    cmd.args(["-m", "uvicorn", "server:app", "--host", "127.0.0.1", "--port", "8020", "--log-level", "warning"])
+        .current_dir(dir)
+        .creation_flags(CREATE_NO_WINDOW);
+    if let Ok(log) = std::fs::OpenOptions::new().create(true).append(true).open(data.join("run.log")) {
+        if let Ok(err) = log.try_clone() {
+            cmd.stdout(log).stderr(err);
         }
-        let _ = cmd.spawn();
-        return;
     }
-    // WSL runtime (scripts/run.sh: vLLM engine + server inside Ubuntu)
-    let distro = std::env::var("MEARI_WSL_DISTRO").unwrap_or_else(|_| DEFAULT_DISTRO.to_string());
-    let _ = Command::new("wsl.exe")
-        .args(["-d", distro.as_str(), "-u", "root", "--cd", dir, "--", "bash", "-c",
-               "mkdir -p data && bash scripts/run.sh >> data/run.log 2>&1"])  // data/ is not in git: a fresh checkout has none
-        .creation_flags(CREATE_NO_WINDOW)
-        .spawn();
+    let _ = cmd.spawn();
 }
 
 fn show(app: &AppHandle) {

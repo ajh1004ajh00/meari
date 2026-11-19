@@ -86,7 +86,7 @@ No WSL or Linux VM is started, and nothing runs under x64 emulation (Prism), so 
 |---|---|
 | Device | RTX Spark (N1X) laptop — 128 GB unified memory (≈30 GB for Windows, ≈96 GB for the GPU) |
 | GPU | Blackwell generation required (NVFP4 model) |
-| OS | Windows 11 ARM64 — runs **without WSL** (the WSL + vLLM setup is still supported) |
+| OS | Windows 11 ARM64 — runs natively, **no WSL** |
 | Speech engine | NVIDIA [NeMo-Speech.cpp](https://github.com/NVIDIA/NeMo-Speech.cpp) 0.3.0 `windows-aarch64-cuda` |
 | Summary engine | llama.cpp `llama-server` (Windows ARM64 CUDA) with a local GGUF model, or the Claude Code / Codex CLI (subscription) |
 | Disk | ≈21 GB speech model + a summary model (e.g. Qwen3.8-27B, 16.5 GB) |
@@ -175,11 +175,6 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 - Turning off: **Turn all off** in the tray menu or the app (engines, server and window). **Engine off** frees only the GPU.
 - To use it in a browser instead of the desktop app, run `launch.vbs` (`launch.vbs /rec` to record right away).
 
-### Alternative: WSL + vLLM
-
-The original setup (vLLM with the NeMo Speech plugin inside WSL2 Ubuntu) still works; the app uses it when there is no `.venv-win`.
-Install steps and the WSL patches are in **[docs/SETUP-WSL.md](docs/SETUP-WSL.md)** (Korean; the commands are self-explanatory).
-
 ## Configuration (environment variables)
 
 Put machine-specific values in `local.env` — copy `local.env.example`. The server reads it, and git ignores it.
@@ -197,9 +192,6 @@ Put machine-specific values in `local.env` — copy `local.env.example`. The ser
 | `MEARI_FINAL_PIECE_S` / `MEARI_PIECE_OVERLAP_S` | `1800` / `60` | Speaker-pass part length / how much of the previous part each part re-reads (s) |
 | `SORINOTE_DATA` | `./data` | Where notes are stored |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | Allowed host names (add your Tailscale name for phone access) |
-| `MEARI_RUNTIME` | `native` on Windows | `vllm` for the WSL setup |
-
-WSL-only settings (`MEARI_NEMO_DIR`, `MEARI_MODEL`, `GPU_UTIL`, `MAX_SEQS`, `ENGINE_MEM_HIGH`, `MEARI_WSL_DISTRO`) are in [docs/SETUP-WSL.md](docs/SETUP-WSL.md).
 
 ## Known limitations
 

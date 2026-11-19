@@ -1,10 +1,9 @@
 """Meari (메아리, formerly SoriNote): local lecture/meeting notes on Nemotron 3.5 Transcribe.
 
-Runs inside WSL (Ubuntu-24.04) with the nemo-speech venv. Talks to the vLLM
-server at ENGINE_URL for transcription, speaker tags, summary, translation,
-Q&A and study material.
+Runs natively on Windows on ARM. Speech (transcription, speaker tags, live English) goes to NeMo-Speech.cpp and
+text (summary, quiz, Q&A, translation) to llama.cpp or a subscription CLI; native_engines.py and cloud_llm.py
+own those processes.
 """
-import base64
 import io
 import json
 import math
@@ -42,26 +41,15 @@ def _load_local_env():
                 os.environ.setdefault(k.strip(), v.strip())
 
 
-def _host_path(p: str) -> str:
-    """local.env is shared with the WSL runtime: /mnt/d/x means D:\\x when running on Windows."""
-    m = re.match(r"^/mnt/([a-zA-Z])/(.*)$", str(p))
-    return f"{m.group(1).upper()}:\\" + m.group(2).replace("/", "\\") if (m and os.name == "nt") else str(p)
-
-
 _load_local_env()
-# native: Windows, no WSL - NeMo-Speech.cpp for speech + llama.cpp for text (native_engines.py)
-# vllm:   the original WSL setup - one vLLM server (scripts/engine.sh) for both
-NATIVE = os.environ.get("MEARI_RUNTIME", "native" if os.name == "nt" else "vllm") == "native"
-if NATIVE:
-    import cloud_llm
-    from native_engines import ENG, kill_orphans, list_presets
-    kill_orphans()   # engines a crashed/forced-closed earlier app process left on the GPU
+import cloud_llm  # noqa: E402  (after local.env: both read their settings at import)
+from native_engines import ENG, kill_orphans, list_presets  # noqa: E402
+
+kill_orphans()   # engines a crashed/forced-closed earlier app process left on the GPU
 FFMPEG = os.environ.get("MEARI_FFMPEG", "ffmpeg")
-DATA = Path(_host_path(os.environ.get("SORINOTE_DATA", APP_DIR / "data"))) / "sessions"
+DATA = Path(os.environ.get("SORINOTE_DATA", APP_DIR / "data")) / "sessions"
 DATA.mkdir(parents=True, exist_ok=True)
 SETTINGS = DATA.parent / "settings.json"   # app settings kept with the notes (e.g. the summary engine)
-ENGINE_URL = os.environ.get("ENGINE_URL", "http://127.0.0.1:8010/v1")
-MODEL = "nemotron-transcribe"
 SR = 16000
 FINAL_PIECE_S = int(os.environ.get("MEARI_FINAL_PIECE_S", 1800))  # final speaker pass works on <=30 min pieces
 # Each piece after the first also re-reads this much of the previous one. The speech heard twice tells which
@@ -200,84 +188,43 @@ def read_pcm(sid: str, start_s: float = 0, end_s: float | None = None) -> np.nda
 
 
 # ---------------------------------------------------------------- engine
-def engine_ready() -> bool:
-    if NATIVE:
-        return ENG.asr.ready()
-    try:
-        return requests.get(f"{ENGINE_URL}/models", timeout=2).ok
-    except requests.RequestException:
-        return False
-
-
-# The app owns the engine's lifecycle: it starts it on demand (recording, upload, jobs), lets a recording
-# begin before it is ready (chunks are queued and transcribed once it is up), and turns it off after
-# IDLE_OFF_MIN minutes without use to hand the ~42 GB of GPU memory back.
-ENGINE_SH = APP_DIR / "scripts" / "engine.sh"
+# The app owns the engines' lifecycle: it starts them on demand (recording, upload, jobs), lets a recording
+# begin before the speech engine is ready (chunks are queued and transcribed once it is up), and turns them off
+# after IDLE_OFF_MIN minutes without use to hand the GPU memory back.
 IDLE_OFF_MIN = float(os.environ.get("MEARI_IDLE_OFF_MIN", "30"))
-_engine_lock = threading.Lock()
 _meta_lock = threading.RLock()
 _seg_lock = threading.Lock()
 
 
+def engine_ready() -> bool:
+    return ENG.asr.ready()
+
+
 def engine_proc_running() -> bool:
-    if NATIVE:
-        return ENG.any_running()
-    return subprocess.run(["pgrep", "-f", "vllm serve"], capture_output=True).returncode == 0
+    return ENG.any_running()
 
 
 def engine_state() -> str:
-    if NATIVE:
-        return ENG.state()
-    if engine_ready():
-        return "ready"
-    return "starting" if engine_proc_running() else "off"
+    return ENG.state()
 
 
 def start_engine():
-    if NATIVE:
-        ENG.ensure("asr")
-        return
-    with _engine_lock:
-        if engine_proc_running():
-            return
-        (APP_DIR / "data").mkdir(exist_ok=True)
-        log = open(APP_DIR / "data" / "engine.log", "ab")
-        subprocess.Popen(["bash", str(ENGINE_SH)], stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                         start_new_session=True, env={**os.environ, "GPU_UTIL": os.environ.get("GPU_UTIL", "0.38")})
+    ENG.ensure("asr")
 
 
 def stop_engine():
-    if NATIVE:
-        ENG.stop_all()
-        return
-    subprocess.run(["pkill", "-f", "vllm serve"])
+    ENG.stop_all()
 
 
 def wait_engine(sid: str | None = None, timeout: float = 900, role: str = "asr"):
-    """Block a background job until the engine answers, starting it if needed.
-    role (native only): "asr" for speech work, "llm" for text work; the vLLM runtime does both in one engine."""
-    if NATIVE:
-        if role == "llm" and llm_is_cloud():
-            return   # text goes to a subscription CLI; no local engine to start
-        prev = meta(sid).get("status") if sid else None
-        ENG.wait(role, timeout, on_wait=(lambda: set_meta(sid, status="waiting")) if sid else None)
-        if sid and meta(sid).get("status") == "waiting":
-            set_meta(sid, status=prev)
+    """Block a background job until its engine answers, starting it if needed.
+    role: "asr" for speech work, "llm" for text work (nothing to wait for when text goes to a subscription CLI)."""
+    if role == "llm" and llm_is_cloud():
         return
-    if engine_ready():
-        return
-    start_engine()
     prev = meta(sid).get("status") if sid else None
-    if sid:
-        set_meta(sid, status="waiting")
-    t0 = time.time()
-    while time.time() - t0 < timeout:
-        if engine_ready():
-            if sid:
-                set_meta(sid, status=prev)
-            return
-        time.sleep(3)
-    raise RuntimeError("엔진이 15분 안에 켜지지 않았어요. data/engine.log를 확인해 주세요.")
+    ENG.wait(role, timeout, on_wait=(lambda: set_meta(sid, status="waiting")) if sid else None)
+    if sid and meta(sid).get("status") == "waiting":
+        set_meta(sid, status=prev)
 
 
 def backlog_total() -> int:
@@ -303,9 +250,7 @@ def recording_now() -> bool:
 
 
 def llm_choice() -> str:
-    """Summary engine: "local:<Hermes preset>", "claude:sonnet|opus" or "codex:" (subscription CLIs). vLLM: "engine"."""
-    if not NATIVE:
-        return "engine"
+    """Summary engine: "local:<Hermes preset>", "claude:sonnet|opus" or "codex:" (subscription CLIs)."""
     return (rj(SETTINGS, {}) or {}).get("llm") or f"local:{ENG.preset}"
 
 
@@ -314,29 +259,13 @@ def llm_is_cloud() -> bool:
 
 
 def chat(messages, max_tokens=2048, temperature=0.0, timeout=1800) -> str:
-    """Text-only request (summary, quiz, Q&A, translation). Native: the chosen summary engine."""
-    if NATIVE:
-        kind, _, name = llm_choice().partition(":")
-        if kind == "claude":
-            return cloud_llm.claude_chat(messages, name or "sonnet", timeout=min(timeout, 900))
-        if kind == "codex":
-            return cloud_llm.codex_chat(messages, name, timeout=min(timeout, 900))
-        return ENG.llm_chat(messages, max_tokens=max_tokens, temperature=temperature, timeout=timeout)
-    r = requests.post(
-        f"{ENGINE_URL}/chat/completions",
-        json={
-            "model": MODEL,
-            "messages": messages,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "chat_template_kwargs": {"enable_thinking": False},
-            "skip_special_tokens": False,
-        },
-        timeout=timeout,
-    )
-    if not r.ok:
-        raise RuntimeError(f"engine error {r.status_code}: {r.text[:300]}")
-    return r.json()["choices"][0]["message"]["content"] or ""
+    """Text-only request (summary, quiz, Q&A, translation) to the chosen summary engine."""
+    kind, _, name = llm_choice().partition(":")
+    if kind == "claude":
+        return cloud_llm.claude_chat(messages, name or "sonnet", timeout=min(timeout, 900))
+    if kind == "codex":
+        return cloud_llm.codex_chat(messages, name, timeout=min(timeout, 900))
+    return ENG.llm_chat(messages, max_tokens=max_tokens, temperature=temperature, timeout=timeout)
 
 
 def speech_ratio(a: np.ndarray) -> float:
@@ -383,17 +312,7 @@ def asr_prompt(speakers: bool) -> str:
 
 
 def transcribe(samples: np.ndarray, prompt: str) -> str:
-    if NATIVE:
-        return ENG.asr_chat(prompt, wav_bytes(samples))
-    b64 = base64.b64encode(wav_bytes(samples)).decode()
-    dur = len(samples) / SR
-    return chat(
-        [{"role": "user", "content": [
-            {"type": "text", "text": prompt},
-            {"type": "audio_url", "audio_url": {"url": f"data:audio/wav;base64,{b64}"}},
-        ]}],
-        max_tokens=int(dur * 10) + 256,
-    )
+    return ENG.asr_chat(prompt, wav_bytes(samples))
 
 
 TRANSLATE_SYS = ("You are a professional translator. Translate everything the user sends from Korean into English. "
@@ -890,7 +809,7 @@ def start_job(sid: str, status: str, target, *args):
 def status():
     st = engine_state()
     return {"engine": st == "ready", "state": st, "backlog": backlog_total(), "idle_off_min": IDLE_OFF_MIN,
-            "boot_s": 20 if NATIVE else 180,   # how long the speech engine takes to start (UI wording)
+            "boot_s": 20,   # how long the speech engine takes to start (UI wording)
             "idle_left_s": max(0, int(IDLE_OFF_MIN * 60 - (time.time() - _last_activity))) if IDLE_OFF_MIN > 0 else None}
 
 
@@ -923,15 +842,14 @@ def _llm_label(i: str) -> str:
 @app.get("/api/llm")
 def llm_get():
     """Summary engines to choose from: Hermes' local models and the subscription CLIs that are installed."""
-    opts = []
-    if NATIVE:
-        opts += [{"id": f"local:{p['id']}", "label": _llm_label(f"local:{p['id']}"), "kind": "local", "gb": p["gb"]} for p in list_presets()]
-        av = cloud_llm.available()
-        if av["claude"]:
-            opts += [{"id": f"claude:{k}", "label": v, "kind": "cloud"} for k, v in cloud_llm.CLAUDE_MODELS.items()]
-        if av["codex"]:
-            opts.append({"id": "codex:", "label": cloud_llm.codex_label(), "kind": "cloud"})
-    return {"current": llm_choice(), "options": opts, "native": NATIVE}
+    opts = [{"id": f"local:{p['id']}", "label": _llm_label(f"local:{p['id']}"), "kind": "local", "gb": p["gb"]}
+            for p in list_presets()]
+    av = cloud_llm.available()
+    if av["claude"]:
+        opts += [{"id": f"claude:{k}", "label": v, "kind": "cloud"} for k, v in cloud_llm.CLAUDE_MODELS.items()]
+    if av["codex"]:
+        opts.append({"id": "codex:", "label": cloud_llm.codex_label(), "kind": "cloud"})
+    return {"current": llm_choice(), "options": opts}
 
 
 @app.post("/api/llm")
@@ -1123,8 +1041,8 @@ AUDIO_EN_PROMPT = "Translate the speech into English. Output only the English tr
 def chunk_text(a: np.ndarray, translate: bool, seg: dict) -> str:
     text = collapse_repeats(strip_special(transcribe(a, asr_prompt(False))))
     if text and translate:
-        # native: translate the speech itself, so live translation needs no text engine while recording
-        seg["en"] = strip_special(transcribe(a, AUDIO_EN_PROMPT)) if NATIVE else to_english(text, 400)
+        # translate the speech itself, so live translation needs no text engine while recording
+        seg["en"] = strip_special(transcribe(a, AUDIO_EN_PROMPT))
     return text
 
 
@@ -1173,39 +1091,8 @@ def idle_watcher():
             pass
 
 
-def cache_trimmer():
-    """Loading the 20 GB model fills WSL's page cache (~10 GB), which WSL keeps from Windows.
-    On a 30 GB laptop that starved Windows and the whole WSL VM went down. Drop it once it piles up."""
-    # While the engine loads, the cache grows ~0.5 GB/s (3.7 -> 15 GB in 20 s killed WSL), so trim every 2 s then.
-    # engine.sh also puts the engine under a cgroup memory.high for the load (mapped model pages drop_caches can't
-    # free); once it is ready, lift that so transcription is never throttled (its own memory grows to ~5.3 GB).
-    if NATIVE:
-        return  # WSL-only problem
-    lifted = False
-    while True:
-        loading = engine_proc_running() and not engine_ready()
-        if loading:
-            lifted = False
-        elif not lifted and engine_ready():
-            try:
-                Path("/sys/fs/cgroup/meari-engine/memory.high").write_text("max")
-            except OSError:
-                pass
-            lifted = True
-        time.sleep(2 if loading else 20)
-        try:
-            info = dict(l.split(":", 1) for l in open("/proc/meminfo"))
-            cached_mb = int(info["Cached"].split()[0]) // 1024
-            if cached_mb > (1024 if loading else 2048):
-                os.sync()
-                with open("/proc/sys/vm/drop_caches", "w") as f:
-                    f.write("1")
-        except Exception:
-            pass
-
-
 def resume_interrupted():
-    """If the app/WSL went down mid-job, the note is left 'busy' with no worker. Pick those jobs up again."""
+    """If the app went down mid-job, the note is left 'busy' with no worker. Pick those jobs up again."""
     time.sleep(2)
     jobs = {"speakers": (run_finalize, False), "summarizing": (run_summarize,), "waiting": (run_finalize, False),
             "transcribing": (run_finalize, True), "translating": (run_translate,), "studying": (run_study,)}
@@ -1219,13 +1106,11 @@ def resume_interrupted():
         threading.Thread(target=target, args=(m["id"], *args), daemon=True).start()
 
 
-if NATIVE:
-    ENG.recording_now = recording_now   # recording has priority when the two engines must take turns
-    if llm_choice().startswith("local:"):
-        ENG.preset = llm_choice()[6:]    # the summary engine chosen last time
+ENG.recording_now = recording_now   # recording has priority when the two engines must take turns
+if llm_choice().startswith("local:"):
+    ENG.preset = llm_choice()[6:]    # the summary engine chosen last time
 threading.Thread(target=backlog_worker, daemon=True).start()
 threading.Thread(target=idle_watcher, daemon=True).start()
-threading.Thread(target=cache_trimmer, daemon=True).start()
 threading.Thread(target=resume_interrupted, daemon=True).start()
 
 
@@ -1296,13 +1181,10 @@ async def ask(sid: str, req: Request):
     q = (await req.json()).get("question", "").strip()
     if not q:
         raise HTTPException(400, "질문이 비어 있어요")
-    if NATIVE and not llm_is_cloud() and not ENG.llm.ready():
+    if not llm_is_cloud() and not ENG.llm.ready():
         if not ENG.ensure("llm"):
             raise HTTPException(409, "녹음이 끝나면 답할 수 있어요")
         raise HTTPException(503, "질문에 답할 엔진을 켜는 중이에요(약 20초). 준비되면 다시 질문해 주세요.")
-    if not NATIVE and not engine_ready():
-        start_engine()
-        raise HTTPException(503, "엔진을 켜는 중이에요(약 3분). 준비되면 다시 질문해 주세요.")
     text = transcript_text(sid)[-36000:]
     mats = materials_text(sid, 6000)
     qa = rj(d / "qa.json", [])

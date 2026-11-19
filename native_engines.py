@@ -1,4 +1,4 @@
-"""Windows-native engines for Meari (no WSL).
+"""Windows-native engines for Meari.
 
 Two local servers, started on demand and stopped when idle:
 - speech: NVIDIA NeMo-Speech.cpp (`nemo-speech serve`) running Nemotron 3.5 Transcribe GGUF.

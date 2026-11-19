@@ -86,7 +86,7 @@ WSL이나 리눅스 VM을 띄우지 않고, x64 에뮬레이션(Prism)으로 도
 |---|---|
 | 기기 | RTX Spark(N1X) 노트북 — 통합 메모리 128GB (Windows 약 30GB, GPU 약 96GB) |
 | GPU | Blackwell 세대 필요 (NVFP4 모델) |
-| OS | Windows 11 ARM64 — **WSL 없이** 동작 (WSL + vLLM 방식도 지원) |
+| OS | Windows 11 ARM64 — **WSL 없이** 네이티브로 동작 |
 | 받아쓰기 엔진 | NVIDIA [NeMo-Speech.cpp](https://github.com/NVIDIA/NeMo-Speech.cpp) 0.3.0 `windows-aarch64-cuda` |
 | 요약 엔진 | llama.cpp `llama-server` (Windows ARM64 CUDA) + 로컬 GGUF 모델, 또는 Claude Code / Codex CLI(구독) |
 | 디스크 | 받아쓰기 모델 약 21GB + 요약 모델(예: Qwen3.8-27B 16.5GB) |
@@ -175,11 +175,6 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 - 끄기: 트레이 메뉴나 앱의 **모두 끄기**(엔진·서버·창). GPU만 비우려면 **엔진 끄기**.
 - 데스크톱 앱 없이 브라우저로 쓰려면 `launch.vbs`(바로 녹음은 `launch.vbs /rec`).
 
-### 다른 방법: WSL + vLLM
-
-원래 방식(WSL2 Ubuntu 안의 vLLM + NeMo Speech 플러그인)도 그대로 동작해요. `.venv-win`이 없으면 앱이 이 방식으로 켜요.
-설치와 WSL 대응 패치는 **[docs/SETUP-WSL.md](docs/SETUP-WSL.md)** 를 보세요.
-
 ## 설정 (환경 변수)
 
 이 PC에만 해당하는 값은 `local.env.example`을 `local.env`로 복사해서 적어 두세요. 서버가 읽고, git에는 올라가지 않아요.
@@ -197,9 +192,6 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 | `MEARI_FINAL_PIECE_S` / `MEARI_PIECE_OVERLAP_S` | `1800` / `60` | 화자 구분 구간 길이 / 앞 구간과 겹쳐 들을 길이(초) |
 | `SORINOTE_DATA` | `./data` | 노트 저장 위치 |
 | `SORINOTE_HOSTS` | `127.0.0.1,localhost` | 허용할 호스트(휴대폰용 Tailscale 이름 추가) |
-| `MEARI_RUNTIME` | Windows면 `native` | `vllm`이면 WSL 방식 |
-
-WSL 방식 전용 설정(`MEARI_NEMO_DIR`, `MEARI_MODEL`, `GPU_UTIL`, `MAX_SEQS`, `ENGINE_MEM_HIGH`, `MEARI_WSL_DISTRO`)은 [docs/SETUP-WSL.md](docs/SETUP-WSL.md)에 있어요.
 
 ## 알려진 한계
 

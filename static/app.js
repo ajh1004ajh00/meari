@@ -3,7 +3,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const SR = 16000;
 const BUSY = { recording: t("녹음 중"), transcribing: t("받아쓰는 중"), speakers: t("화자별 원고 만드는 중"), summarizing: t("요약 노트 만드는 중"),
-  translating: t("영어로 번역하는 중"), studying: t("복습 자료 만드는 중"), waiting: t("엔진 켜는 중(약 3분) — 켜지면 이어서 정리해요") };
+  translating: t("영어로 번역하는 중"), studying: t("복습 자료 만드는 중"), waiting: t("엔진 켜는 중(약 20초) — 켜지면 이어서 정리해요") };
 const RM = matchMedia("(prefers-reduced-motion: reduce)");
 const TAU = Math.PI * 2;
 let engineOn = false, current = null, data = null, pollTimer = null, rec = null, editMode = false, viewing = null;
@@ -82,13 +82,12 @@ let engineState = "boot";
 async function checkEngine() {
   let st = { state: "starting" };
   try { st = await api("/status"); } catch {}
-  if (st.boot_s && st.boot_s < 60) useFastBoot(BUSY);
   engineOn = st.state === "ready";
   engineState = st.state === "ready" ? "on" : st.state === "off" ? "off" : "boot";
   document.body.dataset.engine = engineState;
   const T = { on: [t("엔진 준비됨"), t("Nemotron · 이 PC 안에서만"), t("준비됨")],
-    boot: [t("엔진 켜는 중… (약 3분)"), t("녹음은 지금 바로 할 수 있어요"), t("켜는 중")],
-    off: [t("엔진 꺼짐 · GPU 비워 둠"), t("녹음하면 자동으로 켜져요 (약 3분)"), t("꺼짐")] }[engineState];
+    boot: [t("엔진 켜는 중… (약 20초)"), t("녹음은 지금 바로 할 수 있어요"), t("켜는 중")],
+    off: [t("엔진 꺼짐 · GPU 비워 둠"), t("녹음하면 자동으로 켜져요 (약 20초)"), t("꺼짐")] }[engineState];
   $("#engineText").textContent = T[0];
   $("#engineMeta").textContent = st.backlog ? t("밀린 받아쓰기 {n}개 · 켜지면 처리해요", { n: st.backlog }) : T[1].replace(/\((약|~) /, "($1 ");  // keep "(약 20초)" on one line
   $$("[data-engine-short]").forEach((e) => (e.textContent = T[2]));
@@ -99,7 +98,7 @@ async function checkEngine() {
 }
 $("#engineBtn").onclick = async () => {
   try {
-    if (engineState === "off") { await api("/engine/start", { method: "POST" }); toast(t("엔진을 켜는 중이에요 (약 3분)")); }
+    if (engineState === "off") { await api("/engine/start", { method: "POST" }); toast(t("엔진을 켜는 중이에요 (약 20초)")); }
     else { await api("/engine/stop", { method: "POST" }); toast(t("엔진을 껐어요. GPU 메모리를 비웠어요")); }
   } catch (e) { fail(e); }
   checkEngine();
@@ -631,7 +630,7 @@ $("#newBtn").onclick = () => newNote().catch(fail);
 async function uploadFile(f) {
   if (!f) return;
   if (rec) return toast(t("녹음 중에는 파일을 올릴 수 없어요."), true);
-  if (!engineOn) toast(t("엔진을 켜는 중이에요. 켜지면(약 3분) 받아쓰기를 시작해요"));
+  if (!engineOn) toast(t("엔진을 켜는 중이에요. 켜지면(약 20초) 받아쓰기를 시작해요"));
   const m = await api("/sessions", json("POST", { title: f.name.replace(/\.[^.]+$/, "") }));
   await openNote(m.id); setLens("live");
   $("#segments").innerHTML = `<div class="tx__empty"><p class="busy__l">${PING}${t("파일 올리는 중…")}</p></div>`; segKey = "";
@@ -834,7 +833,7 @@ document.addEventListener("click", (e) => {
 });
 async function onStartRec(btn) {
   if (rec) return;
-  if (!engineOn) { api("/engine/start", { method: "POST" }).catch(() => {}); toast(t("녹음은 바로 시작해요. 엔진이 켜지면(약 3분) 따라잡아 받아써요")); }
+  if (!engineOn) { api("/engine/start", { method: "POST" }).catch(() => {}); toast(t("녹음은 바로 시작해요. 엔진이 켜지면(약 20초) 따라잡아 받아써요")); }
   if (btn.id === "recBtn") return startRec();
   if (await newNote()) await startRec();
 }
@@ -1396,7 +1395,7 @@ const isCloud = (v) => /^(claude|codex):/.test(v || "");
 async function loadLlm() {
   let r;
   try { r = await api("/llm"); } catch { return; }
-  if (!r.native || !r.options.length) return;
+  if (!r.options.length) return;
   llmCur = r.current;
   const opt = (o) => `<option value="${esc(o.id)}"${o.id === r.current ? " selected" : ""}>${esc(o.label)}${o.kind === "local" ? ` · ${o.gb}GB` : ""}</option>`;
   const group = (kind, name) => { const os = r.options.filter((o) => o.kind === kind); return os.length ? `<optgroup label="${esc(name)}">${os.map(opt).join("")}</optgroup>` : ""; };

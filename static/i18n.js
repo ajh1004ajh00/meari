@@ -28,7 +28,7 @@ const EN = {
   "강의와 회의를 녹음하면 실시간으로 받아쓰고, 끝나면 화자별 원고·요약 노트·복습 퀴즈로 되돌려 드려요.": "Record a lecture or meeting and it is transcribed live; when you stop, you get a speaker transcript, a summary note and a study quiz.",
   "지금 녹음 시작": "Start recording now",
   "처음 한 번, 브라우저가 마이크 권한을 물어봐요": "The first time, the browser asks for microphone permission",
-  "엔진은 켜지는 중(약 3분) — 녹음은 바로 되고, 준비되면 따라잡아 받아써요": "The engine is starting (~3 min) — recording works now and transcription catches up when it is ready",
+  "엔진은 켜지는 중(약 20초) — 녹음은 바로 되고, 준비되면 따라잡아 받아써요": "The engine is starting (~20 s) — recording works now and transcription catches up when it is ready",
   "마이크": "Mic",
   "탭 소리": "Tab audio",
   "둘 다": "Both",
@@ -41,7 +41,7 @@ const EN = {
   "멈추면 화자별 원고, 요약 노트, 퀴즈와 암기카드가 되돌아와요.": "Stop, and back come a speaker transcript, a summary note, a quiz and flashcards.",
   "모든 처리는 이 노트북 안에서만 이루어져요. 녹음도 원고도 밖으로 나가지 않아요.": "Everything runs on this laptop. Neither audio nor transcripts ever leave it.",
   "말하는 동안 받아쓰고, 멈추면 정리해요": "Transcribes while you talk, organizes when you stop",
-  "바로 녹음돼요 · 엔진이 켜지면(약 3분) 따라잡아 받아써요": "Records right away · transcription catches up once the engine is up (~3 min)",
+  "바로 녹음돼요 · 엔진이 켜지면(약 20초) 따라잡아 받아써요": "Records right away · transcription catches up once the engine is up (~20 s)",
   "최근 노트": "Recent notes",
   "최근 녹음순": "Newest first",
   "편집": "Edit",
@@ -128,19 +128,19 @@ const EN = {
   "요약 노트 만드는 중": "Writing the summary",
   "영어로 번역하는 중": "Translating to English",
   "복습 자료 만드는 중": "Making the study set",
-  "엔진 켜는 중(약 3분) — 켜지면 이어서 정리해요": "Starting the engine (~3 min) — continues once it is up",
+  "엔진 켜는 중(약 20초) — 켜지면 이어서 정리해요": "Starting the engine (~20 s) — continues once it is up",
   "엔진 준비됨": "Engine ready",
   "준비됨": "Ready",
-  "엔진 켜는 중… (약 3분)": "Starting engine… (~3 min)",
+  "엔진 켜는 중… (약 20초)": "Starting engine… (~20 s)",
   "녹음은 지금 바로 할 수 있어요": "You can record right now",
   "켜는 중": "Starting",
   "엔진 꺼짐 · GPU 비워 둠": "Engine off · GPU freed",
-  "녹음하면 자동으로 켜져요 (약 3분)": "Starts by itself when you record (~3 min)",
+  "녹음하면 자동으로 켜져요 (약 20초)": "Starts by itself when you record (~20 s)",
   "꺼짐": "Off",
   "밀린 받아쓰기 {n}개 · 켜지면 처리해요": "{n} chunks waiting · transcribed once it is up",
   "안 쓰면 {n}분 뒤 자동으로 꺼져요": "Turns off after {n} idle minutes",
   "곧 자동으로 꺼져요": "Turning off soon",
-  "엔진을 켜는 중이에요 (약 3분)": "Starting the engine (~3 min)",
+  "엔진을 켜는 중이에요 (약 20초)": "Starting the engine (~20 s)",
   "엔진을 껐어요. GPU 메모리를 비웠어요": "Engine off. GPU memory freed",
   "녹음을 먼저 멈춰 주세요.": "Stop the recording first.",
   "메아리를 모두 끌까요?": "Turn Meari off completely?",
@@ -222,7 +222,7 @@ const EN = {
   "'{t}' 노트와 녹음 파일을 지울까요? 되돌릴 수 없어요.": "Delete '{t}' and its recording? This can't be undone.",
   "노트를 지웠어요": "Note deleted",
   "녹음 중에는 파일을 올릴 수 없어요.": "You can't upload while recording.",
-  "엔진을 켜는 중이에요. 켜지면(약 3분) 받아쓰기를 시작해요": "Starting the engine. Transcription begins once it is up (~3 min)",
+  "엔진을 켜는 중이에요. 켜지면(약 20초) 받아쓰기를 시작해요": "Starting the engine. Transcription begins once it is up (~20 s)",
   "파일 올리는 중…": "Uploading…",
   "녹음 파일을 불러오지 못했어요 ({n})": "Couldn't load the recording ({n})",
   "마이크 + 탭 소리": "Mic + tab audio",
@@ -230,7 +230,7 @@ const EN = {
   "녹음 중에는 녹음할 소리를 바꿀 수 없어요.": "You can't change the source while recording.",
   "다음 줄부터 영어 번역을 함께 받아써요": "English translation on from the next line",
   "다음 줄부터 영어 번역 없이 받아써요": "English translation off from the next line",
-  "녹음은 바로 시작해요. 엔진이 켜지면(약 3분) 따라잡아 받아써요": "Recording now. Transcription catches up once the engine is up (~3 min)",
+  "녹음은 바로 시작해요. 엔진이 켜지면(약 20초) 따라잡아 받아써요": "Recording now. Transcription catches up once the engine is up (~20 s)",
   "이 주소에서는 마이크를 쓸 수 없어요. 휴대폰이라면 https 주소로 접속해 주세요.": "The microphone isn't available on this address. On a phone, use the https address.",
   "공유 창에서 '탭 오디오 공유'(또는 시스템 오디오)를 켜 주세요.": "Turn on 'Share tab audio' (or system audio) in the share dialog.",
   "오디오를 가져올 수 없어요: {e}": "Can't get audio: {e}",
@@ -286,7 +286,7 @@ const EN = {
   "질문에 답할 엔진을 켜는 중이에요(약 20초). 준비되면 다시 질문해 주세요.": "Starting the engine that answers questions (~20 s). Ask again when it is ready.",
   "녹음된 소리가 없어요": "No recorded audio",
   "아직 정리 중인 노트가 있어요. 끝난 뒤에 꺼 주세요": "A note is still being processed. Turn it off when that finishes",
-  "엔진을 켜는 중이에요(약 3분). 준비되면 다시 질문해 주세요.": "The engine is starting (~3 min). Ask again when it is ready.",
+  "엔진을 켜는 중이에요(약 20초). 준비되면 다시 질문해 주세요.": "The engine is starting (~20 s). Ask again when it is ready.",
   "요청 본문이 UTF-8 JSON이 아니에요": "The request body is not UTF-8 JSON",
   "원고가 아직 없어요": "No transcript yet",
   "이미 처리 중이에요": "Already processing",
@@ -297,20 +297,9 @@ const EN = {
 // server messages that end with details after ": "
 const EN_PREFIX = { "오디오를 읽을 수 없어요: ": "Can't read the audio: ", "자료를 읽을 수 없어요: ": "Can't read the material: " };
 
-// The texts say the engine takes ~3 min (vLLM in WSL); the Windows-native engine starts in ~20 s.
-let bootFast = false;
-const fixBoot = (s) => (bootFast ? s.replace(/약 3분/g, "약 20초").replace(/~3 min/g, "~20 s") : s);
 function t(ko, v) {
-  let s = fixBoot(LANG === "en" && EN[ko] != null ? EN[ko] : ko);
+  const s = LANG === "en" && EN[ko] != null ? EN[ko] : ko;
   return v ? s.replace(/\{(\w+)\}/g, (_, k) => (v[k] ?? "")) : s;
-}
-// once the server says its engine starts quickly: fix texts already on the page and in BUSY
-function useFastBoot(busy) {
-  if (bootFast) return;
-  bootFast = true;
-  const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-  for (let n; (n = tw.nextNode());) if (/약 3분|~3 min/.test(n.nodeValue)) n.nodeValue = fixBoot(n.nodeValue);
-  for (const k in busy) busy[k] = fixBoot(busy[k]);
 }
 // free text from the server (errors): exact match, then known prefixes
 function tMsg(msg) {
