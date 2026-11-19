@@ -199,6 +199,7 @@ const EN = {
   "자료에서 글자를 찾지 못했어요(스캔본일 수 있어요). 보기는 되지만 원고와 연결되지는 않아요.": "No text found in the file (it may be a scan). You can view it, but it won't link to the transcript.",
   "퀴즈와 암기카드": "Quiz and flashcards",
   "원고를 바탕으로 객관식 퀴즈와 암기카드를 만들어요. 위의 <b>복습 자료 만들기</b>를 눌러 주세요.": "Makes a multiple-choice quiz and flashcards from the transcript. Press <b>Make study set</b> above.",
+  "지금 {job} — 끝나면 복습 자료를 만들 수 있어요.": "Now: {job}. You can make the study set when it finishes.",
   "복습 자료를 만들면 여기에 암기카드가 나와요.": "Flashcards appear here once you make a study set.",
   "정답": "Correct",
   "오답": "Wrong",

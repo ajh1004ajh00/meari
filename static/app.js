@@ -532,7 +532,9 @@ function renderStudy() {
   }
   if (!s || (!s.quiz.length && !s.cards.length)) {
     $("#scoreRings").innerHTML = ""; $("#scoreTx").innerHTML = "";
-    $("#study").innerHTML = `<div class="study__empty"><h3>${t("퀴즈와 암기카드")}</h3><p>${t("원고를 바탕으로 객관식 퀴즈와 암기카드를 만들어요. 위의 <b>복습 자료 만들기</b>를 눌러 주세요.")}</p></div>`;
+    // another job on this note (translation, summary, ...) keeps the button disabled: say why instead of a dead button
+    const why = isBusy(m) && BUSY[m.status] ? `<p class="study__wait">${t("지금 {job} — 끝나면 복습 자료를 만들 수 있어요.", { job: BUSY[m.status] })}</p>` : "";
+    $("#study").innerHTML = `<div class="study__empty"><h3>${t("퀴즈와 암기카드")}</h3><p>${t("원고를 바탕으로 객관식 퀴즈와 암기카드를 만들어요. 위의 <b>복습 자료 만들기</b>를 눌러 주세요.")}</p>${why}</div>`;
     $("#deck").innerHTML = `<p class='empty-tx'>${t("복습 자료를 만들면 여기에 암기카드가 나와요.")}</p>`;
     return;
   }

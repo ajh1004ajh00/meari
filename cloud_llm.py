@@ -63,9 +63,16 @@ def _run(cmd: list[str], stdin: str, timeout: float) -> subprocess.CompletedProc
 
 def claude_chat(messages, model: str = "sonnet", timeout: float = 900) -> str:
     system, prompt = _split(messages)
-    r = _run([CLAUDE, "-p", "--output-format", "json", "--model", model,
-              "--system-prompt", system or "You are a careful assistant.", "--tools", "", "--setting-sources", "",
-              "--strict-mcp-config", "--no-session-persistence"], prompt, timeout)
+    # The system text can hold a whole transcript (Q&A), far past the Windows command-line limit: pass it as a file.
+    WORK.mkdir(exist_ok=True)
+    sp = WORK / f"claude-sys-{os.getpid()}-{id(messages)}.txt"
+    sp.write_text(system or "You are a careful assistant.", encoding="utf-8")
+    try:
+        r = _run([CLAUDE, "-p", "--output-format", "json", "--model", model,
+                  "--system-prompt-file", str(sp), "--tools", "", "--setting-sources", "",
+                  "--strict-mcp-config", "--no-session-persistence"], prompt, timeout)
+    finally:
+        sp.unlink(missing_ok=True)
     try:
         j = json.loads(r.stdout)
     except json.JSONDecodeError:
