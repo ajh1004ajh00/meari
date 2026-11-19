@@ -642,15 +642,31 @@ def run_finalize(sid: str, do_segments: bool):
                 set_meta(sid, progress=round((i + 1) / len(starts) * 100))
             wj(d / "final.json", {"paragraphs": paragraphs, "parts": len(starts)})
             link_materials(sid)
-            set_meta(sid, status="summarizing", progress=None, llm=llm_choice())
-            lang = lang_of(meta(sid).get("lang"))
-            ref = reference_block(m.get("terms", ""), materials_text(sid), lang)
-            summary = summarize(transcript_text(sid), ref, lang)
-            if lang == "en":
-                summary = ensure_english_md(summary)
-            (d / "summary.md").write_text(summary, encoding="utf-8")
+            # The summary is made when the user asks for it (Make summary), with the engine chosen then.
             set_meta(sid, status="done", progress=None, error=None)
         except Exception as ex:  # surface to UI
+            set_meta(sid, status="error", error=str(ex)[:500], progress=None)
+
+
+def make_summary(sid: str):
+    d = sdir(sid)
+    m = meta(sid)
+    set_meta(sid, status="summarizing", progress=None, llm=llm_choice())
+    lang = lang_of(m.get("lang"))
+    ref = reference_block(m.get("terms", ""), materials_text(sid), lang)
+    summary = summarize(transcript_text(sid), ref, lang)
+    if lang == "en":
+        summary = ensure_english_md(summary)
+    (d / "summary.md").write_text(summary, encoding="utf-8")
+
+
+def run_summarize(sid: str):
+    with lock_for(sid):
+        try:
+            wait_engine(sid, role="llm")
+            make_summary(sid)
+            set_meta(sid, status="done", progress=None, error=None)
+        except Exception as ex:
             set_meta(sid, status="error", error=str(ex)[:500], progress=None)
 
 
@@ -1108,7 +1124,7 @@ def cache_trimmer():
 def resume_interrupted():
     """If the app/WSL went down mid-job, the note is left 'busy' with no worker. Pick those jobs up again."""
     time.sleep(2)
-    jobs = {"speakers": (run_finalize, False), "summarizing": (run_finalize, False), "waiting": (run_finalize, False),
+    jobs = {"speakers": (run_finalize, False), "summarizing": (run_summarize,), "waiting": (run_finalize, False),
             "transcribing": (run_finalize, True), "translating": (run_translate,), "studying": (run_study,)}
     for d in DATA.iterdir():
         m = rj(d / "meta.json", None)
@@ -1166,6 +1182,16 @@ async def upload(sid: str, file: UploadFile, request: Request):
 
 
 # ---- derived content
+@app.post("/api/sessions/{sid}/summarize")
+def summarize_note(sid: str, request: Request):
+    """Make (or remake) the summary note from the transcript, with the summary engine chosen now."""
+    sdir(sid)
+    if not transcript_text(sid).strip():
+        raise HTTPException(400, "원고가 아직 없어요")
+    set_meta(sid, lang=req_lang(request))
+    return start_job(sid, "summarizing", run_summarize)
+
+
 @app.post("/api/sessions/{sid}/translate")
 def translate(sid: str):
     sdir(sid)

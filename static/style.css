@@ -736,6 +736,11 @@ dialog .r { display: flex; justify-content: flex-end; gap: 8px; margin-top: var(
 .engine__llm select { flex: 1; min-width: 0; height: 28px; padding: 0 6px; border: 1px solid var(--line-2); border-radius: var(--r-2);
   background: var(--ink-3); color: var(--tx-1); font-size: var(--t-12); cursor: pointer; }
 .engine__llm select:focus-visible { outline: 2px solid var(--echo-ln); outline-offset: 1px; }
+.sum-make { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 22px 22px 20px; margin-top: 4px;
+  border: 1px dashed var(--line-3); border-radius: var(--r-3); background: rgba(138, 216, 232, .035); }
+.sum-make p { margin: 0; color: var(--tx-1); font-size: var(--t-15); }
+.sum-make .btn { height: 38px; padding: 0 16px; font-size: var(--t-14); border-color: var(--echo-ln); color: var(--echo-hi); }
+.sum-make small { color: var(--tx-3); font-size: var(--t-12); }
 .engine__cloud { display: block; margin-top: 4px; font-size: 11px; color: var(--amber); }
 .engine__cloud[hidden] { display: none; }
 .engine__idle { color: var(--tx-3); font-size: 11.5px; }

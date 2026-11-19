@@ -414,8 +414,12 @@ $("#modeSeg").onclick = (e) => { const b = e.target.closest("button"); if (b) se
 
 function renderSummary() {
   const m = data.meta;
+  const hasTx = !!(data.final?.paragraphs?.length || data.segments.length);
+  $("#resummarizeBtn").hidden = !data.summary; $("#editSummaryBtn").hidden = !data.summary;
   if (["speakers", "summarizing", "transcribing"].includes(m.status)) $("#summary").innerHTML = busyBlock(m, 9);
-  else $("#summary").innerHTML = (data.summary ? md(data.summary) : `<p class='empty-tx'>${t("녹음을 멈추면 요약 노트가 자동으로 만들어져요.")}</p>`);
+  else if (data.summary) $("#summary").innerHTML = md(data.summary);
+  else if (hasTx && !isBusy(m)) $("#summary").innerHTML = summaryPrompt();
+  else $("#summary").innerHTML = `<p class='empty-tx'>${t("녹음을 멈추면 화자별 원고가 만들어지고, 그다음 요약 노트를 만들 수 있어요.")}</p>`;
   $("#editSummaryBtn").disabled = !data.summary || isBusy(m);
 }
 $("#editSummaryBtn").onclick = () => { $("#summaryText").value = data.summary || ""; $("#summary").hidden = true; $("#summaryEditor").hidden = false; $("#summaryText").focus(); };
@@ -592,9 +596,23 @@ $("#deleteBtn").onclick = async () => {
   current = null; data = null; clearTimeout(pollTimer); resetAudio(); P.dataset.key = "";
   setView("home"); loadList().catch(fail); toast(t("노트를 지웠어요"));
 };
-$("#resummarizeBtn").onclick = async () => {
-  try { await api(`/sessions/${current}/finalize`, { method: "POST" }); } catch (e) { return fail(e); }
+// The summary is made on request (not right after recording), with the summary engine chosen at that moment.
+const engineName = () => ($("#llmSel")?.selectedOptions[0]?.textContent || "").split(" · ")[0];
+function summaryPrompt() {
+  const en = engineName();
+  return `<div class="sum-make"><p>${t("원고가 준비됐어요. 요약 노트를 만들까요?")}</p>` +
+    `<button type="button" class="btn" id="makeSummaryBtn">${ic("note")}${t("요약 노트 만들기")}</button>` +
+    (en ? `<small>${esc(t("요약 엔진: {s}", { s: en }))} · ${t("사이드바에서 바꿀 수 있어요")}</small>` : "") + "</div>";
+}
+async function makeSummary() {
+  try { await api(`/sessions/${current}/summarize`, { method: "POST" }); } catch (e) { return fail(e); }
   refresh().catch(fail);
+}
+$("#summary").addEventListener("click", (e) => { if (e.target.closest("#makeSummaryBtn")) makeSummary(); });
+$("#resummarizeBtn").onclick = async () => {
+  if (data?.summary && !await confirmDlg(t("요약 노트를 새로 만들까요?"),
+    t("지금 고른 요약 엔진({s})으로 다시 만들어요. 직접 고친 내용은 사라져요.", { s: engineName() || "-" }), t("새로 만들기"))) return;
+  makeSummary();
 };
 $("#translateBtn").onclick = async () => {
   try { await api(`/sessions/${current}/translate`, { method: "POST" }); } catch (e) { return fail(e); }
@@ -1066,7 +1084,7 @@ async function stopRec() {
   try { await refresh(); } catch (e) { fail(e); }
   loadList().catch(() => {});
 }
-const FIN = ["rest", "speakers", "summarizing"];
+const FIN = ["rest", "speakers"];   // the summary is made later, on request
 function setFinStep(step, pct) {
   const k = FIN.indexOf(step);
   $$("#finSteps li").forEach((li, i) => {
@@ -1077,7 +1095,7 @@ function setFinStep(step, pct) {
 function updateFin(m) {
   if (m.status === "speakers") setFinStep("speakers", m.progress);
   else if (m.status === "summarizing") setFinStep("summarizing", m.progress);
-  else if (m.status === "done") { setFinStep("done"); setTimeout(() => { if (finWatch) { leaveFin(); toast(t("노트가 준비됐어요 — 요약 노트부터 보여드려요")); } }, 450); }
+  else if (m.status === "done") { setFinStep("done"); setTimeout(() => { if (finWatch) { leaveFin(); toast(t("원고가 준비됐어요 — 요약 노트는 버튼을 눌러 만들어요")); } }, 450); }
   else if (m.status === "error") leaveFin();
 }
 function leaveFin() {
