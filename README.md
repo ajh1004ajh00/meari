@@ -171,7 +171,7 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 .\Meari.exe --rec    # 열고 바로 녹음
 ```
 
-- 바탕화면 바로가기에 `Meari.exe --rec`, 바로 가기 키 `Ctrl+Alt+M`을 넣으면 어디서든 바로 녹음돼요.
+- 바로가기 두 개를 추천해요. 바탕화면 아이콘은 `Meari.exe`(홈에서 시작, 지난 노트 보기)로, 시작 메뉴에는 `Meari.exe --rec` + 바로 가기 키 `Ctrl+Alt+M`(어디서든 바로 녹음)으로 만들어 두세요. 같은 바로가기에 둘 다 넣으면 아이콘을 눌러도 녹음이 시작돼요.
 - 끄기: 트레이 메뉴나 앱의 **모두 끄기**(엔진·서버·창). GPU만 비우려면 **엔진 끄기**.
 - 데스크톱 앱 없이 브라우저로 쓰려면 `launch.vbs`(바로 녹음은 `launch.vbs /rec`).
 

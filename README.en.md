@@ -171,7 +171,7 @@ cd desktop; cargo build --release; copy target\release\meari.exe ..\Meari.exe
 .\Meari.exe --rec    # open and start recording
 ```
 
-- Make a desktop shortcut with target `Meari.exe --rec` and shortcut key `Ctrl+Alt+M` to start recording from anywhere.
+- Two shortcuts work best: a desktop icon for `Meari.exe` (opens at home, to look back at notes) and a Start menu shortcut for `Meari.exe --rec` with shortcut key `Ctrl+Alt+M` (records from anywhere). Putting both on one shortcut makes the icon start a recording too.
 - Turning off: **Turn all off** in the tray menu or the app (engines, server and window). **Engine off** frees only the GPU.
 - To use it in a browser instead of the desktop app, run `launch.vbs` (`launch.vbs /rec` to record right away).
 
